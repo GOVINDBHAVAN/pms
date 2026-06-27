@@ -27,7 +27,8 @@
 ### General software points
 
 - DONE: Software product tag line 'Performance management for humans, not HR consultants' Update this in software login and home page
-- Prepare this software project memory file for the business rules we have written so far and in future as well that Claude Code can refer them whenever developing a new feature or modify existings. It's very important that we develop a correct system based on industry accepted norms.
+- DONE: Prepare this software project memory file for the business rules we have written so far and in future as well that Claude Code can refer them whenever developing a new feature or modify existings. It's very important that we develop a correct system based on industry accepted norms.
+- DONE: Make this memory file available so that the project can be port to another system after taking it's git check
 - Add 9-box support, how does it work along with Balance score card? Can they both co-exist if so then prepare the foundation in the system at each and every steps if either or both are enabled in the 'org settings'
 - Now fine-tune this 'org setting' page so that it should allow selection which are mutually exclusive like if the 'OKR Objective' is selected then why do HR need to select 'OKR key result' - I presume these two are used injunction together (correct my understanding) and similarly fix the interconnected fields which the user should not missed to select or it should be auto-select or disabled if that thing is not applicable in the selection of 'Active Performance Types' like if the HR has selected only 'Compentency' whether they can do anything with tabs like 'Weightage' or 'Rating Scale', similarly check for correct configuration the user can do without doing or leaving any mistake.
   
