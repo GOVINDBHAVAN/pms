@@ -3,6 +3,7 @@ import { useAuthStore } from './store/authStore';
 
 import LoginPage       from './pages/LoginPage';
 import DashboardPage   from './pages/DashboardPage';
+import OrgSettingsPage from './pages/OrgSettingsPage';
 import PrivateRoute    from './components/layout/PrivateRoute';
 import WizardShell     from './components/wizard/WizardShell';
 import AppLayout       from './components/layout/AppLayout';
@@ -65,7 +66,7 @@ export default function App() {
           }
         />
 
-        <Route path="/org/settings"  element={<PrivateRoute><Placeholder title="Org Settings" /></PrivateRoute>} />
+        <Route path="/org/settings"  element={<PrivateRoute><OrgSettingsPage /></PrivateRoute>} />
         <Route path="/org/employees" element={<PrivateRoute><Placeholder title="Employee Management" /></PrivateRoute>} />
         <Route path="/org/library"   element={<PrivateRoute><Placeholder title="Performance Library" /></PrivateRoute>} />
 
