@@ -277,6 +277,25 @@ All help strings live in `client/src/utils/helpContent.js` as `export const HELP
 **Content format:** What it is (1 sentence) + Why / business rule (1 sentence) + How to fill (optional).
 **Max 80 words per tooltip.** Do NOT add to: nav items, save/cancel buttons, table data rows.
 
+#### Group-Level InfoIcons — MUST NOT be missed
+
+On **employee/HOD target input screens**, **review screens**, and **approval screens**, every performance item **group header** must also have its own **ⓘ** InfoIcon explaining what that group is for. Required groups:
+
+| Group | Key in helpContent.js | Must explain |
+|---|---|---|
+| Key Results | `HELP.targetGroup.keyResult` | What a KR is vs an Objective; how to write a measurable KR |
+| KPIs | `HELP.targetGroup.kpi` | Definition; difference from KRA; how to set a numeric target |
+| Goals | `HELP.targetGroup.goal` | What a goal is; how it differs from OKR/KPI; how to fill planned target |
+| Competencies | `HELP.targetGroup.competency` | Behavior vs output; how ratings differ from goal scoring |
+
+These group-level icons are **in addition to** field-level icons on each individual target row.
+The intent: a first-time user must be able to understand what they are being asked to enter without leaving the page.
+
+This applies equally to:
+1. Target **entry** forms (employee self-entry, HOD entry)
+2. Target **review** forms (mid-year / end-of-year)
+3. Manager **approval** screens (where manager reads and approves each group)
+
 ### 12. Critical Database Rules
 
 - `employees.reporting_to` → drives entire cascade; incorrect value = wrong approver routing
