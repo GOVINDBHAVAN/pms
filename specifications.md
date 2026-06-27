@@ -1986,5 +1986,913 @@ Constants (in client/src/utils/constants.js):
 
 ---
 
+## 19. CONTEXTUAL HELP SYSTEM
+
+Every UI page, section, and form field must display a small **ⓘ** (info icon) that opens a contextual tooltip or popover explaining:
+- What the element is
+- Why it matters in a performance management context
+- How to fill it in / use it correctly
+- Any business rule the user should know
+
+This serves two purposes: (1) HR/Managers can self-learn the system without training; (2) During demos, you can click any ⓘ to explain the concept to the client.
+
+---
+
+### 19.1 InfoIcon Component (Shared)
+
+```
+components/shared/InfoIcon.jsx
+
+Props:
+  content  : string | ReactNode   — the help text or JSX to display
+  title    : string (optional)    — bold header inside the popover
+  size     : 'sm' | 'md'          — default 'sm'
+  placement: 'top'|'right'|'bottom'|'left'  — default 'right'
+
+Behavior:
+  - Renders a small circular ⓘ icon (shadcn Tooltip or Popover)
+  - On hover (desktop) or tap (mobile): shows the help popover
+  - Popover has a close (×) button
+  - Max width: 320px; text is readable, not a wall of text
+  - Icon color: text-muted-foreground; does NOT distract from the main UI
+  - Placed immediately after the label it describes, inline
+
+Usage example:
+  <label>Planned Target <InfoIcon title="Planned Target" content={HELP.target.planned} /></label>
+```
+
+All help strings live in a single file:
+```
+client/src/utils/helpContent.js
+export const HELP = { wizard: {...}, target: {...}, cycle: {...}, ... }
+```
+
+---
+
+### 19.2 Help Content — Setup Wizard
+
+#### STEP 1 — Company Info
+```
+Field: Organization Name
+  "The legal or commonly used name of your company. This appears in all reports,
+   email notifications, and the employee dashboard header. You can change it later
+   from Org Settings."
+
+Field: Employee Count Range
+  "Approximate number of employees this system will cover. We use this to suggest
+   sensible defaults for target limits, approval hierarchy depth, and report groupings.
+   Choose the closest range — you don't need an exact number."
+
+Field: Country / Region
+  "Used to pre-fill terminology (e.g., 'Financial Year' vs 'Fiscal Year') and date
+   format defaults. Does not affect business logic."
+```
+
+#### STEP 2 — Industry Selection
+```
+Section Header — "Select Your Industry"
+  "Your industry determines the default performance framework, terminology, and
+   starter KRA/KPI library we load for you. For example, selecting IT pre-loads
+   OKR-style targets; Manufacturing pre-loads production KPIs. You can customize
+   everything after — this just saves you setup time."
+
+Each industry tile — shown on hover:
+  IT / Software:
+    "Recommended framework: OKR. Focuses on innovation velocity, product delivery,
+     and engineering metrics. Works well with bidirectional cascading where developers
+     propose their own sprint commitments."
+
+  Manufacturing:
+    "Recommended framework: KRA/KPI. Centers on production output, defect rates,
+     machine uptime, and safety compliance. Top-down cascading ensures plant-level
+     targets align to company production plans."
+
+  Healthcare:
+    "Recommended framework: Hybrid (Goals + Competency). Clinical roles need both
+     measurable goals (patient satisfaction, compliance scores) and behavioral
+     competency ratings (clinical judgment, empathy). Equal 50/50 weighting is common."
+
+  BFSI:
+    "Recommended framework: Balanced Scorecard. Regulatory requirements demand
+     tracking across Financial, Customer, Compliance & Risk, and Learning dimensions
+     simultaneously. AUM growth sits alongside NPA ratios."
+
+  Retail / Sales:
+    "Recommended framework: Goals. Simple revenue and conversion targets that reset
+     monthly or quarterly. Over-planning is common and allowed (up to 130% of quota)."
+
+  Education:
+    "Recommended framework: Goals + Competency. Teachers are measured on student
+     outcomes (pass rates, curriculum completion) and pedagogical skills. NGO-adjacent
+     terminology like 'Programme Target' can be applied."
+
+  Hospitality:
+    "Recommended framework: KRA/KPI with competency overlay. Guest satisfaction scores,
+     RevPAR, and occupancy are the primary metrics; service excellence competencies
+     differentiate top performers."
+
+  Logistics:
+    "Recommended framework: KRA/KPI. On-time delivery, order accuracy, fleet utilization,
+     and shrinkage are the standard KRAs. Top-down cascading from central ops to
+     regional hubs to individual drivers."
+
+  NGO / Social Sector:
+    "Recommended framework: Goals (Bottom-Up). Field staff propose programme targets
+     based on ground realities; leadership aggregates commitments. Terminology is
+     customized: 'Programme Target' instead of 'Goal', 'Impact Band' instead of
+     'Performance Band'."
+```
+
+#### STEP 3 — Framework Selection
+```
+Section Header — "Choose Your Performance Framework"
+  "A framework is the structure you use to define and measure employee performance.
+   Think of it as the 'language' of your appraisal process. Your industry pre-selected
+   a recommendation, but you can choose any framework or mix them."
+
+OKR Card:
+  "OKR stands for Objectives and Key Results — popularized by Google and Intel.
+   An Objective is an inspiring qualitative direction ('Build the best product in
+   the market'). Key Results are 3-5 measurable outcomes that prove you reached it
+   ('Ship 4 features with <1% bug rate', 'Achieve NPS of 60').
+   Best for: tech companies, startups, product-led organizations."
+
+KRA / KPI Card:
+  "KRA (Key Result Area) is a broad responsibility domain — e.g., 'Customer Service'.
+   KPIs (Key Performance Indicators) are the specific metrics within that domain —
+   e.g., 'First Call Resolution Rate: 85%', 'Average Handle Time: <4 min'.
+   Best for: manufacturing, banking, retail, traditional enterprises."
+
+Goals Card:
+  "Plain individual targets with no jargon. An employee just commits to outcomes:
+   'Complete 3 certifications', 'Onboard 10 new clients'. Simple to understand
+   and fast to set up. Best for: small teams, NGOs, education sector."
+
+Competency-Based Card:
+  "Evaluates employees on behaviors and skills rather than numbers. Examples:
+   'Communication: Level 3 — Clearly articulates ideas to non-technical audiences'.
+   Uses BARS (Behaviorally Anchored Rating Scales) or a 5-point proficiency scale.
+   Best for: healthcare, customer service, HR-heavy organizations."
+
+Balanced Scorecard Card:
+  "Measures performance across four perspectives simultaneously: Financial, Customer,
+   Internal Process, and Learning & Growth. Prevents over-focus on financial metrics
+   alone. Each perspective gets a weight (e.g., Financial 40%, Customer 30%).
+   Best for: BFSI, large enterprises, regulated industries."
+
+Hybrid Card (Recommended badge):
+  "Mix any of the above frameworks in one system. Most organizations use a hybrid:
+   e.g., 70% KPI-based goals + 30% competency ratings. The system handles the
+   blended final score automatically. Recommended for: mid-sized organizations
+   that want both quantitative targets and behavioral evaluation."
+```
+
+#### STEP 4 — Cascading Mode
+```
+Section Header — "How Should Targets Flow Through Your Organization?"
+  "Cascading is the process of connecting individual employee targets to company-level
+   goals. It ensures that everyone's work is traceable back to the organization's
+   strategy. Choose how targets will be initiated and linked in this system."
+
+Top-Down Card:
+  "The most common approach. The CEO or leadership team sets company targets first.
+   Managers then break those down into team targets. Employees receive their targets
+   from managers. No one can set targets until the level above them has finalized
+   theirs. Ensures perfect strategic alignment but can feel top-heavy.
+   Example: Company targets ₹100 Cr revenue → Sales VP targets ₹60 Cr → 
+   Regional Manager targets ₹20 Cr → each rep commits to ₹5 Cr."
+
+Bottom-Up Card:
+  "Employees propose their own targets from day one. Managers review, link, and
+   approve these proposals. Leadership sees what the team has collectively committed
+   to. Promotes ownership and morale but requires managers to actively reconcile
+   upward commitments. Best for mature teams or innovation-heavy roles."
+
+Bidirectional Card (Recommended):
+  "Both happen simultaneously. Leadership sets strategic direction (top-down track)
+   while employees also propose targets (bottom-up track). The manager's job is
+   to reconcile both: push down the strategic targets AND link/approve the bottom-up
+   proposals. The system enforces that all approved targets are linked before the
+   cycle goes active. Best balance of alignment and ownership."
+```
+
+#### STEP 5 — Rating Scale
+```
+Section Header — "How Will You Score Performance?"
+  "The rating scale determines how a manager expresses how well an employee
+   performed against their targets. Choose the scale that matches your existing
+   culture or HR policy."
+
+5-Point Scale:
+  "The most widely used scale. Each level has a label and a numeric value (1-5).
+   Default labels: Poor (1), Below Expectation (2), Meets Expectation (3),
+   Exceeds Expectation (4), Exceptional (5). You can rename these labels in
+   Step 7 (Terminology). The weighted average of all ratings becomes the
+   employee's final score."
+
+3-Point Scale:
+  "Simpler scale for organizations that find 5-point scales create forced
+   differentiation. Labels: Below (1), Meets (2), Above (3). Reduces rating
+   bias and is faster for managers to complete."
+
+Percentage Achievement:
+  "Score is derived directly from how much of the target the employee achieved.
+   100% = met target. 120% = exceeded by 20%. 80% = fell short. No manager
+   subjectivity — the number speaks for itself. Common in sales organizations."
+
+BARS (Behaviorally Anchored):
+  "Each rating level is defined by a specific observable behavior, not just a label.
+   Example for 'Communication' at Level 3: 'Explains technical concepts to
+   non-technical stakeholders without jargon; presents data clearly in meetings.'
+   Reduces subjectivity dramatically. More setup effort but highest consistency."
+
+Custom Labels:
+  "Define your own scale labels and numeric values. Useful if your HR policy
+   already uses specific terms (e.g., 'Platinum / Gold / Silver / Bronze')
+   or if you need a 10-point scale."
+
+"For Goals vs. Competency" note:
+  "In Hybrid frameworks, you can use different scales for goals (e.g., Percentage)
+   and competencies (e.g., BARS). The system handles the blended final score."
+```
+
+#### STEP 6 — Weightage Split
+```
+Section Header — "How Much Should Goals vs. Competencies Count?"
+  "When your framework includes both quantitative goals (KPIs, OKRs) and qualitative
+   competency ratings, you need to decide their relative importance in the final score.
+   This percentage applies to every employee's final performance score calculation."
+
+Goals Weight Slider:
+  "The percentage of the final score that comes from how well the employee met their
+   measurable targets (KPIs, OKRs, Goals). A higher weight here means performance
+   is driven primarily by hitting numbers. Typical range: 50-80%."
+
+Competency Weight Slider:
+  "The percentage of the final score that comes from behavioral and skill ratings.
+   A higher weight here means HOW an employee works matters as much as WHAT they
+   deliver. Typical range: 20-50%."
+
+Sum = 100% note:
+  "These two percentages must always add up to 100%. The slider enforces this
+   automatically. Example: Goals 70% + Competency 30% = 100% final score."
+
+OKR variant — Objectives vs Key Results weighting:
+  "For OKR frameworks: Objectives are qualitative (rated by manager), Key Results
+   are measurable. You can weight them differently — e.g., KRs 80% (what you
+   delivered) + Objectives 20% (the quality of the goal itself)."
+
+BSC variant — Four-quadrant weight:
+  "For Balanced Scorecard: Assign a percentage to each of the four perspectives.
+   Ensure all four sum to 100%. Example: Financial 40% + Customer 30% +
+   Internal Process 20% + Learning 10%."
+```
+
+#### STEP 7 — Terminology
+```
+Section Header — "Customize the Language of Your System"
+  "Different organizations use different words for the same concepts. Here you can
+   rename any system term to match your company's existing vocabulary. All employees
+   will see your custom labels everywhere in the system — forms, reports, emails."
+
+KRA field:
+  "Key Result Area — a broad domain of responsibility. If your company calls these
+   'Focus Areas', 'Pillars', or 'Accountabilities', rename it here."
+
+KPI field:
+  "Key Performance Indicator — a specific measurable metric. Also called 'Metric',
+   'Success Measure', or 'Indicator' in some organizations."
+
+Objective field:
+  "Used in OKR frameworks. The inspiring qualitative direction. Also called
+   'Strategic Priority', 'Company Direction', or 'North Star'."
+
+Key Result field:
+  "Used in OKR frameworks. The measurable proof that the Objective was achieved.
+   Also called 'Measurable Outcome', 'Success Metric', or 'Milestone'."
+
+Goal field:
+  "A plain individual target. NGOs often call these 'Programme Targets'. Sales
+   organizations may call them 'Quotas'. Education calls them 'Learning Outcomes'."
+
+Competency field:
+  "A behavioral skill or capability. Also called 'Behavioral Indicator', 'Soft Skill',
+   or 'Capability' depending on your HR system."
+
+Weight field:
+  "The importance percentage of a target in the employee's total scorecard.
+   Some organizations call this 'Priority (%)', 'Importance', or 'Allocation'."
+
+Performance Band field:
+  "The label assigned to a final score range. NGOs use 'Impact Band'. Some orgs
+   use 'Rating Category'. The default bands are Exceptional / Exceeds / Meets /
+   Below / Poor — rename them to match your HR policy."
+```
+
+#### STEP 8 — Grades / Levels
+```
+Section Header — "Define Your Organization's Job Levels"
+  "Grades represent seniority levels in your organization (e.g., L1 = Junior,
+   L5 = Director). The system uses grades to determine who can approve whose
+   targets and to filter the performance library by applicable grade."
+
+Grade Code field:
+  "A short alphanumeric code for the grade. Examples: L1, M2, VP, IC3, Band-A.
+   Keep it short — it appears in org tree views and approval chains."
+
+Grade Label field:
+  "The full human-readable title for this grade. Examples: 'Junior Developer',
+   'Senior Manager', 'Vice President', 'Individual Contributor Level 3'."
+
+Level (number) field:
+  "A numeric ranking where 1 = most junior and higher numbers = more senior.
+   Used by the system to enforce that higher-level employees set targets first
+   in top-down cascade. Two grades can share the same level number (peers)."
+
+Can Manage toggle:
+  "Mark 'Yes' if employees at this grade can have direct reportees. If 'No',
+   employees at this grade are individual contributors with no team to manage.
+   This controls which approval workflows are available to them."
+
+Reorder note:
+  "Drag rows to set the display order in org tree views. This does not affect
+   the Level number — only visual presentation."
+```
+
+#### STEP 9 — Departments
+```
+Section Header — "Build Your Organization Structure"
+  "Departments determine which team an employee belongs to and how performance
+   data is grouped in reports (e.g., 'Engineering vs. Sales completion rate').
+   Sub-departments allow you to model divisions, regions, or functions within
+   a department."
+
+Add Department button:
+  "Click to add a top-level department (e.g., Engineering, Sales, Operations).
+   The company name is always the root node."
+
+Add Sub-Department:
+  "Click the + next to any department to add a child department under it.
+   Example: under 'Sales', add 'Inside Sales' and 'Field Sales'."
+
+Drag to reorder:
+  "Drag any department node to change its display order. This affects how
+   departments appear in dropdown lists and reports — it does not affect
+   the actual reporting structure (that comes from employees' 'Reports To' field)."
+
+Department code field (optional):
+  "A short code for the department used in reports and exports. Example:
+   'ENG', 'SAL', 'OPS'. Leave blank if not used in your organization."
+```
+
+#### STEP 10 — Employees
+```
+Section Header — "Add Your Team"
+  "Employee records drive everything: cascade chains, approval routing, target
+   assignment, and reporting. The 'Reports To' field is the single most important
+   setting — it determines who approves whose targets and how goals cascade."
+
+Manual Entry table:
+  "Add employees one at a time. Best for small teams (under 20 people)."
+
+Employee Code field:
+  "Your HR system's unique employee ID (e.g., EMP001, HR-045). Optional but
+   useful for cross-referencing with your payroll or HRMS. Must be unique within
+   the organization."
+
+Reports To field:
+  "Select the employee's direct manager. This field drives the entire cascade
+   chain. If set incorrectly, targets will flow to the wrong approver. For the
+   CEO / top-level person, leave this blank."
+
+CSV Upload button:
+  "Upload a CSV file with multiple employees at once. Download the template first —
+   it shows the required columns and an example row. The system validates each row
+   and shows errors before importing (e.g., missing email, unknown department name)."
+
+Org Tree Preview:
+  "After uploading, review the org tree to verify the reporting structure looks
+   correct. Incorrect 'Reports To' assignments are the most common data error —
+   catch them here before the cycle starts."
+```
+
+#### STEP 11 — Create First Review Cycle
+```
+Section Header — "Set Up Your First Performance Cycle"
+  "A Review Cycle is the time period during which performance targets are set,
+   tracked, and evaluated. Most organizations run one annual cycle, though
+   quarterly check-ins are becoming common."
+
+Cycle Name field:
+  "A descriptive name for this cycle. Default suggestion: 'FY 2025-26 Annual'.
+   This name appears in all employee dashboards, emails, and reports."
+
+Cycle Type dropdown:
+  "How often this cycle repeats. Annual = once per financial year. Half-Yearly =
+   two appraisal rounds per year. Quarterly = four rounds. Monthly = rolling
+   monthly targets (common in sales). Custom = you define the period dates."
+
+Period Start / End dates:
+  "The actual performance period — the months during which employees are working
+   toward their targets. For an Indian FY, this is typically April 1 to March 31."
+
+Goal-Setting Window (Open / Close dates):
+  "The window during which employees can enter and submit their targets. Opens
+   before or at the period start. Close date is the deadline — after this, no
+   new targets can be added."
+
+Review Window (Open / Close dates):
+  "The window during which self-appraisals and manager ratings are entered.
+   Opens after the performance period ends. Employees first rate themselves,
+   then managers review and submit their ratings."
+
+Cascade Mode Override:
+  "By default, this cycle uses the organization's cascade mode (set in Step 4).
+   Override here if this specific cycle should work differently — e.g., your
+   normal mode is bidirectional but this first cycle should be top-down for
+   simplicity."
+
+Launch Cycle button:
+  "Creates the cycle in 'goal_setting' status, completes the wizard, and takes
+   you to the main dashboard. Employees can immediately begin entering targets."
+```
+
+---
+
+### 19.3 Help Content — Dashboard
+
+#### Employee Dashboard
+```
+Page Header — "Your Dashboard"
+  "This is your personal performance home. It shows your progress in the current
+   active cycle — how many targets you've set, their combined weight, and your
+   preliminary score (once ratings are complete)."
+
+My Targets Summary card:
+  "A quick count of your targets in this cycle: how many are approved, submitted,
+   in draft, or rejected. All targets must be approved before the review phase begins."
+
+Weight Usage meter:
+  "Shows what percentage of your 100% weight allocation you've used across all your
+   targets. It must reach exactly 100% before you can submit. Each target carries a
+   weight — the system ensures they always add up to 100%."
+
+Score Gauge (post-review):
+  "Your weighted performance score for this cycle, calculated after your manager
+   completes ratings. Formula: weighted average of goal ratings × goals% + weighted
+   average of competency ratings × competency%. Appears after manager rates you."
+
+Performance Band badge:
+  "The qualitative label corresponding to your score range. Defined by HR during
+   setup. Example: score 4.2 out of 5 → 'Exceeds Expectation'. The band determines
+   increment and promotion eligibility in most organizations."
+
+Cycle Status stepper:
+  "Shows which phase the current cycle is in: Goal Setting → Active → Review →
+   Calibration → Closed. You can only take actions relevant to the current phase.
+   During 'Goal Setting': add/submit targets. During 'Review': self-rate your targets."
+```
+
+#### Manager Dashboard
+```
+Team Completion ring:
+  "Percentage of your direct reportees who have had their targets fully approved.
+   A reportee is 'complete' when all their targets are in Approved status and
+   weights sum to 100%. HR tracks this to ensure goal-setting is on schedule."
+
+Pending Approvals count:
+  "Number of targets submitted by your team that are waiting for your approval.
+   Click to go directly to the approval queue. You cannot close the goal-setting
+   phase until all your reportees' targets are approved."
+
+Coverage Meter:
+  "Shows whether your team's collective planned targets add up to cover what you
+   yourself have committed to. Example: You committed ₹5 Cr revenue. Your 3 reps
+   have committed ₹2 Cr + ₹2 Cr + ₹0.5 Cr = ₹4.5 Cr = 90% coverage. The gap
+   must be assigned before the cycle goes active."
+
+Unlinked Proposals count (bidirectional/bottom-up):
+  "Number of bottom-up target proposals from your team that you haven't yet linked
+   to one of your own targets. Unlinked proposals cannot be approved. The cycle
+   cannot go active until all proposals are linked."
+```
+
+#### HR Dashboard
+```
+Org-Wide Completion card:
+  "Percentage of all employees across the organization who have approved targets.
+   Target: 100% before goal-setting window closes. Drill down by department to
+   identify which managers are lagging."
+
+Cascade Health card:
+  "Measures how well individual targets are connected to company strategy. A target
+   is 'linked' if it has a parent_target_id connecting it up the hierarchy.
+   Green: >95% linked. Yellow: 80-95%. Red: <80%."
+
+Over-Plan Targets count:
+  "Number of targets where an employee has committed to more than their manager's
+   target. Not a problem by itself — over-planning shows ambition. But requires
+   manager approval and should be monitored to prevent aggregate over-commitment."
+
+Unlinked Proposals count:
+  "In bottom-up or bidirectional cycles: number of employee-proposed targets that
+   managers haven't yet linked to their own targets. Blocks cycle advancement."
+```
+
+---
+
+### 19.4 Help Content — Target Entry (My Targets Page)
+
+#### Page Layout
+```
+Page Header — "My Targets"
+  "This is where you define what you will deliver this cycle. Add targets for each
+   area of your work, set their weight (importance), and submit for your manager's
+   approval. The right panel shows your manager's targets so you can align yours."
+
+Left Panel — "Your Targets":
+  "Your list of performance targets for this cycle. Each target must have a title,
+   planned value, unit, and weight. All weights must add up to exactly 100% before
+   you can submit."
+
+Right Panel — "Your Hierarchy Context":
+  "Shows your manager's (and their manager's) approved targets for this cycle. Use
+   this panel to understand what your team is trying to achieve and to select the
+   correct parent target when you add a new target. Click any target here to link
+   your new target to it."
+```
+
+#### Target Form Fields
+```
+Field: Framework Type dropdown
+  "Select the type of target you're adding. Options depend on your organization's
+   framework. In a KRA/KPI framework: choose KRA for a broad responsibility area
+   or KPI for a specific metric under that KRA. In OKR: choose Objective or Key
+   Result. In Hybrid: you can mix types."
+
+Field: Title
+  "A clear, action-oriented description of what you will achieve. Good examples:
+   'Deliver 4 product features with < 1% post-release bugs', 'Achieve 90% customer
+   satisfaction score', 'Complete AWS Solutions Architect certification'. Avoid vague
+   titles like 'Do my best' or 'Support team'."
+
+Field: Description (optional)
+  "Additional context about this target — methodology, key assumptions, or
+   dependencies. Managers read this during approval. For bottom-up proposals,
+   explain how this target contributes to the team's goals."
+
+Field: Parent Target
+  "Link your target to one of your manager's targets. This is how the cascade chain
+   is built — your target's outcome contributes to your manager's target. Required
+   for top-down targets before submission. Click a target in the right panel to
+   auto-fill this field."
+
+Field: Unit
+  "The unit of measurement for your planned and actual values. Examples: % (percentage),
+   INR (Indian Rupees), count (number of items), days, score (e.g., NPS or CSAT),
+   text (for qualitative targets with no numeric measure)."
+
+Field: Measurement Type
+  "How success is measured:
+   Higher is Better — more is good (e.g., revenue, customer count, NPS score)
+   Lower is Better — less is good (e.g., defect rate, customer complaints, downtime)
+   Target Exact — hitting a precise number is the goal (e.g., specific headcount)
+   Qualitative — no numeric measure; manager rates the quality of the outcome"
+
+Field: Planned Target
+  "The number you commit to achieve by the end of the cycle. This is your promise.
+   If your planned value is higher than your manager's planned target for the linked
+   parent, the system will flag it as 'over-planned' and ask for a justification.
+   Must be greater than zero for numeric targets."
+
+Field: Stretch Target (optional)
+  "An aspirational target above your planned commitment. If you exceed your planned
+   target but fall short of stretch, the dashboard shows 'On the way to stretch'.
+   Stretch targets are not used in score calculation — only planned vs. actual matters.
+   Must be higher than your planned target."
+
+Field: Weight (%)
+  "How important is this target relative to your other targets? The weights of all
+   your targets must add up to exactly 100%. A target with 30% weight has three
+   times more impact on your final score than a 10% target. Minimum weight is
+   typically 5%; no single target should exceed 50% (configurable by HR)."
+
+Field: Over-Plan Justification (appears automatically)
+  "Your planned target exceeds your manager's planned target for the linked parent.
+   This is allowed — it means you're committing to more than your share. But you
+   must explain why: additional capacity, a new initiative, a stretch goal you've
+   taken on. Managers will see this note during approval."
+```
+
+#### Weight Meter
+```
+WeightMeter gauge:
+  "The circular gauge shows how much of your 100% weight allocation you've used
+   across all your targets. As you add targets and set their weights, this updates
+   live. You cannot submit until the gauge reaches exactly 100%. If it shows 85%,
+   you have 15% unallocated — distribute it among your targets."
+```
+
+#### Target Status Badges
+```
+DRAFT:
+  "You've saved this target but haven't submitted it yet. Only you can see and
+   edit it. Your manager cannot approve it until you submit."
+
+SUBMITTED:
+  "You've submitted this target to your manager for approval. You can no longer
+   edit it unless your manager rejects it back to you. Your manager will receive
+   a notification."
+
+PROPOSED (Bottom-Up):
+  "You've proposed this target. Your manager needs to review it, link it to one
+   of their own targets, and then approve or reject it. Status changes to LINKED
+   once the manager connects it to a parent target."
+
+LINKED (Bottom-Up):
+  "Your manager has linked your proposal to their target. It's now pending approval.
+   This is a positive sign — your manager has acknowledged the proposal is relevant."
+
+APPROVED:
+  "Your manager approved this target. It is now locked — no further changes during
+   this cycle unless HR unlocks it. You'll rate yourself against this target during
+   the review phase."
+
+REJECTED:
+  "Your manager rejected this target with a note explaining why. Review the rejection
+   note, revise the target, and resubmit. Common reasons: unclear measurement,
+   not aligned to team goals, or duplicate of another target."
+
+ACTIVE:
+  "The cycle has moved to the active (performance) phase. Targets are frozen —
+   no edits allowed. You are now working toward these targets."
+
+LOCKED:
+  "The review phase has opened. You can now enter actual values and self-ratings,
+   but you cannot change the target itself."
+```
+
+---
+
+### 19.5 Help Content — Manager Approval Workflow
+
+#### Team Targets Page
+```
+Page Header — "Team Targets"
+  "Review and approve your team's performance targets. You must approve all submitted
+   targets before the goal-setting phase can close. You can also reject targets with
+   feedback for the employee to revise."
+
+Filter Tabs:
+  "All: See every target from all your direct reportees.
+   Submitted: Targets waiting for your approval — action required here.
+   Proposed: Bottom-up proposals that need to be linked to your targets first.
+   Approved: Already approved targets — read-only reference.
+   Rejected: Targets you've sent back; employee may resubmit after revision."
+
+Employee grouping:
+  "Targets are grouped by employee. The header row for each employee shows their
+   completion percentage (how much of their 100% weight is in approved targets).
+   An employee is fully complete when 100% weight is approved."
+```
+
+#### Approval Panel (Slide-In)
+```
+Panel Header:
+  "Review this target before approving. Check that it is specific, measurable,
+   aligned to your own targets, and realistic. An approved target becomes a binding
+   commitment for the employee."
+
+Parent Target Context section:
+  "Shows which of your targets this employee's target is linked to. Verify the
+   linkage makes sense — the employee's planned target should contribute to yours.
+   If the wrong parent is selected, reject and ask the employee to re-link."
+
+Over-Plan section (appears when is_over_planned = 1):
+  "This employee is committing to MORE than their proportional share of your target.
+   Their planned value is {X}% above yours. Read their justification note carefully.
+   If you agree the extra effort is realistic, tick the approval checkbox. If you
+   doubt their capacity, reject with feedback."
+
+Over-Plan Approval checkbox:
+  "By ticking this, you explicitly acknowledge and approve the employee's over-
+   commitment. This is tracked in the audit log. Approving without reading the
+   justification is a common mistake — it can lead to inflated expectations."
+
+Link to Parent button (Bottom-Up):
+  "This is a bottom-up proposal. Before you can approve it, you must link it to
+   one of your own targets. Select the parent from the dropdown. This establishes
+   the cascade chain and lets the system check coverage."
+
+Approve button:
+  "Approve this target. The employee is notified. The target moves to APPROVED
+   status and counts toward their 100% weight total. You must have your own
+   approved targets before you can approve your team's."
+
+Reject button + note field:
+  "Reject this target and send it back to the employee for revision. You must
+   enter a reason — the employee will see it. Be specific: 'Planned target of 150
+   units seems unrealistic given Q3 capacity constraints. Please revise to 120 or
+   provide more justification.'"
+```
+
+#### Coverage Card
+```
+Coverage Meter:
+  "Shows the total planned value your team has committed, compared to your own
+   planned target. Example: you committed ₹10 Cr; your team collectively committed
+   ₹9.5 Cr = 95% coverage. The gap (₹0.5 Cr) needs to be assigned to someone or
+   explained to your manager. 100%+ coverage is fine — it means your team is
+   over-committed (which may trigger an org-level over-plan warning)."
+```
+
+---
+
+### 19.6 Help Content — Validation Summary
+
+```
+Validation Summary modal:
+  "Before submitting all your targets, the system checks 13 validation rules.
+   Errors (red) block submission — you must fix them first. Warnings (yellow)
+   can be acknowledged and submitted through. Green rows are passing checks."
+
+Error V1 — Weight Sum:
+  "All your active targets must add up to exactly 100% in weight. Check the weight
+   field on each target. Use the Weight Meter to track the running total."
+
+Error V4 — Parent Linkage Required:
+  "Every target must be linked to a parent target in the hierarchy. Open the target,
+   click the hierarchy panel, and select a parent target."
+
+Error V5 — Manager Targets Not Approved:
+  "Your manager hasn't had their own targets approved yet. In top-down cascade,
+   you can't submit until the level above you has finalized theirs. Contact your
+   manager or wait for the notification."
+
+Error V6 — Over-Plan Note Missing:
+  "One or more of your targets exceeds your manager's planned value. This is allowed
+   but requires a written justification. Open the target and fill in the
+   'Over-Plan Justification' field."
+
+Error V11 — Mandatory Target Missing:
+  "HR has marked certain KRAs/KPIs as mandatory for your grade. These must appear
+   in your targets. Click 'Add This Target' to quickly add it from the library."
+
+Warning V12 — Aggregate Over-Plan:
+  "The combined planned values of your team exceed the company target by more than
+   the allowed buffer (typically 15%). This is visible to HR. Not a blocker,
+   but managers may be asked to reconcile."
+```
+
+---
+
+### 19.7 Help Content — Appraisal Phase
+
+#### Self-Appraisal Page
+```
+Page Header — "Self-Appraisal"
+  "The review phase is your chance to record what you actually achieved and rate
+   your own performance. Be honest — inflated self-ratings that don't match actuals
+   create credibility issues in the manager review. Your manager sees both your
+   actual value and your self-rating."
+
+Field: Actual Achievement value
+  "Enter the actual number you achieved by the end of the cycle. Examples:
+   If your target was '₹2 Cr revenue' and you delivered ₹2.3 Cr, enter 2.3.
+   For qualitative targets (unit = 'text'), leave this blank and use your comment."
+
+Field: Self-Rating
+  "Rate your own performance on this target using the organization's scale.
+   Be realistic: 'Meets Expectation' means you delivered what was committed.
+   'Exceeds Expectation' should be backed by the actual value exceeding your
+   planned target."
+
+Field: Comments
+  "Explain the context behind your numbers. What went well? What blocked you?
+   For over-achievements: what did you do differently? For shortfalls: external
+   factors, scope changes, or learnings. Managers weigh comments heavily."
+```
+
+#### Manager Appraisal Page
+```
+Page Header — "Rate Your Team"
+  "Review each employee's self-assessment and enter your ratings. Your rating
+   is the final rating (unless changed during calibration). The system computes
+   a weighted final score automatically based on all rated targets."
+
+Employee Self-Rating display:
+  "What the employee rated themselves. Use this as a starting point — you may
+   agree, rate higher, or rate lower based on your direct observation. If you
+   differ significantly, a comment explaining why is best practice."
+
+Field: Manager Rating
+  "Your rating for this specific target. This becomes the 'final_rating' used
+   in score computation. If the employee over-achieved vs. their plan, consider
+   rating them higher than 'Meets Expectation' even if their self-rating was
+   conservative."
+
+Field: Manager Comment
+  "Your qualitative feedback for this target. Be specific and actionable:
+   'Delivered the integration 2 weeks ahead of schedule, enabling the sales
+   team to demo to 3 enterprise clients. Excellent initiative.' Avoid generic
+   comments like 'Good work'."
+```
+
+#### Performance Summary Card
+```
+Score Gauge:
+  "The final weighted performance score for this employee/yourself this cycle.
+   Computed as: (weighted avg of goal ratings × goals%) + (weighted avg of
+   competency ratings × competency%). Range matches your rating scale (e.g., 1-5)."
+
+Performance Band badge:
+  "The qualitative category corresponding to the score. Determined by the
+   band ranges HR configured during setup. Bands typically determine salary
+   increment eligibility, promotion consideration, and PIP status."
+
+Goals Score vs. Competency Score breakdown:
+  "Shows the two components of the final score separately. Useful to see if
+   an employee excels at delivering numbers (goals) but needs to develop
+   behaviors (competency), or vice versa."
+
+PIP Indicator:
+  "PIP = Performance Improvement Plan. Automatically flagged when the final
+   performance band falls in the lowest category (e.g., 'Poor' or 'Needs
+   Improvement'). HR is notified; the employee will be enrolled in a PIP
+   process per your HR policy."
+```
+
+---
+
+### 19.8 Help Content — HR Reports
+
+```
+Completion Rate Report:
+  "Percentage of employees who have fully approved targets (weight = 100% approved).
+   Grouped by department and manager. Use this to identify which managers are
+   behind on the goal-setting deadline and follow up with them."
+
+Rating Distribution Chart:
+  "Bar chart showing how manager ratings are distributed across the organization
+   (or by department). A healthy distribution follows a bell curve. If everyone
+   is rated 'Exceptional', ratings may be inflated. If a manager has everyone at
+   'Below Expectation', investigate potential bias."
+
+Performance Band Distribution chart:
+  "Pie chart showing what percentage of employees fall into each performance band
+   for this cycle. Used during calibration to ensure the distribution matches
+   HR policy (e.g., 'No more than 15% can be Exceptional')."
+
+Over-Plan Report table:
+  "Every target where is_over_planned = 1, showing the employee, the target,
+   the over-plan ratio, the justification note, and whether the manager approved
+   the over-commitment. Use this to spot patterns (e.g., a department consistently
+   over-commits)."
+
+Cascade Health Report:
+  "By manager: shows what percentage of their team's targets are properly linked
+   to parent targets, and the coverage gap (how much of the manager's committed
+   target is covered by their team's commitments). Green = well-linked. Red = gaps."
+
+Calibration View:
+  "HR can adjust an employee's final score after the manager rating phase.
+   Used when there is evidence of rating bias, cross-department inconsistency,
+   or extenuating circumstances. Every calibration requires a written reason
+   and is logged in the audit trail."
+```
+
+---
+
+### 19.9 Implementation Notes for InfoIcon
+
+```
+Placement rules:
+  1. Immediately after the label text, inline: <label>Field Name <InfoIcon .../></label>
+  2. For section headers: after the heading text, slightly smaller size
+  3. For card headers: top-right corner of the card
+  4. For table column headers: after the header text
+  5. For buttons: do NOT put ⓘ on action buttons; add a tooltip on hover instead
+
+Content writing rules:
+  1. First sentence: what is this field? (the WHAT)
+  2. Second sentence: why does it matter / what business rule applies? (the WHY)
+  3. Third sentence (optional): example or how to fill it correctly (the HOW)
+  4. Keep total content under 80 words per tooltip
+  5. Use plain language — no jargon unless explaining the jargon itself
+
+Don't add InfoIcon to:
+  - Navigation menu items (too cluttered)
+  - Obvious UI chrome (save button, cancel button, search box)
+  - Table rows of data (only column headers)
+
+Access helpContent.js centrally:
+  import { HELP } from '@/utils/helpContent'
+  <InfoIcon title="Planned Target" content={HELP.target.planned} />
+  
+  This ensures all help text is in one place, easy to update, and consistent.
+```
+
+---
+
 *PMS POC Specifications — Version 2.0 — Complete and ready for Claude Code*
 *Build sequence: Prompts 1 → 10, one at a time. Test each before proceeding.*

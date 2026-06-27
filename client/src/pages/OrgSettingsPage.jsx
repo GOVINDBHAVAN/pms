@@ -1,6 +1,9 @@
 import { useEffect, useState, useCallback } from 'react';
 import AppLayout from '../components/layout/AppLayout';
 import { getOrgSettings, updateOrgSettings } from '../api/orgApi';
+import InfoIcon from '../components/shared/InfoIcon';
+import PerformanceTypeModal from '../components/shared/PerformanceTypeModal';
+import { HELP } from '../utils/helpContent';
 
 const FRAMEWORKS = [
   { value: 'okr',               label: 'OKR (Objectives & Key Results)' },
@@ -159,10 +162,19 @@ export default function OrgSettingsPage() {
 
 /* ── General Tab ─────────────────────────────────────────────────────────── */
 function GeneralTab({ org, settings, onChange }) {
+  const [typeModal, setTypeModal] = useState(null); // key of HELP.performanceTypes
+
   return (
     <div className="space-y-6">
+      {typeModal && (
+        <PerformanceTypeModal
+          info={HELP.performanceTypes[typeModal]}
+          onClose={() => setTypeModal(null)}
+        />
+      )}
+
       <div className="grid grid-cols-2 gap-6">
-        <Field label="Framework">
+        <Field label="Framework" info={HELP.orgSettings.framework}>
           <select
             className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
             value={settings.framework || ''}
@@ -172,7 +184,7 @@ function GeneralTab({ org, settings, onChange }) {
           </select>
         </Field>
 
-        <Field label="Cascade Mode">
+        <Field label="Cascade Mode" info={HELP.orgSettings.cascadeMode}>
           <select
             className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
             value={settings.cascade_mode || ''}
@@ -183,31 +195,43 @@ function GeneralTab({ org, settings, onChange }) {
         </Field>
       </div>
 
-      <Field label="Active Performance Types" hint="Select which types employees can use when setting targets">
+      <Field label="Active Performance Types" hint="Select which types employees can use when setting targets. Click ⓘ to learn what each type means." info={HELP.orgSettings.activeTypes}>
         <div className="grid grid-cols-2 gap-2 mt-1">
           {ALL_ACTIVE_TYPES.map(t => (
-            <label key={t.value} className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer">
-              <input
-                type="checkbox"
-                className="rounded"
-                checked={(settings.active_types || []).includes(t.value)}
-                onChange={e => {
-                  const cur = settings.active_types || [];
-                  onChange({
-                    active_types: e.target.checked
-                      ? [...cur, t.value]
-                      : cur.filter(v => v !== t.value),
-                  });
-                }}
-              />
-              {t.label}
-            </label>
+            <div key={t.value} className="flex items-center gap-1">
+              <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer flex-1">
+                <input
+                  type="checkbox"
+                  className="rounded"
+                  checked={(settings.active_types || []).includes(t.value)}
+                  onChange={e => {
+                    const cur = settings.active_types || [];
+                    onChange({
+                      active_types: e.target.checked
+                        ? [...cur, t.value]
+                        : cur.filter(v => v !== t.value),
+                    });
+                  }}
+                />
+                {t.label}
+              </label>
+              {HELP.performanceTypes[t.value] && (
+                <button
+                  type="button"
+                  onClick={() => setTypeModal(t.value)}
+                  title={`Learn about ${t.label}`}
+                  className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-slate-200 text-slate-500 hover:bg-indigo-100 hover:text-indigo-600 text-[10px] font-bold leading-none transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-400 flex-shrink-0"
+                >
+                  i
+                </button>
+              )}
+            </div>
           ))}
         </div>
       </Field>
 
       {(settings.framework === 'balanced_scorecard' || settings.active_types?.includes('bsc_metric')) && (
-        <Field label="BSC Perspectives" hint="Comma-separated list of BSC perspective names">
+        <Field label="BSC Perspectives" hint="Comma-separated list of BSC perspective names" info={HELP.orgSettings.bscPerspectives}>
           <div className="space-y-2">
             {(settings.bsc_perspectives || ['Financial', 'Customer', 'Internal Process', 'Learning & Growth']).map((p, i) => (
               <div key={i} className="flex gap-2">
@@ -239,10 +263,13 @@ function GeneralTab({ org, settings, onChange }) {
         </Field>
       )}
 
-      <Field label="Cycle Defaults">
+      <Field label="Cycle Defaults" info="Default values pre-filled when HR creates a new review cycle. These save time but can be overridden per cycle.">
         <div className="grid grid-cols-3 gap-4">
           <div>
-            <label className="text-xs text-slate-500 mb-1 block">Default Type</label>
+            <label className="flex items-center gap-0.5 text-xs text-slate-500 mb-1">
+              Default Type
+              <InfoIcon title="Default Cycle Type" content={HELP.orgSettings.cycleDefaultType} />
+            </label>
             <select
               className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
               value={settings.cycle_defaults?.type || 'annual'}
@@ -254,7 +281,10 @@ function GeneralTab({ org, settings, onChange }) {
             </select>
           </div>
           <div>
-            <label className="text-xs text-slate-500 mb-1 block">Goal-Setting Days</label>
+            <label className="flex items-center gap-0.5 text-xs text-slate-500 mb-1">
+              Goal-Setting Days
+              <InfoIcon title="Goal-Setting Days" content={HELP.orgSettings.goalSettingDays} />
+            </label>
             <input
               type="number" min="1"
               className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
@@ -263,7 +293,10 @@ function GeneralTab({ org, settings, onChange }) {
             />
           </div>
           <div>
-            <label className="text-xs text-slate-500 mb-1 block">Review Days</label>
+            <label className="flex items-center gap-0.5 text-xs text-slate-500 mb-1">
+              Review Days
+              <InfoIcon title="Review Days" content={HELP.orgSettings.reviewDays} />
+            </label>
             <input
               type="number" min="1"
               className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
@@ -291,26 +324,31 @@ function RatingScaleTab({ settings, onChange }) {
         title="Goals / KRA / KPI Rating Scale"
         scale={ratingScale.goals || {}}
         onUpdate={patch => updateScale('goals', patch)}
+        sectionHelp={HELP.ratingScale.goalsScaleSection}
       />
       <div className="border-t border-slate-100 pt-6">
         <RatingScaleSection
           title="Competency Rating Scale"
           scale={ratingScale.competency || {}}
           onUpdate={patch => updateScale('competency', patch)}
+          sectionHelp={HELP.ratingScale.competencyScaleSection}
         />
       </div>
     </div>
   );
 }
 
-function RatingScaleSection({ title, scale, onUpdate }) {
+function RatingScaleSection({ title, scale, onUpdate, sectionHelp }) {
   const labels = scale.labels || [];
   const values = scale.values || [];
 
   return (
     <div className="space-y-4">
-      <h3 className="font-semibold text-slate-800">{title}</h3>
-      <Field label="Scale Type">
+      <h3 className="flex items-center gap-1 font-semibold text-slate-800">
+        {title}
+        {sectionHelp && <InfoIcon title={title} content={sectionHelp} />}
+      </h3>
+      <Field label="Scale Type" info={HELP.ratingScale.scaleType}>
         <select
           className="w-full max-w-xs border border-slate-200 rounded-lg px-3 py-2 text-sm"
           value={scale.type || '5_point'}
@@ -320,7 +358,7 @@ function RatingScaleSection({ title, scale, onUpdate }) {
         </select>
       </Field>
 
-      <Field label="Scale Labels & Values" hint="One row per rating level, from lowest to highest">
+      <Field label="Scale Labels & Values" hint="One row per rating level, from lowest to highest" info={HELP.ratingScale.scaleLabelsValues}>
         <div className="space-y-2 mt-1">
           <div className="grid grid-cols-[1fr_80px_32px] gap-2 text-xs text-slate-400 px-1">
             <span>Label</span><span>Value</span><span></span>
@@ -365,7 +403,7 @@ function RatingScaleSection({ title, scale, onUpdate }) {
       </Field>
 
       {scale.type?.includes('point') && (
-        <Field label="PIP Threshold" hint="Employees scoring at or below this value trigger a PIP flag">
+        <Field label="PIP Threshold" hint="Employees scoring at or below this value trigger a PIP flag" info={HELP.ratingScale.pipThreshold}>
           <input
             type="number" step="0.5" min="0"
             className="border border-slate-200 rounded-lg px-3 py-2 text-sm w-24"
@@ -391,7 +429,10 @@ function WeightageTab({ settings, onChange }) {
   return (
     <div className="space-y-6">
       <div>
-        <h3 className="font-semibold text-slate-800 mb-1">Goals vs Competency Split</h3>
+        <h3 className="flex items-center gap-1 font-semibold text-slate-800 mb-1">
+          Goals vs Competency Split
+          <InfoIcon title="Weightage Split" content={HELP.weightage.split} />
+        </h3>
         <p className="text-sm text-slate-500">
           Determines how much each category contributes to an employee's final performance score.
         </p>
@@ -401,7 +442,10 @@ function WeightageTab({ settings, onChange }) {
         <div className="flex gap-6 items-center">
           <div className="flex-1">
             <div className="flex justify-between text-sm font-medium mb-2">
-              <span className="text-indigo-700">Goals / KRA / KPI</span>
+              <span className="flex items-center gap-1 text-indigo-700">
+                Goals / KRA / KPI
+                <InfoIcon title="Goals Weight" content={HELP.weightage.goalsPercent} />
+              </span>
               <span className="text-indigo-700">{goalsVal}%</span>
             </div>
             <input
@@ -424,7 +468,10 @@ function WeightageTab({ settings, onChange }) {
         <div className="flex gap-6 items-center">
           <div className="flex-1">
             <div className="flex justify-between text-sm font-medium mb-2">
-              <span className="text-purple-700">Competency</span>
+              <span className="flex items-center gap-1 text-purple-700">
+                Competency
+                <InfoIcon title="Competency Weight" content={HELP.weightage.competencyPercent} />
+              </span>
               <span className="text-purple-700">{w.competency_percent ?? 30}%</span>
             </div>
             <div className="w-full h-2 bg-purple-200 rounded-full">
@@ -481,7 +528,10 @@ function TerminologyTab({ settings, onChange }) {
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="font-semibold text-slate-800 mb-1">Custom Terminology</h3>
+        <h3 className="flex items-center gap-1 font-semibold text-slate-800 mb-1">
+          Custom Terminology
+          <InfoIcon title="Custom Terminology" content={HELP.terminology.section} />
+        </h3>
         <p className="text-sm text-slate-500">
           Rename system terms to match your organization's language. Changes apply org-wide.
         </p>
@@ -498,7 +548,14 @@ function TerminologyTab({ settings, onChange }) {
           <tbody className="divide-y divide-slate-100">
             {TERMINOLOGY_KEYS.map(({ key, label }) => (
               <tr key={key} className="hover:bg-slate-50">
-                <td className="px-4 py-3 text-slate-600 font-medium">{label}</td>
+                <td className="px-4 py-3">
+                  <span className="flex items-center gap-1 text-slate-600 font-medium">
+                    {label}
+                    {HELP.terminology[key] && (
+                      <InfoIcon title={label} content={HELP.terminology[key]} />
+                    )}
+                  </span>
+                </td>
                 <td className="px-4 py-3">
                   <input
                     className="w-full border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-400"
@@ -538,7 +595,10 @@ function BandsTab({ settings, onChange }) {
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="font-semibold text-slate-800 mb-1">Performance Bands</h3>
+        <h3 className="flex items-center gap-1 font-semibold text-slate-800 mb-1">
+          Performance Bands
+          <InfoIcon title="Performance Bands" content={HELP.bands.section} />
+        </h3>
         <p className="text-sm text-slate-500">
           Map final scores to performance labels. Ranges should not overlap and collectively cover 0–5 (or 0–100% if using percentage scale).
         </p>
@@ -546,7 +606,11 @@ function BandsTab({ settings, onChange }) {
 
       <div className="space-y-2">
         <div className="grid grid-cols-[2fr_1fr_1fr_80px_32px] gap-3 text-xs text-slate-400 px-1">
-          <span>Band Label</span><span>Min Score</span><span>Max Score</span><span>Color</span><span></span>
+          <span className="flex items-center gap-1">Band Label <InfoIcon title="Band Label" content={HELP.bands.bandLabel} /></span>
+          <span className="flex items-center gap-1">Min Score <InfoIcon title="Min Score" content={HELP.bands.minScore} /></span>
+          <span className="flex items-center gap-1">Max Score <InfoIcon title="Max Score" content={HELP.bands.maxScore} /></span>
+          <span className="flex items-center gap-1">Color <InfoIcon title="Band Color" content={HELP.bands.color} /></span>
+          <span></span>
         </div>
         {bands.map((band, i) => (
           <div key={i} className="grid grid-cols-[2fr_1fr_1fr_80px_32px] gap-3 items-center">
@@ -630,7 +694,7 @@ function TargetRulesTab({ settings, onChange }) {
       </div>
 
       <div className="grid grid-cols-2 gap-6">
-        <Field label="Minimum Target Weight (%)" hint="Warn when a single target has less than this weight">
+        <Field label="Minimum Target Weight (%)" hint="Warn when a single target has less than this weight" info={HELP.targetRules.minWeight}>
           <input
             type="number" min="1" max="100"
             className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
@@ -639,7 +703,7 @@ function TargetRulesTab({ settings, onChange }) {
           />
         </Field>
 
-        <Field label="Maximum Target Weight (%)" hint="Warn when a single target has more than this weight">
+        <Field label="Maximum Target Weight (%)" hint="Warn when a single target has more than this weight" info={HELP.targetRules.maxWeight}>
           <input
             type="number" min="1" max="100"
             className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
@@ -652,15 +716,18 @@ function TargetRulesTab({ settings, onChange }) {
       <div className="border border-slate-200 rounded-xl p-4 space-y-4">
         <h4 className="font-medium text-slate-700">Over-Planning Rules</h4>
 
-        <label className="flex items-center gap-3 cursor-pointer">
+        <label className="flex items-start gap-3 cursor-pointer">
           <input
             type="checkbox"
-            className="rounded"
+            className="rounded mt-0.5"
             checked={rules.overplan_allowed ?? true}
             onChange={e => update({ overplan_allowed: e.target.checked })}
           />
           <div>
-            <div className="text-sm font-medium text-slate-700">Allow Over-Planning</div>
+            <div className="flex items-center gap-1 text-sm font-medium text-slate-700">
+              Allow Over-Planning
+              <InfoIcon title="Allow Over-Planning" content={HELP.targetRules.overplanAllowed} />
+            </div>
             <div className="text-xs text-slate-400">
               Employees can commit to more than their manager's planned target (with justification)
             </div>
@@ -671,6 +738,7 @@ function TargetRulesTab({ settings, onChange }) {
           <Field
             label="Maximum Over-Plan Multiplier"
             hint="E.g. 1.15 means team total can be up to 15% above the manager's target before a warning"
+            info={HELP.targetRules.overplanMultiplier}
           >
             <div className="flex items-center gap-3">
               <input
@@ -690,30 +758,36 @@ function TargetRulesTab({ settings, onChange }) {
       <div className="border border-slate-200 rounded-xl p-4 space-y-3">
         <h4 className="font-medium text-slate-700">Linkage & Proposal Rules</h4>
 
-        <label className="flex items-center gap-3 cursor-pointer">
+        <label className="flex items-start gap-3 cursor-pointer">
           <input
             type="checkbox"
-            className="rounded"
+            className="rounded mt-0.5"
             checked={rules.require_parent_linkage ?? true}
             onChange={e => update({ require_parent_linkage: e.target.checked })}
           />
           <div>
-            <div className="text-sm font-medium text-slate-700">Require Parent Linkage</div>
+            <div className="flex items-center gap-1 text-sm font-medium text-slate-700">
+              Require Parent Linkage
+              <InfoIcon title="Require Parent Linkage" content={HELP.targetRules.requireParentLinkage} />
+            </div>
             <div className="text-xs text-slate-400">
               Every approved target must be linked to a parent target in the hierarchy
             </div>
           </div>
         </label>
 
-        <label className="flex items-center gap-3 cursor-pointer">
+        <label className="flex items-start gap-3 cursor-pointer">
           <input
             type="checkbox"
-            className="rounded"
+            className="rounded mt-0.5"
             checked={rules.allow_self_propose ?? true}
             onChange={e => update({ allow_self_propose: e.target.checked })}
           />
           <div>
-            <div className="text-sm font-medium text-slate-700">Allow Self-Propose (Bottom-Up)</div>
+            <div className="flex items-center gap-1 text-sm font-medium text-slate-700">
+              Allow Self-Propose (Bottom-Up)
+              <InfoIcon title="Allow Self-Propose" content={HELP.targetRules.allowSelfPropose} />
+            </div>
             <div className="text-xs text-slate-400">
               Employees can propose their own targets for manager review
             </div>
@@ -725,10 +799,13 @@ function TargetRulesTab({ settings, onChange }) {
 }
 
 /* ── Helpers ─────────────────────────────────────────────────────────────── */
-function Field({ label, hint, children }) {
+function Field({ label, hint, info, infoTitle, children }) {
   return (
     <div className="space-y-1">
-      <label className="block text-sm font-medium text-slate-700">{label}</label>
+      <label className="flex items-center gap-0.5 text-sm font-medium text-slate-700">
+        {label}
+        {info && <InfoIcon title={infoTitle || label} content={info} />}
+      </label>
       {hint && <p className="text-xs text-slate-400">{hint}</p>}
       {children}
     </div>
