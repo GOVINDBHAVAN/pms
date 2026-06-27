@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "PowerShell(git -C \"d:\\\\Practice\\\\my\\\\pms\" init)",
+      "PowerShell(git -C \"d:\\\\Practice\\\\my\\\\pms\" add specifications.md steps.md)",
+      "PowerShell(git -C \"d:\\\\Practice\\\\my\\\\pms\" status)",
+      "PowerShell(git -C \"d:\\\\Practice\\\\my\\\\pms\" add .gitignore)"
+    ]
+  }
+}
