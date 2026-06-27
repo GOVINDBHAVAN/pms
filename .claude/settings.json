@@ -4,7 +4,12 @@
       "PowerShell(git -C \"d:\\\\Practice\\\\my\\\\pms\" init)",
       "PowerShell(git -C \"d:\\\\Practice\\\\my\\\\pms\" add specifications.md steps.md)",
       "PowerShell(git -C \"d:\\\\Practice\\\\my\\\\pms\" status)",
-      "PowerShell(git -C \"d:\\\\Practice\\\\my\\\\pms\" add .gitignore)"
+      "PowerShell(git -C \"d:\\\\Practice\\\\my\\\\pms\" add .gitignore)",
+      "PowerShell(git -C \"d:\\\\Practice\\\\my\\\\pms\" add client/ server/ package.json)",
+      "PowerShell(git -C \"d:\\\\Practice\\\\my\\\\pms\" add dev.bat dev.ps1)",
+      "PowerShell(git -C \"d:\\\\Practice\\\\my\\\\pms\" add server/package.json server/index.js client/package.json)",
+      "Read(//c/Users/govin/AppData/Local/npm-cache/_logs/**)",
+      "PowerShell(git -C \"d:\\\\Practice\\\\my\\\\pms\" add server/package.json specifications.md)"
     ]
   }
 }
