@@ -24,28 +24,61 @@
 
 ## TODOs
 
+### General software points
 - Software product tag line 'PMS software for stupid HR'
 - Prepare this software project memory file for the business rules we have written so far and in future as well that Claude Code can refer them whenever developing a new feature or modify existings. It's very important that we develop a correct system based on industry accepted norms.
+- Add 9-box support
+
+### Cycles
+
+- In 'Org settings' Do we need 'Cycle Defaults' or it will come in the 'Cycles' section/configuration?
+- Review cycle can be defined by the client such that daily, weekly, bi-weekly, monthly, quarterly, semin-annually, annually. Assessment of those reflect in the top and HR management dashboard, along with consolidated and cummulative results of the entire year data.
+
+### Validation
+
 - If the use has selected 'Framework' then why do they need to select 'Active performance types', is this a duplication? Do we really need 'Framework' selection?
+
+### OKR, KR and KPI
 - How the OKR's Key Results and KPI can work together? Is it possible can bo co-exists in the same cycle, if so that can we make this system in such a way that it can be fill and review and measures, which can result in a decision making at employee, department and organization level.
 - How can CEO/management can enter the actual results against the OKR defined at company level, and comparsion with subordinates given values for comparison, it could be possible that end actual results enter by the company at the end of each cycle review may be different than values enterred by subordinates, need to plot in a way that it can be visualize and captured. Then how cascade work here. Can we have multi-result kind of approach (think on that before going to implement) that employees, managers and department (HOD) values may provide positive targets achievement whereas the management (CEO or VP) will provide a real numbers?
 - Need to prepare input of HOD (departmental OKR achievement) so that it should not be duplicated when the same person (manager) is giving the input at the time of review.
-- When employees or department head is updating the reviews, they can see their cummulative/consolidated ratings (average) as well, so that they can track the progress i.e. April to May average visible when they are enterring the June month data (including June numbers).
-- Review cycle can be defined by the client such that daily, weekly, bi-weekly, monthly, quarterly, semin-annually, annually. Assessment of those reflect in the top and HR management dashboard, along with consolidated and cummulative results of the entire year data.
-- In 'Org settings' Do we need 'Cycle Defaults' or it will come in the 'Cycles' section/configuration?
-- Add 9-box support
 - How can in one employee or department profile of review, all these selected options like 'OKR objective', 'OKR Key Result', 'KRA', 'Goal', 'KPI', 'Compentancy', 'BSC Metric', 'Custom' can work together, think in-depth for a both INPUT and REVIEW page of employee or manager or department head that a form can have dedicated sections based on these 'Active Performance Types' selection, otherwise the form will be very confusing for the user, we are building the software for common man, so it should be very easy to follow and adopt in the organization, we can split the input in small steps that can persist across the session and continue. The end result is also important that how can we combine results of these all 'Active Performance Types' input to generate a final score or result, how can the system predict this?
-- Industry wise ready-to-use OKR/KR/GOAL/KPI/Compentenacy templates and selection in the employee Input screen.
 - CEO,VP,Director,HOD page where they can enter the targets against the company OKR (enter by all CEO,VP,Director as per their profiles and domain applicability) and another page for departments HOD to provide their sub-targets against company OKR (this will be applicable if Cascading is enabled)
 - Manager organization hierarchy wise goals cascading and target visualization. How the actual target and commitment or planned both along can be defined?
-- Sample data of employees with L1 to L9 each reporting structure L1 = 1 (MD/CEO), L2 = 4 (Sales Head, Product Head, Support Head, HR and Admin Head), Upto L9. At L3 to L9 there will be multiple reportees and each will have their own targets drived from L2 (L2 targets are driven from L1 company targets), The L4 to L9 will give stretch targets (overcommittment or undercommitment) the visualization is required that company's target is separately visible the upper layer target should be visible to current reportees so that they can plan their targets and similarly when manager is enterring their target they can suggest targets to their reportees (it's most critical aspect of the system to make this complex mapping so simple that it can be easily configure by the clients). This feature we can enable in cascading with OKR based appraoch (check if my understanding is correct with cascading).
 - Revise login page functionality to first select the demo database type (IT company, Manufacturing company, Pharma company, etc) and the user/employee to login with without remembering/typing any password this will be use for a quick demostraction.
 - Employee master page modification for manager and reportees mapping to form the hierarchy of organization structure.
 - Revision of targets during the year multiple times with revision history along with approvals.
 - After all these steps completed prepare multiple sample data structures (selection of data structure of case studies to view the software working), 1. An IT company having sales team given target based on their head-count salaries so that Sales head and sales managers target is inclusive of their subordinates salaries + self and invidual sales person target is their own salaries, similarly for operation department the OKR is the revenue of the organization increasing (MRR above threshold) and happy client ratings, development team OKR targets is again revenue stable and increasing, lesser software bugs, new features, HR team target is happy enviornment and good work culture. 2. Another company of a manufacturing where they produce product like Car Brakes or any components they have their hypothetical use cases spread across different departments.
 - Avoid mistakes by the end-users, that in Key-Results (any measurable template) should allow only measurable selection, they cannot just select text based data input in the template of 'Active Performance Types' (correct if am I doing wrong here), so that wrong capturing of data can be avoided at year end consolidation time.
-- Check who can prepare the data such that OKR can be defined by whome (CEO, VP or directors or it can also be defined by department HOD?) similarly employees can defined what (KPI/KR/Goal/etc), that level of built-in checks/validation should be configurable and preconfigured as per industry norms. Can these be configurable in the 'Org Settings'?
+- Check who can prepare the data such that OKR can be defined by whome (CEO, VP or directors or it can also be defined by department HOD?) similarly employees can defined what (KPI/KR/Goal/etc), that level of built-in checks/validation should be configurable and preconfigured as per industry norms. Can these be configurable in the 'Org Settings'? Is it possible to have OKR without Key-results check this framework? Can department also defined OKR or they can just enter their Key-results (if so then configurable)? How KPI to key-results can be mapped when all employees entered their KPIs with very high values then how can it provide wrong results in key-results at department level and company level, such restrictions can be provide at each company OKR and department Key-results declarations with acceptable range, first need to check and prepare the mapping of KPI to Key-results conversion.
+- Unplanned OKRs which are not cascaded at department or department Key-results/OKR visibility and validation during submissions. 
+- When company OKR has been finalized (entered by CEO, VP and directors from their respective logins), and when department HOD enters their Key-results/KPI then they should see cascaded Company's OKR and based on them they need to enter the Key-results (check if the department head can also enter OKR within OKR), also at company OKR definition time, the CEO/VP or directors can tell the system which department head will need to enter their key-results in this OKR and must or not level configuration, so that department head should not missed to enter their key-results or KPI. Option for subordinates which receive this cascaded key-results
+- Can KPI be directly enter against OKR or it can be only entered against Key-results, check industry norms and prepare a validation in the 'Org Settings' with default correct values as per industry norms. Can department head define their KPI along with key-results or they can just enter key-results against company OKRs? If KPI can be defined at department head level then whether it can be visible to subordinates of that same department or not (configurable at the time of preparing those KPIs). Similarly when L3 or L4 (subordinates of department heads) are defining their KPIs whether they can see their superior KPIs and Key-results data or not (this choice can be provided at superior their during input stage, check if my understanding is correct or not).
 - Overplanning or overcommittment highlights or block option to be developed and configurable, the approval/reviewal can get this notified that it's overcommittment given by the employee. Similarly when employees are giving actual numbers, typo-mistakes can be captured (we can create validations configurable the desirable values with threshold/acceptable range in the configuration of cycles). Also when employees defining the Key-results against OKR or KPI against Key-results (validate are these interlinked) then how many line items can be defined, this can be allowed with configurable when company and department HOD both are defining their OKR / KR. To avoid wrong preparation of KPI or Key-results by the employees.
-- Build interactive dashboard with drill-down analysis, comparison of KPI or Key results in which one is achiving the targets but OKR is not achiving how the management or company can view these findings.
-- Continue feedbacks and reflecting the feedbacks (positive, negative) to the employees (configurable), managers when they are reviewing and approving the subordinates reviews.
+  
+
+### Reviews and approvals
+
+- When employees or department head is updating the reviews, they can see their cummulative/consolidated ratings (average) as well, so that they can track the progress i.e. April to May average visible when they are enterring the June month data (including June numbers).
+
+### Sample Data and templates
+
+- Industry wise ready-to-use OKR/KR/GOAL/KPI/Compentenacy templates and selection in the employee Input screen.
+- Sample data of employees with L1 to L9 each reporting structure L1 = 1 (MD/CEO), L2 = 4 (Sales Head, Product Head, Support Head, HR and Admin Head), Upto L9. At L3 to L9 there will be multiple reportees and each will have their own targets drived from L2 (L2 targets are driven from L1 company targets), The L4 to L9 will give stretch targets (overcommittment or undercommitment) the visualization is required that company's target is separately visible the upper layer target should be visible to current reportees so that they can plan their targets and similarly when manager is enterring their target they can suggest targets to their reportees (it's most critical aspect of the system to make this complex mapping so simple that it can be easily configure by the clients). This feature we can enable in cascading with OKR based appraoch (check if my understanding is correct with cascading).
+
+
+### Salary and increment/hide
+- Industry wise salary comparison of the grade (need to check internet for actual average data) and what current we have in the system, if the employee is getting promoted whether it's beyond the industry same grade?. This data can be visible in the system or pull from the internet.
+- Later we can define salary-hike scenarios or promotion of grade configuration.
+
+### AI
 - AI insights later based on the comments/text they have entered throughout the years and consideration of feedbacks data of the employees.
+
+### Dashboard
+
+- Build interactive dashboard with drill-down analysis, comparison of KPI or Key results in which one is achiving the targets but OKR is not achiving how the management or company can view these findings.
+
+### Continue feedbacks
+
+- Continue feedbacks and reflecting the feedbacks (positive, negative) to the employees (configurable), managers when they are reviewing and approving the subordinates reviews.
+
