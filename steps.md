@@ -32,13 +32,14 @@
 - DONE: Add 9-box support, how does it work along with Balance score card? Can they both co-exist if so then prepare the foundation in the system at each and every steps if either or both are enabled in the 'org settings'
 - DONE: Update project memory that, when creating At employee/HOD input screen the 'learn more' or (i) feature should be available at group level like Key-Result, KPI, Goal, Compentancy so that end users can understand what to enter there and that should not be missed during those pages development. Similar things to be considered during review and approval stages.
 - DONE: Update my @CLAUDE.md file instead of my user computer profile files 
-- Now fine-tune this 'org setting' page so that it should allow selection which are mutually exclusive like if the 'OKR Objective' is selected then why do HR need to select 'OKR key result' - I presume these two are used injunction together (correct my understanding) and similarly fix the interconnected fields which the user should not missed to select or it should be auto-select or disabled if that thing is not applicable in the selection of 'Active Performance Types' like if the HR has selected only 'Compentency' whether they can do anything with tabs like 'Weightage' or 'Rating Scale', similarly check for correct configuration the user can do without doing or leaving any mistake.
+- DONE: Now fine-tune this 'org setting' page so that it should allow selection which are mutually exclusive like if the 'OKR Objective' is selected then why do HR need to select 'OKR key result' - I presume these two are used injunction together (correct my understanding) and similarly fix the interconnected fields which the user should not missed to select or it should be auto-select or disabled if that thing is not applicable in the selection of 'Active Performance Types' like if the HR has selected only 'Compentency' whether they can do anything with tabs like 'Weightage' or 'Rating Scale', similarly check for correct configuration the user can do without doing or leaving any mistake.
   
 
 ### Validation
 
-- If the use has selected 'Framework' then why do they need to select 'Active performance types', is this a duplication? Do we really need 'Framework' selection?
+- DONE: If the use has selected 'Framework' then why do they need to select 'Active performance types', is this a duplication? Do we really need 'Framework' selection?
 - Check the 'org settings' page the tabs like 'Rating Scale' etc should be applicable depend on the selection of 'Active Performance Types' or 'Framework' to avoid confusion at the user side.
+- it's still visible, I can see both Framework and Active Performance Types, do check if these both can co-exist.
 - Who can enter what configuration - CEO/VP/Directors can enter OKR or Key-results/Goals/KPI, Department heads can enter what OKR/KR/KPI/Goals/Compentancy, similarly mid-managers and employees can enter what OKR/KR/KPI/Goals/Compentancy - by default it should have correct mapping and configured in the system.
 - If the approving authority has any subordinates data pending for submission or approval is pending by mid-managers then can see that status in a list form that they can take action while they are inputting their own target status or approving their subordinates data.
 - When approving authority is approving the submission of subordinates they can clearly view the data of their subordinates on the screen.
@@ -116,6 +117,7 @@
 
 - Do need to the configuration like BSC or 9-box or OKR/KR/Goal at the 'org settings' or it should be there at 'Cycles' setup/configuration.
 - Prepare structural features of other options which are used in industries that we have not covered yet (other than OKR,KR,KPI,Goals), check industries like Pharma, Hospitals,Banks and suggest if they are following different approaches and methods, that we can provide and incorporate in this demo application.
+- SMART Goals in Key-results guidelines.
 
 ### Product developed features list
 

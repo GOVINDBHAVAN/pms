@@ -15,7 +15,14 @@
       "PowerShell(Get-ChildItem \"d:\\\\Practice\\\\my\\\\pms\\\\server\" -Recurse | Select-Object FullName | Where-Object { $_.FullName -notmatch 'node_modules' })",
       "Bash(npx tsc *)",
       "Bash(npx vite *)",
-      "Bash(node -e ' *)"
+      "Bash(node -e ' *)",
+      "PowerShell(Test-Path \"d:\\\\Practice\\\\my\\\\pms\\\\data\\\\pms.db\"; if \\(Test-Path \"d:\\\\Practice\\\\my\\\\pms\\\\data\\\\pms.db\"\\) { \\(Get-Item \"d:\\\\Practice\\\\my\\\\pms\\\\data\\\\pms.db\"\\).Length })",
+      "PowerShell(try { $r = Invoke-WebRequest -Uri \"http://localhost:3001/api/v1/health\" -TimeoutSec 5; $r.Content } catch { \"Server not responding: $_\" })",
+      "PowerShell(Start-Sleep -Seconds 3; try { $r = Invoke-WebRequest -Uri \"http://localhost:3001/api/v1/health\" -TimeoutSec 5; $r.Content } catch { \"Still not up: $_\" })",
+      "PowerShell(Start-Sleep -Seconds 4; try { $r = Invoke-WebRequest -Uri \"http://localhost:3001/api/v1/health\" -TimeoutSec 5; $r.Content } catch { \"Not up yet: $_\" })",
+      "PowerShell($r = Invoke-WebRequest -Uri \"http://localhost:3001/api/v1/health\" -TimeoutSec 5; $r.Content)",
+      "Bash(curl -s http://localhost:3001/api/v1/health)",
+      "Bash(curl -s -X POST http://localhost:3001/api/v1/auth/login -H \"Content-Type: application/json\" -d '{\"email\":\"arjun.mehta@techcorp.com\",\"password\":\"password123\"}')"
     ]
   }
 }
