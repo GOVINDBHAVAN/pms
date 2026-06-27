@@ -3,6 +3,7 @@ import AppLayout from '../components/layout/AppLayout';
 import { getOrgSettings, updateOrgSettings } from '../api/orgApi';
 import InfoIcon from '../components/shared/InfoIcon';
 import PerformanceTypeModal from '../components/shared/PerformanceTypeModal';
+import SettingInfoModal from '../components/shared/SettingInfoModal';
 import { HELP } from '../utils/helpContent';
 
 const FRAMEWORKS = [
@@ -162,7 +163,9 @@ export default function OrgSettingsPage() {
 
 /* ── General Tab ─────────────────────────────────────────────────────────── */
 function GeneralTab({ org, settings, onChange }) {
-  const [typeModal, setTypeModal] = useState(null); // key of HELP.performanceTypes
+  const [typeModal, setTypeModal] = useState(null);
+  const [activeModal, setActiveModal] = useState(null);
+  const openModal = (key) => setActiveModal(key);
 
   return (
     <div className="space-y-6">
@@ -172,9 +175,15 @@ function GeneralTab({ org, settings, onChange }) {
           onClose={() => setTypeModal(null)}
         />
       )}
+      {activeModal && (
+        <SettingInfoModal
+          info={HELP.settingModals[activeModal]}
+          onClose={() => setActiveModal(null)}
+        />
+      )}
 
       <div className="grid grid-cols-2 gap-6">
-        <Field label="Framework" info={HELP.orgSettings.framework}>
+        <Field label="Framework" info={HELP.orgSettings.framework} onLearnMore={() => openModal('framework')}>
           <select
             className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
             value={settings.framework || ''}
@@ -184,7 +193,7 @@ function GeneralTab({ org, settings, onChange }) {
           </select>
         </Field>
 
-        <Field label="Cascade Mode" info={HELP.orgSettings.cascadeMode}>
+        <Field label="Cascade Mode" info={HELP.orgSettings.cascadeMode} onLearnMore={() => openModal('cascade_mode')}>
           <select
             className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
             value={settings.cascade_mode || ''}
@@ -231,7 +240,7 @@ function GeneralTab({ org, settings, onChange }) {
       </Field>
 
       {(settings.framework === 'balanced_scorecard' || settings.active_types?.includes('bsc_metric')) && (
-        <Field label="BSC Perspectives" hint="Comma-separated list of BSC perspective names" info={HELP.orgSettings.bscPerspectives}>
+        <Field label="BSC Perspectives" hint="Comma-separated list of BSC perspective names" info={HELP.orgSettings.bscPerspectives} onLearnMore={() => openModal('bsc_perspectives')}>
           <div className="space-y-2">
             {(settings.bsc_perspectives || ['Financial', 'Customer', 'Internal Process', 'Learning & Growth']).map((p, i) => (
               <div key={i} className="flex gap-2">
@@ -266,10 +275,11 @@ function GeneralTab({ org, settings, onChange }) {
       <Field label="Cycle Defaults" info="Default values pre-filled when HR creates a new review cycle. These save time but can be overridden per cycle.">
         <div className="grid grid-cols-3 gap-4">
           <div>
-            <label className="flex items-center gap-0.5 text-xs text-slate-500 mb-1">
+            <div className="flex items-center gap-0.5 text-xs text-slate-500 mb-1">
               Default Type
               <InfoIcon title="Default Cycle Type" content={HELP.orgSettings.cycleDefaultType} />
-            </label>
+              <button type="button" onClick={() => openModal('cycle_default_type')} className="ml-1 text-[10px] text-indigo-500 hover:text-indigo-700 font-medium underline underline-offset-2 leading-none">Learn more</button>
+            </div>
             <select
               className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
               value={settings.cycle_defaults?.type || 'annual'}
@@ -281,10 +291,11 @@ function GeneralTab({ org, settings, onChange }) {
             </select>
           </div>
           <div>
-            <label className="flex items-center gap-0.5 text-xs text-slate-500 mb-1">
+            <div className="flex items-center gap-0.5 text-xs text-slate-500 mb-1">
               Goal-Setting Days
               <InfoIcon title="Goal-Setting Days" content={HELP.orgSettings.goalSettingDays} />
-            </label>
+              <button type="button" onClick={() => openModal('goal_setting_days')} className="ml-1 text-[10px] text-indigo-500 hover:text-indigo-700 font-medium underline underline-offset-2 leading-none">Learn more</button>
+            </div>
             <input
               type="number" min="1"
               className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
@@ -293,10 +304,11 @@ function GeneralTab({ org, settings, onChange }) {
             />
           </div>
           <div>
-            <label className="flex items-center gap-0.5 text-xs text-slate-500 mb-1">
+            <div className="flex items-center gap-0.5 text-xs text-slate-500 mb-1">
               Review Days
               <InfoIcon title="Review Days" content={HELP.orgSettings.reviewDays} />
-            </label>
+              <button type="button" onClick={() => openModal('review_days')} className="ml-1 text-[10px] text-indigo-500 hover:text-indigo-700 font-medium underline underline-offset-2 leading-none">Learn more</button>
+            </div>
             <input
               type="number" min="1"
               className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
@@ -312,6 +324,7 @@ function GeneralTab({ org, settings, onChange }) {
 
 /* ── Rating Scale Tab ────────────────────────────────────────────────────── */
 function RatingScaleTab({ settings, onChange }) {
+  const [activeModal, setActiveModal] = useState(null);
   const ratingScale = settings.rating_scale || {};
 
   const updateScale = (kind, patch) => {
@@ -320,11 +333,19 @@ function RatingScaleTab({ settings, onChange }) {
 
   return (
     <div className="space-y-8">
+      {activeModal && (
+        <SettingInfoModal
+          info={HELP.settingModals[activeModal]}
+          onClose={() => setActiveModal(null)}
+        />
+      )}
       <RatingScaleSection
         title="Goals / KRA / KPI Rating Scale"
         scale={ratingScale.goals || {}}
         onUpdate={patch => updateScale('goals', patch)}
         sectionHelp={HELP.ratingScale.goalsScaleSection}
+        keyPrefix="goals"
+        onOpenModal={setActiveModal}
       />
       <div className="border-t border-slate-100 pt-6">
         <RatingScaleSection
@@ -332,13 +353,15 @@ function RatingScaleTab({ settings, onChange }) {
           scale={ratingScale.competency || {}}
           onUpdate={patch => updateScale('competency', patch)}
           sectionHelp={HELP.ratingScale.competencyScaleSection}
+          keyPrefix="comp"
+          onOpenModal={setActiveModal}
         />
       </div>
     </div>
   );
 }
 
-function RatingScaleSection({ title, scale, onUpdate, sectionHelp }) {
+function RatingScaleSection({ title, scale, onUpdate, sectionHelp, keyPrefix, onOpenModal }) {
   const labels = scale.labels || [];
   const values = scale.values || [];
 
@@ -348,7 +371,7 @@ function RatingScaleSection({ title, scale, onUpdate, sectionHelp }) {
         {title}
         {sectionHelp && <InfoIcon title={title} content={sectionHelp} />}
       </h3>
-      <Field label="Scale Type" info={HELP.ratingScale.scaleType}>
+      <Field label="Scale Type" info={HELP.ratingScale.scaleType} onLearnMore={() => onOpenModal(`${keyPrefix}_scale_type`)}>
         <select
           className="w-full max-w-xs border border-slate-200 rounded-lg px-3 py-2 text-sm"
           value={scale.type || '5_point'}
@@ -358,7 +381,7 @@ function RatingScaleSection({ title, scale, onUpdate, sectionHelp }) {
         </select>
       </Field>
 
-      <Field label="Scale Labels & Values" hint="One row per rating level, from lowest to highest" info={HELP.ratingScale.scaleLabelsValues}>
+      <Field label="Scale Labels & Values" hint="One row per rating level, from lowest to highest" info={HELP.ratingScale.scaleLabelsValues} onLearnMore={() => onOpenModal(`${keyPrefix}_scale_labels`)}>
         <div className="space-y-2 mt-1">
           <div className="grid grid-cols-[1fr_80px_32px] gap-2 text-xs text-slate-400 px-1">
             <span>Label</span><span>Value</span><span></span>
@@ -403,7 +426,7 @@ function RatingScaleSection({ title, scale, onUpdate, sectionHelp }) {
       </Field>
 
       {scale.type?.includes('point') && (
-        <Field label="PIP Threshold" hint="Employees scoring at or below this value trigger a PIP flag" info={HELP.ratingScale.pipThreshold}>
+        <Field label="PIP Threshold" hint="Employees scoring at or below this value trigger a PIP flag" info={HELP.ratingScale.pipThreshold} onLearnMore={() => onOpenModal(`${keyPrefix}_pip`)}>
           <input
             type="number" step="0.5" min="0"
             className="border border-slate-200 rounded-lg px-3 py-2 text-sm w-24"
@@ -418,6 +441,7 @@ function RatingScaleSection({ title, scale, onUpdate, sectionHelp }) {
 
 /* ── Weightage Tab ───────────────────────────────────────────────────────── */
 function WeightageTab({ settings, onChange }) {
+  const [activeModal, setActiveModal] = useState(null);
   const w = settings.weightage || { goals_percent: 70, competency_percent: 30 };
   const goalsVal = w.goals_percent ?? 70;
 
@@ -428,10 +452,17 @@ function WeightageTab({ settings, onChange }) {
 
   return (
     <div className="space-y-6">
+      {activeModal && (
+        <SettingInfoModal
+          info={HELP.settingModals[activeModal]}
+          onClose={() => setActiveModal(null)}
+        />
+      )}
       <div>
         <h3 className="flex items-center gap-1 font-semibold text-slate-800 mb-1">
           Goals vs Competency Split
           <InfoIcon title="Weightage Split" content={HELP.weightage.split} />
+          <button type="button" onClick={() => setActiveModal('weightage_split')} className="ml-1 text-[10px] text-indigo-500 hover:text-indigo-700 font-medium underline underline-offset-2 leading-none">Learn more</button>
         </h3>
         <p className="text-sm text-slate-500">
           Determines how much each category contributes to an employee's final performance score.
@@ -519,6 +550,7 @@ function WeightageTab({ settings, onChange }) {
 
 /* ── Terminology Tab ─────────────────────────────────────────────────────── */
 function TerminologyTab({ settings, onChange }) {
+  const [activeModal, setActiveModal] = useState(null);
   const terms = settings.terminology || {};
 
   const updateTerm = (key, value) => {
@@ -537,6 +569,12 @@ function TerminologyTab({ settings, onChange }) {
         </p>
       </div>
 
+      {activeModal && (
+        <SettingInfoModal
+          info={HELP.settingModals[activeModal]}
+          onClose={() => setActiveModal(null)}
+        />
+      )}
       <div className="rounded-lg border border-slate-200 overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-slate-50 border-b border-slate-200">
@@ -553,6 +591,9 @@ function TerminologyTab({ settings, onChange }) {
                     {label}
                     {HELP.terminology[key] && (
                       <InfoIcon title={label} content={HELP.terminology[key]} />
+                    )}
+                    {HELP.settingModals[`term_${key}`] && (
+                      <button type="button" onClick={() => setActiveModal(`term_${key}`)} className="text-[10px] text-indigo-500 hover:text-indigo-700 font-medium underline underline-offset-2 leading-none">Learn more</button>
                     )}
                   </span>
                 </td>
@@ -575,6 +616,7 @@ function TerminologyTab({ settings, onChange }) {
 
 /* ── Performance Bands Tab ───────────────────────────────────────────────── */
 function BandsTab({ settings, onChange }) {
+  const [activeModal, setActiveModal] = useState(null);
   const bands = settings.performance_bands || [];
 
   const updateBand = (i, patch) => {
@@ -594,10 +636,17 @@ function BandsTab({ settings, onChange }) {
 
   return (
     <div className="space-y-4">
+      {activeModal && (
+        <SettingInfoModal
+          info={HELP.settingModals[activeModal]}
+          onClose={() => setActiveModal(null)}
+        />
+      )}
       <div>
         <h3 className="flex items-center gap-1 font-semibold text-slate-800 mb-1">
           Performance Bands
           <InfoIcon title="Performance Bands" content={HELP.bands.section} />
+          <button type="button" onClick={() => setActiveModal('bands_overview')} className="ml-1 text-[10px] text-indigo-500 hover:text-indigo-700 font-medium underline underline-offset-2 leading-none">Learn more</button>
         </h3>
         <p className="text-sm text-slate-500">
           Map final scores to performance labels. Ranges should not overlap and collectively cover 0–5 (or 0–100% if using percentage scale).
@@ -606,9 +655,9 @@ function BandsTab({ settings, onChange }) {
 
       <div className="space-y-2">
         <div className="grid grid-cols-[2fr_1fr_1fr_80px_32px] gap-3 text-xs text-slate-400 px-1">
-          <span className="flex items-center gap-1">Band Label <InfoIcon title="Band Label" content={HELP.bands.bandLabel} /></span>
-          <span className="flex items-center gap-1">Min Score <InfoIcon title="Min Score" content={HELP.bands.minScore} /></span>
-          <span className="flex items-center gap-1">Max Score <InfoIcon title="Max Score" content={HELP.bands.maxScore} /></span>
+          <span className="flex items-center gap-1">Band Label <InfoIcon title="Band Label" content={HELP.bands.bandLabel} /><button type="button" onClick={() => setActiveModal('band_label')} className="text-[10px] text-indigo-500 hover:text-indigo-700 underline leading-none ml-0.5">?</button></span>
+          <span className="flex items-center gap-1">Min Score <InfoIcon title="Min Score" content={HELP.bands.minScore} /><button type="button" onClick={() => setActiveModal('min_weight')} className="text-[10px] text-indigo-500 hover:text-indigo-700 underline leading-none ml-0.5">?</button></span>
+          <span className="flex items-center gap-1">Max Score <InfoIcon title="Max Score" content={HELP.bands.maxScore} /><button type="button" onClick={() => setActiveModal('max_weight')} className="text-[10px] text-indigo-500 hover:text-indigo-700 underline leading-none ml-0.5">?</button></span>
           <span className="flex items-center gap-1">Color <InfoIcon title="Band Color" content={HELP.bands.color} /></span>
           <span></span>
         </div>
@@ -680,12 +729,19 @@ function BandsTab({ settings, onChange }) {
 
 /* ── Target Rules Tab ────────────────────────────────────────────────────── */
 function TargetRulesTab({ settings, onChange }) {
+  const [activeModal, setActiveModal] = useState(null);
   const rules = settings.target_rules || {};
 
   const update = (patch) => onChange({ target_rules: { ...rules, ...patch } });
 
   return (
     <div className="space-y-6">
+      {activeModal && (
+        <SettingInfoModal
+          info={HELP.settingModals[activeModal]}
+          onClose={() => setActiveModal(null)}
+        />
+      )}
       <div>
         <h3 className="font-semibold text-slate-800 mb-1">Target Rules</h3>
         <p className="text-sm text-slate-500">
@@ -694,7 +750,7 @@ function TargetRulesTab({ settings, onChange }) {
       </div>
 
       <div className="grid grid-cols-2 gap-6">
-        <Field label="Minimum Target Weight (%)" hint="Warn when a single target has less than this weight" info={HELP.targetRules.minWeight}>
+        <Field label="Minimum Target Weight (%)" hint="Warn when a single target has less than this weight" info={HELP.targetRules.minWeight} onLearnMore={() => setActiveModal('min_weight')}>
           <input
             type="number" min="1" max="100"
             className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
@@ -703,7 +759,7 @@ function TargetRulesTab({ settings, onChange }) {
           />
         </Field>
 
-        <Field label="Maximum Target Weight (%)" hint="Warn when a single target has more than this weight" info={HELP.targetRules.maxWeight}>
+        <Field label="Maximum Target Weight (%)" hint="Warn when a single target has more than this weight" info={HELP.targetRules.maxWeight} onLearnMore={() => setActiveModal('max_weight')}>
           <input
             type="number" min="1" max="100"
             className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
@@ -727,6 +783,7 @@ function TargetRulesTab({ settings, onChange }) {
             <div className="flex items-center gap-1 text-sm font-medium text-slate-700">
               Allow Over-Planning
               <InfoIcon title="Allow Over-Planning" content={HELP.targetRules.overplanAllowed} />
+              <button type="button" onClick={() => setActiveModal('overplan_allowed')} className="text-[10px] text-indigo-500 hover:text-indigo-700 font-medium underline underline-offset-2 leading-none">Learn more</button>
             </div>
             <div className="text-xs text-slate-400">
               Employees can commit to more than their manager's planned target (with justification)
@@ -739,6 +796,7 @@ function TargetRulesTab({ settings, onChange }) {
             label="Maximum Over-Plan Multiplier"
             hint="E.g. 1.15 means team total can be up to 15% above the manager's target before a warning"
             info={HELP.targetRules.overplanMultiplier}
+            onLearnMore={() => setActiveModal('overplan_multiplier')}
           >
             <div className="flex items-center gap-3">
               <input
@@ -769,6 +827,7 @@ function TargetRulesTab({ settings, onChange }) {
             <div className="flex items-center gap-1 text-sm font-medium text-slate-700">
               Require Parent Linkage
               <InfoIcon title="Require Parent Linkage" content={HELP.targetRules.requireParentLinkage} />
+              <button type="button" onClick={() => setActiveModal('require_parent_linkage')} className="text-[10px] text-indigo-500 hover:text-indigo-700 font-medium underline underline-offset-2 leading-none">Learn more</button>
             </div>
             <div className="text-xs text-slate-400">
               Every approved target must be linked to a parent target in the hierarchy
@@ -787,6 +846,7 @@ function TargetRulesTab({ settings, onChange }) {
             <div className="flex items-center gap-1 text-sm font-medium text-slate-700">
               Allow Self-Propose (Bottom-Up)
               <InfoIcon title="Allow Self-Propose" content={HELP.targetRules.allowSelfPropose} />
+              <button type="button" onClick={() => setActiveModal('allow_self_propose')} className="text-[10px] text-indigo-500 hover:text-indigo-700 font-medium underline underline-offset-2 leading-none">Learn more</button>
             </div>
             <div className="text-xs text-slate-400">
               Employees can propose their own targets for manager review
@@ -799,13 +859,22 @@ function TargetRulesTab({ settings, onChange }) {
 }
 
 /* ── Helpers ─────────────────────────────────────────────────────────────── */
-function Field({ label, hint, info, infoTitle, children }) {
+function Field({ label, hint, info, infoTitle, onLearnMore, children }) {
   return (
     <div className="space-y-1">
-      <label className="flex items-center gap-0.5 text-sm font-medium text-slate-700">
-        {label}
+      <div className="flex items-center gap-0.5">
+        <span className="text-sm font-medium text-slate-700">{label}</span>
         {info && <InfoIcon title={infoTitle || label} content={info} />}
-      </label>
+        {onLearnMore && (
+          <button
+            type="button"
+            onClick={onLearnMore}
+            className="ml-1 text-[10px] text-indigo-500 hover:text-indigo-700 font-medium underline underline-offset-2 leading-none transition-colors focus:outline-none"
+          >
+            Learn more
+          </button>
+        )}
+      </div>
       {hint && <p className="text-xs text-slate-400">{hint}</p>}
       {children}
     </div>
