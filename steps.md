@@ -10,3 +10,6 @@
 - Change sqllite3 with alternative because it was not working on windows.
   - Proceed to prepare  @specifications.md for '2. TECHNOLOGY STACK'
   - Proceed to prepare  @specifications.md for '3. DATABASE SCHEMA'
+  - Create a batch and ps file to stop the running both server and client project running
+  - Proceed to prepare  @specifications.md for '4. SETUP WIZARD — DESIGN (Most Important UX Feature)'
+  - 
