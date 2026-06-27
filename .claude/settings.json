@@ -11,7 +11,8 @@
       "Read(//c/Users/govin/AppData/Local/npm-cache/_logs/**)",
       "PowerShell(git -C \"d:\\\\Practice\\\\my\\\\pms\" add server/package.json specifications.md)",
       "PowerShell(Get-ChildItem -Path \"d:\\\\Practice\\\\my\\\\pms\\\\client\\\\src\" -Recurse | Where-Object {-not $_.PSIsContainer} | Select-Object FullName)",
-      "PowerShell(Invoke-RestMethod -Uri \"http://localhost:3001/api/v1/health\")"
+      "PowerShell(Invoke-RestMethod -Uri \"http://localhost:3001/api/v1/health\")",
+      "PowerShell(Get-ChildItem \"d:\\\\Practice\\\\my\\\\pms\\\\server\" -Recurse | Select-Object FullName | Where-Object { $_.FullName -notmatch 'node_modules' })"
     ]
   }
 }
