@@ -32,16 +32,72 @@ const RATING_TYPES = [
   { value: 'custom',               label: 'Custom Labels' },
 ];
 
-const ALL_ACTIVE_TYPES = [
-  { value: 'okr_objective', label: 'OKR Objective' },
-  { value: 'okr_kr',        label: 'OKR Key Result' },
-  { value: 'kra',           label: 'KRA' },
-  { value: 'kpi',           label: 'KPI' },
-  { value: 'goal',          label: 'Goal' },
-  { value: 'competency',    label: 'Competency' },
-  { value: 'bsc_metric',    label: 'BSC Metric' },
-  { value: 'custom_metric', label: 'Custom Metric' },
+const ACTIVE_TYPE_GROUPS = [
+  {
+    id: 'okr',
+    label: 'OKR — Objective + Key Result',
+    values: ['okr_objective', 'okr_kr'],
+    paired: true,
+    hint: 'Objectives set the direction; Key Results measure progress. These two are always used together — an Objective without Key Results has no measurable success criteria.',
+    infoKey: 'okr_objective',
+  },
+  {
+    id: 'kra_kpi',
+    label: 'KRA + KPI',
+    values: ['kra', 'kpi'],
+    paired: true,
+    hint: 'KPIs are metrics measured within the scope of a Key Result Area. A KPI always lives under a KRA parent, so they are always enabled as a pair.',
+    infoKey: 'kra',
+  },
+  {
+    id: 'goal',
+    label: 'Goal (Simple Target)',
+    values: ['goal'],
+    paired: false,
+    hint: 'A standalone output-based target — use when OKR or KRA/KPI structure is not needed.',
+    infoKey: 'goal',
+  },
+  {
+    id: 'competency',
+    label: 'Competency',
+    values: ['competency'],
+    paired: false,
+    hint: 'Behavioral and skills-based targets. Scored separately from goal-type targets and combined via the Weightage split.',
+    infoKey: 'competency',
+  },
+  {
+    id: 'bsc_metric',
+    label: 'BSC Metric',
+    values: ['bsc_metric'],
+    paired: false,
+    hint: 'Balanced Scorecard metric mapped to one of four strategic perspectives (Financial, Customer, Internal Process, Learning & Growth).',
+    infoKey: 'bsc_metric',
+    requiresFrameworks: ['balanced_scorecard', 'hybrid'],
+  },
+  {
+    id: 'custom_metric',
+    label: 'Custom Metric',
+    values: ['custom_metric'],
+    paired: false,
+    hint: 'Define your own target type with a custom label for org-specific needs not covered by other types.',
+    infoKey: 'custom_metric',
+  },
 ];
+
+const GOAL_TYPES = new Set(['okr_objective', 'okr_kr', 'kra', 'kpi', 'goal', 'bsc_metric', 'custom_metric']);
+
+function getTypeStatus(active_types = []) {
+  const hasGoals = active_types.some(t => GOAL_TYPES.has(t));
+  const hasComp = active_types.includes('competency');
+  return {
+    hasGoals,
+    hasComp,
+    compOnly: !hasGoals && hasComp,
+    goalsOnly: hasGoals && !hasComp,
+    mixed: hasGoals && hasComp,
+    empty: !hasGoals && !hasComp,
+  };
+}
 
 const TERMINOLOGY_KEYS = [
   { key: 'kra',              label: 'KRA' },
@@ -73,6 +129,8 @@ export default function OrgSettingsPage() {
   const tabs = settings?.ninebox_enabled
     ? [...BASE_TABS, 'Talent Grid']
     : BASE_TABS;
+  const typeStatus = settings ? getTypeStatus(settings.active_types) : {};
+  const isWeightageAuto = typeStatus.compOnly || typeStatus.goalsOnly;
 
   useEffect(() => {
     getOrgSettings()
@@ -135,19 +193,25 @@ export default function OrgSettingsPage() {
         {/* Tabs */}
         <div className="border-b border-slate-200">
           <nav className="flex gap-1">
-            {tabs.map(tab => (
-              <button
-                key={tab}
-                onClick={() => setActiveTab(tab)}
-                className={`px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 transition-colors ${
-                  activeTab === tab
-                    ? 'border-indigo-600 text-indigo-700 bg-indigo-50'
-                    : 'border-transparent text-slate-500 hover:text-slate-700'
-                }`}
-              >
-                {tab}
-              </button>
-            ))}
+            {tabs.map(tab => {
+              const isAuto = tab === 'Weightage' && isWeightageAuto;
+              return (
+                <button
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`px-4 py-2 text-sm font-medium rounded-t-lg border-b-2 transition-colors inline-flex items-center gap-1.5 ${
+                    activeTab === tab
+                      ? 'border-indigo-600 text-indigo-700 bg-indigo-50'
+                      : 'border-transparent text-slate-500 hover:text-slate-700'
+                  }`}
+                >
+                  {tab}
+                  {isAuto && (
+                    <span className="text-[10px] bg-amber-100 text-amber-600 rounded px-1.5 py-0.5 font-medium leading-none">Auto</span>
+                  )}
+                </button>
+              );
+            })}
           </nav>
         </div>
 
@@ -209,39 +273,86 @@ function GeneralTab({ org, settings, onChange }) {
         </Field>
       </div>
 
-      <Field label="Active Performance Types" hint="Select which types employees can use when setting targets. Click ⓘ to learn what each type means." info={HELP.orgSettings.activeTypes}>
-        <div className="grid grid-cols-2 gap-2 mt-1">
-          {ALL_ACTIVE_TYPES.map(t => (
-            <div key={t.value} className="flex items-center gap-1">
-              <label className="flex items-center gap-2 text-sm text-slate-700 cursor-pointer flex-1">
+      <Field label="Active Performance Types" hint="Select which types employees can use when setting targets. Paired types (marked below) are always enabled together." info={HELP.orgSettings.activeTypes}>
+        <div className="space-y-2 mt-1">
+          {ACTIVE_TYPE_GROUPS.map(group => {
+            const activeTypes = settings.active_types || [];
+            const allChecked = group.values.every(v => activeTypes.includes(v));
+            const isBscWarning = group.requiresFrameworks && allChecked &&
+              !group.requiresFrameworks.includes(settings.framework);
+
+            const handleToggle = (checked) => {
+              const cur = settings.active_types || [];
+              const newTypes = checked
+                ? [...new Set([...cur, ...group.values])]
+                : cur.filter(v => !group.values.includes(v));
+              onChange({ active_types: newTypes });
+            };
+
+            return (
+              <label
+                key={group.id}
+                className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
+                  isBscWarning
+                    ? 'border-amber-300 bg-amber-50'
+                    : allChecked
+                      ? 'border-indigo-200 bg-indigo-50'
+                      : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
+                }`}
+              >
                 <input
                   type="checkbox"
-                  className="rounded"
-                  checked={(settings.active_types || []).includes(t.value)}
-                  onChange={e => {
-                    const cur = settings.active_types || [];
-                    onChange({
-                      active_types: e.target.checked
-                        ? [...cur, t.value]
-                        : cur.filter(v => v !== t.value),
-                    });
-                  }}
+                  className="rounded mt-0.5 cursor-pointer flex-shrink-0"
+                  checked={allChecked}
+                  onChange={e => handleToggle(e.target.checked)}
                 />
-                {t.label}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center flex-wrap gap-1.5">
+                    <span className={`text-sm font-medium ${allChecked ? 'text-slate-800' : 'text-slate-600'}`}>
+                      {group.label}
+                    </span>
+                    {group.paired && (
+                      <span className="text-[10px] bg-indigo-100 text-indigo-600 rounded-full px-2 py-0.5 font-medium whitespace-nowrap">
+                        always paired
+                      </span>
+                    )}
+                    {HELP.performanceTypes[group.infoKey] && (
+                      <button
+                        type="button"
+                        onClick={e => { e.preventDefault(); setTypeModal(group.infoKey); }}
+                        title={`Learn about ${group.label}`}
+                        className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-slate-200 text-slate-500 hover:bg-indigo-100 hover:text-indigo-600 text-[10px] font-bold leading-none transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-400 flex-shrink-0"
+                      >i</button>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">{group.hint}</p>
+                  {isBscWarning && (
+                    <p className="text-xs text-amber-700 mt-1 font-medium">
+                      ⚠ BSC Metric works best with the Balanced Scorecard or Hybrid framework. Current framework: <strong>{settings.framework || 'none'}</strong>.
+                    </p>
+                  )}
+                </div>
               </label>
-              {HELP.performanceTypes[t.value] && (
-                <button
-                  type="button"
-                  onClick={() => setTypeModal(t.value)}
-                  title={`Learn about ${t.label}`}
-                  className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-slate-200 text-slate-500 hover:bg-indigo-100 hover:text-indigo-600 text-[10px] font-bold leading-none transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-400 flex-shrink-0"
-                >
-                  i
-                </button>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
+        {(() => {
+          const ts = getTypeStatus(settings.active_types);
+          if (ts.empty) return (
+            <p className="text-xs text-red-500 mt-2">⚠ No performance types selected — at least one type is required.</p>
+          );
+          if (ts.compOnly) return (
+            <p className="text-xs text-amber-600 mt-2">
+              Only Competency is active — the Weightage tab will auto-set to 0% Goals / 100% Competency.
+            </p>
+          );
+          if (ts.goalsOnly) return (
+            <p className="text-xs text-amber-600 mt-2">
+              No Competency type active — the Weightage tab will auto-set to 100% Goals / 0% Competency.
+            </p>
+          );
+          return null;
+        })()}
       </Field>
 
       {(settings.framework === 'balanced_scorecard' || settings.active_types?.includes('bsc_metric')) && (
@@ -391,6 +502,7 @@ function GeneralTab({ org, settings, onChange }) {
 function RatingScaleTab({ settings, onChange }) {
   const [activeModal, setActiveModal] = useState(null);
   const ratingScale = settings.rating_scale || {};
+  const typeStatus = getTypeStatus(settings.active_types);
 
   const updateScale = (kind, patch) => {
     onChange({ rating_scale: { ...ratingScale, [kind]: { ...(ratingScale[kind] || {}), ...patch } } });
@@ -404,23 +516,43 @@ function RatingScaleTab({ settings, onChange }) {
           onClose={() => setActiveModal(null)}
         />
       )}
-      <RatingScaleSection
-        title="Goals / KRA / KPI Rating Scale"
-        scale={ratingScale.goals || {}}
-        onUpdate={patch => updateScale('goals', patch)}
-        sectionHelp={HELP.ratingScale.goalsScaleSection}
-        keyPrefix="goals"
-        onOpenModal={setActiveModal}
-      />
-      <div className="border-t border-slate-100 pt-6">
+
+      {typeStatus.hasGoals ? (
         <RatingScaleSection
-          title="Competency Rating Scale"
-          scale={ratingScale.competency || {}}
-          onUpdate={patch => updateScale('competency', patch)}
-          sectionHelp={HELP.ratingScale.competencyScaleSection}
-          keyPrefix="comp"
+          title="Goals / KRA / KPI Rating Scale"
+          scale={ratingScale.goals || {}}
+          onUpdate={patch => updateScale('goals', patch)}
+          sectionHelp={HELP.ratingScale.goalsScaleSection}
+          keyPrefix="goals"
           onOpenModal={setActiveModal}
         />
+      ) : (
+        <div className="bg-slate-50 border border-slate-200 rounded-lg px-5 py-4">
+          <p className="text-sm font-medium text-slate-500 mb-1">Goals / KRA / KPI Rating Scale</p>
+          <p className="text-xs text-slate-400">
+            No goal-type performance targets are active. Enable OKR, KRA/KPI, Goal, BSC Metric, or Custom Metric in the General tab to configure goal ratings.
+          </p>
+        </div>
+      )}
+
+      <div className="border-t border-slate-100 pt-6">
+        {typeStatus.hasComp ? (
+          <RatingScaleSection
+            title="Competency Rating Scale"
+            scale={ratingScale.competency || {}}
+            onUpdate={patch => updateScale('competency', patch)}
+            sectionHelp={HELP.ratingScale.competencyScaleSection}
+            keyPrefix="comp"
+            onOpenModal={setActiveModal}
+          />
+        ) : (
+          <div className="bg-slate-50 border border-slate-200 rounded-lg px-5 py-4">
+            <p className="text-sm font-medium text-slate-500 mb-1">Competency Rating Scale</p>
+            <p className="text-xs text-slate-400">
+              Competency is not an active type. Enable it in the General tab to configure competency ratings.
+            </p>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -507,10 +639,22 @@ function RatingScaleSection({ title, scale, onUpdate, sectionHelp, keyPrefix, on
 /* ── Weightage Tab ───────────────────────────────────────────────────────── */
 function WeightageTab({ settings, onChange }) {
   const [activeModal, setActiveModal] = useState(null);
+  const typeStatus = getTypeStatus(settings.active_types);
+  const isLocked = typeStatus.compOnly || typeStatus.goalsOnly;
+
+  useEffect(() => {
+    if (typeStatus.compOnly) {
+      onChange({ weightage: { goals_percent: 0, competency_percent: 100 } });
+    } else if (typeStatus.goalsOnly) {
+      onChange({ weightage: { goals_percent: 100, competency_percent: 0 } });
+    }
+  }, [settings.active_types, onChange]);
+
   const w = settings.weightage || { goals_percent: 70, competency_percent: 30 };
   const goalsVal = w.goals_percent ?? 70;
 
   const handleGoalsChange = (val) => {
+    if (isLocked) return;
     const g = Math.min(100, Math.max(0, +val));
     onChange({ weightage: { goals_percent: g, competency_percent: 100 - g } });
   };
@@ -534,7 +678,16 @@ function WeightageTab({ settings, onChange }) {
         </p>
       </div>
 
-      <div className="bg-slate-50 rounded-xl p-6 space-y-5">
+      {isLocked && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-800">
+          {typeStatus.compOnly
+            ? <>Only <strong>Competency</strong> is active. Goal weight is automatically <strong>0%</strong> and Competency is <strong>100%</strong>. Enable a goal-type (OKR, KRA/KPI, Goal, etc.) in the General tab to configure a custom split.</>
+            : <>No <strong>Competency</strong> type is active. Goal weight is automatically <strong>100%</strong> and Competency is <strong>0%</strong>. Enable Competency in the General tab to configure a custom split.</>
+          }
+        </div>
+      )}
+
+      <div className={`bg-slate-50 rounded-xl p-6 space-y-5 ${isLocked ? 'opacity-60 pointer-events-none select-none' : ''}`}>
         <div className="flex gap-6 items-center">
           <div className="flex-1">
             <div className="flex justify-between text-sm font-medium mb-2">
@@ -549,6 +702,7 @@ function WeightageTab({ settings, onChange }) {
               value={goalsVal}
               onChange={e => handleGoalsChange(e.target.value)}
               className="w-full accent-indigo-600"
+              disabled={isLocked}
             />
           </div>
           <div className="w-20">
@@ -557,6 +711,7 @@ function WeightageTab({ settings, onChange }) {
               className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-center"
               value={goalsVal}
               onChange={e => handleGoalsChange(e.target.value)}
+              disabled={isLocked}
             />
           </div>
         </div>
@@ -583,6 +738,7 @@ function WeightageTab({ settings, onChange }) {
               className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm text-center"
               value={w.competency_percent ?? 30}
               onChange={e => handleGoalsChange(100 - +e.target.value)}
+              disabled={isLocked}
             />
           </div>
         </div>

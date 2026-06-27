@@ -80,10 +80,12 @@
 - When company OKR has been finalized (entered by CEO, VP and directors from their respective logins), and when department HOD enters their Key-results/KPI then they should see cascaded Company's OKR and based on them they need to enter the Key-results (check if the department head can also enter OKR within OKR), also at company OKR definition time, the CEO/VP or directors can tell the system which department head will need to enter their key-results in this OKR and must or not level configuration, so that department head should not missed to enter their key-results or KPI. Option for subordinates which receive this cascaded key-results
 - Can KPI be directly enter against OKR or it can be only entered against Key-results, check industry norms and prepare a validation in the 'Org Settings' with default correct values as per industry norms. Can department head define their KPI along with key-results or they can just enter key-results against company OKRs? If KPI can be defined at department head level then whether it can be visible to subordinates of that same department or not (configurable at the time of preparing those KPIs). Similarly when L3 or L4 (subordinates of department heads) are defining their KPIs whether they can see their superior KPIs and Key-results data or not (this choice can be provided at superior their during input stage, check if my understanding is correct or not).
 - Overplanning or overcommittment highlights or block option to be developed and configurable, the approval/reviewal can get this notified that it's overcommittment given by the employee. Similarly when employees are giving actual numbers, typo-mistakes can be captured (we can create validations configurable the desirable values with threshold/acceptable range in the configuration of cycles). Also when employees defining the Key-results against OKR or KPI against Key-results (validate are these interlinked) then how many line items can be defined, this can be allowed with configurable when company and department HOD both are defining their OKR / KR. To avoid wrong preparation of KPI or Key-results by the employees.
+- Timebound objective feature, that should reflect to the all users and they can also provide the timeline of their planned KPIs/KR/Goals/Compentancy. This will also to be applicable at company's OKR definition.
+- Later: Dependency of OKR/KR/KPI/Goals feature at someone else. The actionable can be executed independently or dependent others.
 
 ### User inputs (Employee KPI/Goals/Compentancy)
 
-  
+- Indication of input types like numbers, ratings, stars Measurement types with pictorial infotype for making it better user interface. Check if possible then only implement.
 
 ### Reviews and approvals
 
@@ -104,6 +106,7 @@
 
 - Build interactive dashboard with drill-down analysis, comparison of KPI or Key results in which one is achiving the targets but OKR is not achiving how the management or company can view these findings.
 - Company OKR line item wise analysis which is achieved and which are missed. Similarly HOD department wise comparison of achievement of companys OKR line item wise comparison at different department level of achievement to know which department has missed the company's OKR.
+- Missing of timebound OKR/KR/KPI/Goals/etc insights who is missing (company, department, particular mid-manager or individual employees are lacking behind).
 
 ### Continue feedbacks
 
@@ -113,3 +116,8 @@
 
 - Do need to the configuration like BSC or 9-box or OKR/KR/Goal at the 'org settings' or it should be there at 'Cycles' setup/configuration.
 - Prepare structural features of other options which are used in industries that we have not covered yet (other than OKR,KR,KPI,Goals), check industries like Pharma, Hospitals,Banks and suggest if they are following different approaches and methods, that we can provide and incorporate in this demo application.
+
+### Product developed features list
+
+- List down the features which are covered in the project, and display them as features content (categorized) for management presentation of demo.
+  
