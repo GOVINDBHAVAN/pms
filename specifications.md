@@ -1,6 +1,6 @@
 # Performance Management System (PMS)
 ## Technical Specifications v2.0 — POC/Prototype
-### Stack: React 18 + Vite + Node.js/Express + SQLite (better-sqlite3)
+### Stack: React 18 + Vite + Node.js/Express + SQLite (sql.js — WebAssembly, no native build needed)
 
 ---
 
@@ -82,8 +82,7 @@ pms-poc/
 | HTTP Client | Axios | 1 | API calls |
 | Charts | Recharts | 2 | Dashboards |
 | Backend | Express | 4 | REST API server |
-| Database | better-sqlite3 | 9 | Sync SQLite driver |
-| Query Builder | Knex.js | 3 | SQL abstraction |
+| Database | sql.js | 1 | SQLite via WebAssembly — no native compilation needed |
 | Auth | jsonwebtoken + bcrypt | — | JWT sessions |
 | Dev | nodemon + concurrently | — | Hot reload both servers |
 
@@ -1755,7 +1754,7 @@ mkdir pms-poc && cd pms-poc
 # 2. Server setup
 mkdir server && cd server
 npm init -y
-npm install express better-sqlite3 knex bcrypt jsonwebtoken cors dotenv multer csv-parse
+npm install express sql.js bcrypt jsonwebtoken cors dotenv multer csv-parse
 npm install -D nodemon
 cd ..
 
