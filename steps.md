@@ -9,3 +9,4 @@
 - # install dependency npm i on both server and client then run the project with ./dev.ps1.
 - Change sqllite3 with alternative because it was not working on windows.
   - Proceed to prepare  @specifications.md for '2. TECHNOLOGY STACK'
+  - Proceed to prepare  @specifications.md for '3. DATABASE SCHEMA'

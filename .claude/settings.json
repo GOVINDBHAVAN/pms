@@ -9,7 +9,9 @@
       "PowerShell(git -C \"d:\\\\Practice\\\\my\\\\pms\" add dev.bat dev.ps1)",
       "PowerShell(git -C \"d:\\\\Practice\\\\my\\\\pms\" add server/package.json server/index.js client/package.json)",
       "Read(//c/Users/govin/AppData/Local/npm-cache/_logs/**)",
-      "PowerShell(git -C \"d:\\\\Practice\\\\my\\\\pms\" add server/package.json specifications.md)"
+      "PowerShell(git -C \"d:\\\\Practice\\\\my\\\\pms\" add server/package.json specifications.md)",
+      "PowerShell(Get-ChildItem -Path \"d:\\\\Practice\\\\my\\\\pms\\\\client\\\\src\" -Recurse | Where-Object {-not $_.PSIsContainer} | Select-Object FullName)",
+      "PowerShell(Invoke-RestMethod -Uri \"http://localhost:3001/api/v1/health\")"
     ]
   }
 }
