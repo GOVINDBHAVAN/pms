@@ -24,6 +24,7 @@
 
 ## TODOs
 
+- Software product tag line 'PMS software for stupid HR'
 - If the use has selected 'Framework' then why do they need to select 'Active performance types', is this a duplication? Do we really need 'Framework' selection?
 - In 'Org settings' Do we need 'Cycle Defaults' or it will come in the 'Cycles' section/configuration?
 - Add 9-box support
@@ -32,6 +33,8 @@
 - CEO,VP,Director,HOD page where they can enter the targets against the company OKR (enter by all CEO,VP,Director as per their profiles and domain applicability) and another page for departments HOD to provide their sub-targets against company OKR (this will be applicable if Cascading is enabled)
 - Manager organization hierarchy wise goals cascading and target visualization. How the actual target and commitment or planned both along can be defined?
 - Sample data of employees with L1 to L9 each reporting structure L1 = 1 (MD/CEO), L2 = 4 (Sales Head, Product Head, Support Head, HR and Admin Head), Upto L9. At L3 to L9 there will be multiple reportees and each will have their own targets drived from L2 (L2 targets are driven from L1 company targets), The L4 to L9 will give stretch targets (overcommittment or undercommitment) the visualization is required that company's target is separately visible the upper layer target should be visible to current reportees so that they can plan their targets and similarly when manager is enterring their target they can suggest targets to their reportees (it's most critical aspect of the system to make this complex mapping so simple that it can be easily configure by the clients). This feature we can enable in cascading with OKR based appraoch (check if my understanding is correct with cascading).
+- Revise login page functionality to first select the demo database type (IT company, Manufacturing company, Pharma company, etc) and the user/employee to login with without remembering/typing any password this will be use for a quick demostraction.
+- Employee master page modification for manager and reportees mapping to form the hierarchy of organization structure.
 - Revision of targets during the year multiple times with revision history along with approvals.
 - After all these steps completed prepare multiple sample data structures (selection of data structure of case studies to view the software working), 1. An IT company having sales team given target based on their head-count salaries so that Sales head and sales managers target is inclusive of their subordinates salaries + self and invidual sales person target is their own salaries, similarly for operation department the OKR is the revenue of the organization increasing (MRR above threshold) and happy client ratings, development team OKR targets is again revenue stable and increasing, lesser software bugs, new features, HR team target is happy enviornment and good work culture. 2. Another company of a manufacturing where they produce product like Car Brakes or any components they have their hypothetical use cases spread across different departments.
 - Build interactive dashboard with drill-down analysis, comparison of KPI or Key results in which one is achiving the targets but OKR is not achiving how the management or company can view these findings.
