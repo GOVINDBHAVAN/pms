@@ -14,6 +14,7 @@ export default function DashboardPage() {
           <p className="text-slate-500 mt-1">
             {employee?.org_name} · {employee?.grade_label || employee?.role}
           </p>
+          <p className="text-xs text-slate-400 italic mt-1">Performance management for humans, not HR consultants</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

@@ -60,7 +60,7 @@ export default function LoginPage() {
         <div className="text-center space-y-1">
           <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-600 text-white text-xl font-bold mb-2">P</div>
           <h1 className="text-2xl font-bold text-slate-900">Performance Management</h1>
-          <p className="text-sm text-slate-500">Sign in to your organization</p>
+          <p className="text-sm text-slate-500 italic">Performance management for humans, not HR consultants</p>
         </div>
 
         {/* Tab selector */}
