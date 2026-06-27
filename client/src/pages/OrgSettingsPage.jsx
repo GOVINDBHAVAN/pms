@@ -59,7 +59,7 @@ const TERMINOLOGY_KEYS = [
 
 const BAND_COLORS = ['#16a34a', '#2563eb', '#d97706', '#dc2626', '#7f1d1d', '#7c3aed', '#0891b2'];
 
-const TABS = ['General', 'Rating Scale', 'Weightage', 'Terminology', 'Performance Bands', 'Target Rules'];
+const BASE_TABS = ['General', 'Rating Scale', 'Weightage', 'Terminology', 'Performance Bands', 'Target Rules'];
 
 export default function OrgSettingsPage() {
   const [activeTab, setActiveTab] = useState('General');
@@ -69,6 +69,10 @@ export default function OrgSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
   const [error, setError] = useState('');
+
+  const tabs = settings?.ninebox_enabled
+    ? [...BASE_TABS, 'Talent Grid']
+    : BASE_TABS;
 
   useEffect(() => {
     getOrgSettings()
@@ -131,7 +135,7 @@ export default function OrgSettingsPage() {
         {/* Tabs */}
         <div className="border-b border-slate-200">
           <nav className="flex gap-1">
-            {TABS.map(tab => (
+            {tabs.map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -155,6 +159,7 @@ export default function OrgSettingsPage() {
           {activeTab === 'Terminology'     && <TerminologyTab settings={settings} onChange={updateSettings} />}
           {activeTab === 'Performance Bands' && <BandsTab settings={settings} onChange={updateSettings} />}
           {activeTab === 'Target Rules'    && <TargetRulesTab settings={settings} onChange={updateSettings} />}
+          {activeTab === 'Talent Grid'     && <TalentGridTab settings={settings} onChange={updateSettings} />}
         </div>
       </div>
     </AppLayout>
@@ -240,7 +245,7 @@ function GeneralTab({ org, settings, onChange }) {
       </Field>
 
       {(settings.framework === 'balanced_scorecard' || settings.active_types?.includes('bsc_metric')) && (
-        <Field label="BSC Perspectives" hint="Comma-separated list of BSC perspective names" info={HELP.orgSettings.bscPerspectives} onLearnMore={() => openModal('bsc_perspectives')}>
+        <Field label="BSC Perspectives" hint="Names of the four strategic dimensions each BSC Metric will be tagged to" info={HELP.orgSettings.bscPerspectives} onLearnMore={() => openModal('bsc_perspectives')}>
           <div className="space-y-2">
             {(settings.bsc_perspectives || ['Financial', 'Customer', 'Internal Process', 'Learning & Growth']).map((p, i) => (
               <div key={i} className="flex gap-2">
@@ -271,6 +276,66 @@ function GeneralTab({ org, settings, onChange }) {
           </div>
         </Field>
       )}
+
+      {(settings.framework === 'balanced_scorecard' || settings.active_types?.includes('bsc_metric')) && (
+        <Field
+          label="BSC Perspective Weights (%)"
+          hint="Relative importance of each perspective in the final BSC score — must total 100%"
+          info={HELP.orgSettings.bscPerspectiveWeights}
+          onLearnMore={() => openModal('bsc_perspective_weights')}
+        >
+          {(() => {
+            const perspectives = settings.bsc_perspectives?.length
+              ? settings.bsc_perspectives
+              : ['Financial', 'Customer', 'Internal Process', 'Learning & Growth'];
+            const weights = settings.bsc_perspective_weights || {};
+            const total = perspectives.reduce((s, p) => s + (weights[p] ?? 0), 0);
+            return (
+              <div className="space-y-2">
+                {perspectives.map(p => (
+                  <div key={p} className="flex items-center gap-3">
+                    <span className="text-sm text-slate-600 w-44 truncate">{p}</span>
+                    <input
+                      type="number" min="0" max="100"
+                      className="w-20 border border-slate-200 rounded-lg px-3 py-1.5 text-sm"
+                      value={weights[p] ?? Math.round(100 / perspectives.length)}
+                      onChange={e => onChange({
+                        bsc_perspective_weights: { ...weights, [p]: +e.target.value },
+                      })}
+                    />
+                    <span className="text-xs text-slate-400">%</span>
+                  </div>
+                ))}
+                <p className={`text-xs font-medium mt-1 ${total === 100 ? 'text-green-600' : 'text-red-500'}`}>
+                  Total: {total}% {total === 100 ? '✓' : '— must equal 100%'}
+                </p>
+              </div>
+            );
+          })()}
+        </Field>
+      )}
+
+      <div className="border border-slate-200 rounded-xl p-4 space-y-3">
+        <h4 className="font-medium text-slate-700">9-Box Talent Grid</h4>
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            className="rounded mt-0.5"
+            checked={settings.ninebox_enabled ?? false}
+            onChange={e => onChange({ ninebox_enabled: e.target.checked })}
+          />
+          <div>
+            <div className="flex items-center gap-1 text-sm font-medium text-slate-700">
+              Enable 9-Box Talent Grid
+              <InfoIcon title="9-Box Talent Grid" content={HELP.orgSettings.nineboxEnabled} />
+              <button type="button" onClick={() => openModal('ninebox_enabled')} className="text-[10px] text-indigo-500 hover:text-indigo-700 font-medium underline underline-offset-2 leading-none">Learn more</button>
+            </div>
+            <div className="text-xs text-slate-400 mt-0.5">
+              Adds Performance × Potential matrix to calibration. Unlocks the Talent Grid settings tab.
+            </div>
+          </div>
+        </label>
+      </div>
 
       <Field label="Cycle Defaults" info="Default values pre-filled when HR creates a new review cycle. These save time but can be overridden per cycle.">
         <div className="grid grid-cols-3 gap-4">
@@ -853,6 +918,181 @@ function TargetRulesTab({ settings, onChange }) {
             </div>
           </div>
         </label>
+      </div>
+    </div>
+  );
+}
+
+/* ── Talent Grid Tab ─────────────────────────────────────────────────────── */
+const DEFAULT_BOX_LABELS = {
+  '1_1': 'Underperformer',    '1_2': 'Inconsistent Player', '1_3': 'Enigma',
+  '2_1': 'Solid Contributor', '2_2': 'Core Player',         '2_3': 'High Potential',
+  '3_1': 'Effective Performer','3_2': 'Strong Performer',   '3_3': 'Star / Future Leader',
+};
+
+const BOX_GRID_ORDER = [
+  ['1_3','2_3','3_3'],
+  ['1_2','2_2','3_2'],
+  ['1_1','2_1','3_1'],
+];
+
+function TalentGridTab({ settings, onChange }) {
+  const cfg = settings.ninebox_config || {};
+  const update = (patch) => onChange({ ninebox_config: { ...cfg, ...patch } });
+
+  const potentialLevels = cfg.potential_levels || ['Low', 'Medium', 'High'];
+  const thresholds = cfg.performance_thresholds || { low_max: 2.49, medium_max: 3.99 };
+  const boxLabels = cfg.box_labels || {};
+  const whoRates = cfg.who_rates_potential || 'manager';
+
+  return (
+    <div className="space-y-6">
+      <div>
+        <h3 className="font-semibold text-slate-800 mb-1">9-Box Talent Grid Settings</h3>
+        <p className="text-sm text-slate-500">
+          Configure how the Performance × Potential matrix is displayed, labelled, and who enters potential ratings during calibration.
+        </p>
+      </div>
+
+      {/* Potential level labels */}
+      <Field label="Potential Level Labels" hint="Y-axis labels from Low → High (3 levels)" info={HELP.talentGrid.potentialLevels}>
+        <div className="flex gap-3">
+          {[0, 1, 2].map(i => (
+            <div key={i} className="flex-1">
+              <div className="text-xs text-slate-400 mb-1">Level {i + 1}</div>
+              <input
+                className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
+                value={potentialLevels[i] ?? ''}
+                onChange={e => {
+                  const arr = [...potentialLevels];
+                  arr[i] = e.target.value;
+                  update({ potential_levels: arr });
+                }}
+              />
+            </div>
+          ))}
+        </div>
+      </Field>
+
+      {/* Performance thresholds */}
+      <Field
+        label="Performance Thresholds (X-axis)"
+        hint="Final score ≤ low_max → Low | ≤ medium_max → Medium | above → High"
+        info={HELP.talentGrid.performanceThresholds}
+      >
+        <div className="flex gap-4 items-end">
+          <div>
+            <div className="text-xs text-slate-400 mb-1">Low max score</div>
+            <input
+              type="number" step="0.01" min="0" max="5"
+              className="w-24 border border-slate-200 rounded-lg px-3 py-2 text-sm"
+              value={thresholds.low_max}
+              onChange={e => update({ performance_thresholds: { ...thresholds, low_max: parseFloat(e.target.value) } })}
+            />
+          </div>
+          <div>
+            <div className="text-xs text-slate-400 mb-1">Medium max score</div>
+            <input
+              type="number" step="0.01" min="0" max="5"
+              className="w-24 border border-slate-200 rounded-lg px-3 py-2 text-sm"
+              value={thresholds.medium_max}
+              onChange={e => update({ performance_thresholds: { ...thresholds, medium_max: parseFloat(e.target.value) } })}
+            />
+          </div>
+          <span className="text-xs text-slate-400 pb-2">High = above {thresholds.medium_max}</span>
+        </div>
+      </Field>
+
+      {/* Who rates potential */}
+      <Field label="Who Rates Potential" info={HELP.talentGrid.whoRatesPotential}>
+        <select
+          className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
+          value={whoRates}
+          onChange={e => update({ who_rates_potential: e.target.value })}
+        >
+          <option value="manager">Direct Manager (during calibration)</option>
+          <option value="hr">HR Only</option>
+          <option value="committee">Calibration Committee</option>
+        </select>
+      </Field>
+
+      {/* Optional fields */}
+      <div className="border border-slate-200 rounded-xl p-4 space-y-3">
+        <h4 className="font-medium text-slate-700">Optional Talent Fields</h4>
+
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            className="rounded mt-0.5"
+            checked={cfg.show_succession_risk ?? false}
+            onChange={e => update({ show_succession_risk: e.target.checked })}
+          />
+          <div>
+            <div className="flex items-center gap-1 text-sm font-medium text-slate-700">
+              Show Succession Risk
+              <InfoIcon title="Succession Risk" content={HELP.talentGrid.showSuccessionRisk} />
+            </div>
+            <div className="text-xs text-slate-400">Flight Risk / Key Person Risk / Bench Strength</div>
+          </div>
+        </label>
+
+        <label className="flex items-start gap-3 cursor-pointer">
+          <input
+            type="checkbox"
+            className="rounded mt-0.5"
+            checked={cfg.show_readiness ?? false}
+            onChange={e => update({ show_readiness: e.target.checked })}
+          />
+          <div>
+            <div className="flex items-center gap-1 text-sm font-medium text-slate-700">
+              Show Readiness Level
+              <InfoIcon title="Readiness Level" content={HELP.talentGrid.showReadiness} />
+            </div>
+            <div className="text-xs text-slate-400">Ready Now / 1–2 Years / Long-Term</div>
+          </div>
+        </label>
+      </div>
+
+      {/* Box label editor */}
+      <div>
+        <div className="flex items-center gap-1 mb-3">
+          <span className="text-sm font-medium text-slate-700">Box Labels</span>
+          <InfoIcon title="Box Labels" content={HELP.talentGrid.boxLabels} />
+        </div>
+        <p className="text-xs text-slate-400 mb-3">
+          Preview of the 9-box grid. X-axis = Performance (Low→High left to right). Y-axis = Potential (Low→High bottom to top). Click any box to rename it.
+        </p>
+        <div className="border border-slate-200 rounded-xl overflow-hidden">
+          <div className="grid grid-cols-4 text-xs text-slate-400 bg-slate-50 border-b border-slate-200">
+            <div className="p-2 border-r border-slate-200">Potential ↕ / Perf →</div>
+            {['Low Perf', 'Mid Perf', 'High Perf'].map(h => (
+              <div key={h} className="p-2 text-center border-r last:border-r-0 border-slate-200">{h}</div>
+            ))}
+          </div>
+          {BOX_GRID_ORDER.map((row, ri) => (
+            <div key={ri} className="grid grid-cols-4 border-b last:border-b-0 border-slate-200">
+              <div className="p-2 text-xs text-slate-400 bg-slate-50 border-r border-slate-200 flex items-center">
+                {potentialLevels[2 - ri] || `Level ${3 - ri}`} Pot.
+              </div>
+              {row.map(pos => (
+                <div key={pos} className="p-1 border-r last:border-r-0 border-slate-200">
+                  <input
+                    className="w-full text-xs border border-slate-100 rounded px-2 py-1 text-slate-700 bg-white focus:border-indigo-400 focus:outline-none"
+                    value={boxLabels[pos] ?? DEFAULT_BOX_LABELS[pos]}
+                    onChange={e => update({ box_labels: { ...boxLabels, [pos]: e.target.value } })}
+                    placeholder={DEFAULT_BOX_LABELS[pos]}
+                  />
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+        <button
+          className="mt-2 text-xs text-slate-400 hover:text-slate-600"
+          onClick={() => update({ box_labels: {} })}
+        >
+          Reset to defaults
+        </button>
       </div>
     </div>
   );

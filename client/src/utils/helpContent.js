@@ -52,6 +52,16 @@ export const HELP = {
       'The default number of days allocated for the appraisal/review phase — from when self-rating opens to when manager ratings must be submitted.\n\n' +
       'Example: 21 days gives employees 10 days for self-rating and managers 11 days for their review.\n\n' +
       'HR can set specific open and close dates per cycle.',
+
+    nineboxEnabled:
+      'The 9-Box Talent Grid plots every employee on a 3×3 matrix: Performance (X-axis, from final score) × Potential (Y-axis, entered by manager/HR during calibration).\n\n' +
+      'Enabling this does NOT change how targets are scored — it adds a talent layer on top of completed appraisals.\n\n' +
+      'Unlocks the "Talent Grid" settings tab where you can customise box labels, potential levels, and who enters potential ratings.',
+
+    bscPerspectiveWeights:
+      'Relative importance (%) of each BSC perspective in the overall scorecard. Must total 100%.\n\n' +
+      'Example: Financial 35%, Customer 30%, Process 20%, Learning 15% for a bank.\n\n' +
+      'These weights determine how per-perspective scores are aggregated into the BSC component of the final score.',
   },
 
   /* ─── Performance Type Detailed Info (for modal) ───────────────────────── */
@@ -1103,5 +1113,123 @@ export const HELP = {
 
     term_performance_band: { title: 'Performance Band Label', icon: '🏷️', color: 'slate',  tagline: 'Rename "Performance Band" (the qualitative score category) to your preferred term', what: ['Performance bands are qualitative categories assigned to final score ranges. Alternatives: "Rating Category", "Impact Band", "Performance Category".'], reflects: [{ where: 'Employee Profile', what: 'Shows the employee\'s band for the completed cycle.' }, { where: 'Appraisal Completion Screen', what: '"Your Performance Band: Exceptional" — label updates.' }, { where: 'HR Reports', what: 'Distribution report header uses the custom term.' }], practices: [{ context: 'NGOs', rec: '"Impact Band" — aligns with social impact measurement language.' }], impact: 'The band label is the most visible outcome of the entire appraisal cycle. Employees remember their band long after they forget their numeric score.', example: { scenario: '', items: ['"Impact Band: Outstanding Contributor"  ← NGO employees respond to this language'] }, mistake: 'Renaming to "Rating" — "Rating" is also used for scale type. Two different things sharing the same name causes confusion in reports and emails.' },
 
+    ninebox_enabled: {
+      title: '9-Box Talent Grid', icon: '🔲', color: 'violet',
+      tagline: 'Enable the 9-Box grid to plot employees by Performance × Potential',
+      what: [
+        'The 9-Box Talent Grid is a 3×3 matrix used in succession planning and talent management. X-axis = Performance (derived from final appraisal score). Y-axis = Potential (assessed separately by manager or HR — it is a judgment call, not a formula).',
+        'Enabling this adds a "Potential Rating" input (1=Low, 2=Medium, 3=High) to the calibration phase. Combined with the final score, it places each employee into one of 9 boxes.',
+        'This feature does NOT change how targets are set or scored. It is an overlay on top of the completed appraisal — adding a talent dimension to the performance data.',
+      ],
+      reflects: [
+        { where: 'Calibration Phase', what: 'HR and managers enter potential ratings after manager scores are finalised.' },
+        { where: 'Talent Grid Report', what: '3×3 matrix showing all employees with their box placement and custom labels.' },
+        { where: 'Employee Profile', what: 'Shows the employee\'s 9-box position for the cycle (visible to HR and manager only).' },
+      ],
+      practices: [
+        { context: 'Large Enterprises (200+ employees)', rec: 'Enable. 9-box is most valuable when you have multiple succession candidates and need to identify talent pipeline objectively.' },
+        { context: 'BFSI / Manufacturing', rec: 'Enable, especially when BSC is active — BSC provides multi-dimensional performance; potential adds the future dimension.' },
+        { context: 'Small teams (<50)', rec: 'Optional. Value comes from cross-team comparison during calibration, which requires enough data points.' },
+      ],
+      impact: '9-box identifies four critical talent actions: retain Stars (high perf + high potential), develop Core Players, coach Inconsistent Players, and address Underperformers. Without it, HR only sees the past; with it, HR sees the future pipeline.',
+      example: {
+        scenario: '9-Box placement examples:',
+        items: [
+          'Final Score 4.2 (High Perf) + Potential 3 (High) = Box 3_3 → Star / Future Leader',
+          'Final Score 4.0 (High Perf) + Potential 1 (Low)  = Box 3_1 → Effective Performer (retain, not promote)',
+          'Final Score 2.2 (Low Perf)  + Potential 3 (High) = Box 1_3 → Enigma (coach aggressively)',
+          'Final Score 1.8 (Low Perf)  + Potential 1 (Low)  = Box 1_1 → Underperformer (PIP or exit)',
+        ],
+        note: 'The 9-box does not automatically trigger any action — it is a conversation tool for HR and leadership.',
+      },
+      mistake: 'Using 9-box without calibration sessions. Potential ratings entered by individual managers without cross-comparison are inconsistent — one manager\'s "High Potential" may be another\'s "Medium". Calibration is essential.',
+    },
+
+    bsc_perspective_weights: {
+      title: 'BSC Perspective Weights', icon: '⚖️', color: 'amber',
+      tagline: 'Set the relative importance of each BSC perspective in the scorecard',
+      what: [
+        'When using Balanced Scorecard, targets are tagged to one of your configured perspectives (Financial, Customer, Internal Process, Learning & Growth). Perspective weights determine how much each perspective contributes to the overall BSC score.',
+        'Example: Financial 35%, Customer 30%, Internal Process 20%, Learning 15%. A BSC target\'s contribution to the final score = target weight × its perspective weight.',
+        'All perspective weights must sum to 100%. If equal weighting is preferred, set 25% each.',
+      ],
+      reflects: [
+        { where: 'BSC Scorecard View', what: 'Each perspective block shows the perspective weight prominently.' },
+        { where: 'Final Score Calculation', what: 'BSC perspective scores are aggregated using these weights before flowing into the goals/competency split.' },
+        { where: 'HR Reports', what: 'Per-perspective performance distribution uses these weights for comparison.' },
+      ],
+      practices: [
+        { context: 'Banks / NBFC (profit-driven)', rec: 'Financial 35%, Customer 30%, Process 20%, Learning 15%. Profitability is primary.' },
+        { context: 'Hospitals / Healthcare', rec: 'Customer (Patient) 35%, Process 30%, Learning 20%, Financial 15%. Patient outcomes first.' },
+        { context: 'Government / Public Sector', rec: 'Process 35%, Customer (Citizen) 30%, Learning 20%, Financial 15%. Process compliance is primary.' },
+      ],
+      impact: 'Perspective weights signal strategic priorities to employees. A bank that sets Financial at 50% tells employees: hit the revenue number at all costs. Balanced weights signal a sustainable, long-term culture.',
+      example: {
+        scenario: 'Branch Manager\'s BSC with perspective weights applied:',
+        items: [
+          'Financial (35%): Perspective Score 3.8 → Contribution = 3.8 × 0.35 = 1.33',
+          'Customer (30%): Perspective Score 4.2 → Contribution = 4.2 × 0.30 = 1.26',
+          'Process (20%):  Perspective Score 4.5 → Contribution = 4.5 × 0.20 = 0.90',
+          'Learning (15%): Perspective Score 3.5 → Contribution = 3.5 × 0.15 = 0.53',
+          'Total BSC Score: 1.33 + 1.26 + 0.90 + 0.53 = 4.02 / 5',
+        ],
+        note: 'Without perspective weights, all four dimensions contribute equally even if the bank values Financial 2× more than Learning.',
+      },
+      mistake: 'Leaving all perspective weights equal when your business strategy clearly prioritises one dimension. Equal weights are politically safe but strategically inaccurate.',
+    },
+
+  },
+
+  /* ─── Talent Grid Tab ───────────────────────────────────────────────────── */
+  talentGrid: {
+    section:
+      'Configure the 9-Box Talent Grid — a succession planning tool that plots every employee on a 3×3 matrix.\n\n' +
+      'X-axis (Performance): automatically derived from the final appraisal score.\n' +
+      'Y-axis (Potential): manually rated by the manager or HR during calibration.\n\n' +
+      'These settings control how the matrix is labelled, who enters potential ratings, and what additional talent fields are tracked.',
+
+    potentialLevels:
+      'The three potential levels shown on the Y-axis of the talent grid.\n\n' +
+      'Default: Low / Medium / High. You can rename them to match your language (e.g., "Developing / Growth / Ready Now").\n\n' +
+      'These labels appear in the potential rating dropdown during calibration, and as Y-axis labels on the talent grid report.',
+
+    performanceThresholds:
+      'Defines which final score range maps to Low / Medium / High performance on the X-axis.\n\n' +
+      'Example: Low = 0–2.49, Medium = 2.50–3.99, High = 4.00–5.00 (on a 5-point scale).\n\n' +
+      'Align these with your performance bands so "High Performance" matches your "Exceeds" or "Exceptional" bands.',
+
+    boxLabels:
+      'The name assigned to each of the 9 cells in the talent grid.\n\n' +
+      'Default labels: "Star / Future Leader" (3_3), "Core Player" (2_2), "Underperformer" (1_1), etc.\n\n' +
+      'Rename boxes to match your HR terminology. Names are visible on calibration reports and succession plan documents.',
+
+    whoRatesPotential:
+      'Controls who can enter potential ratings during the calibration phase.\n\n' +
+      'Manager: the direct manager enters potential rating for each reportee during their calibration session.\n' +
+      'HR Only: only HR administrators can assign potential ratings (prevents manager bias).\n' +
+      'Calibration Committee: potential is agreed during a moderated group calibration session (most common in mature PMS).\n\n' +
+      'Recommended: HR or Calibration Committee — managers tend to rate their best performers as "High Potential" to protect them, regardless of actual future readiness.',
+
+    showSuccessionRisk:
+      'When enabled, calibrators can additionally mark each employee\'s succession risk.\n\n' +
+      '"Flight Risk": employee is likely to leave if not engaged (inform retention strategy).\n' +
+      '"Key Person Risk": employee is critical and has no backup (inform succession planning).\n' +
+      '"Bench Strength": employee is ready to step up (inform promotion pipeline).\n\n' +
+      'Adds one extra field to the calibration form per employee.',
+
+    showReadiness:
+      'When enabled, calibrators can mark when a "High Potential" employee will be ready for the next role.\n\n' +
+      '"Ready Now": can be promoted in the current cycle.\n' +
+      '"Ready in 1–2 Years": needs development before promotion.\n' +
+      '"Long-Term (3+ Years)": high potential but early in career.\n\n' +
+      'This is the core output of succession planning — the readiness field builds the promotion pipeline.',
+  },
+
+  /* ─── Target Form — BSC and 9-box fields ───────────────────────────────── */
+  target: {
+    bscPerspective:
+      'The BSC perspective this metric belongs to.\n\n' +
+      'Every BSC Metric must be tagged to one perspective (Financial, Customer, Internal Process, Learning & Growth — or your renamed versions).\n\n' +
+      'Perspective determines how this metric contributes to your overall BSC score, based on the perspective weights configured in Org Settings.',
   },
 };

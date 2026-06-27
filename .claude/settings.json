@@ -14,7 +14,8 @@
       "PowerShell(Invoke-RestMethod -Uri \"http://localhost:3001/api/v1/health\")",
       "PowerShell(Get-ChildItem \"d:\\\\Practice\\\\my\\\\pms\\\\server\" -Recurse | Select-Object FullName | Where-Object { $_.FullName -notmatch 'node_modules' })",
       "Bash(npx tsc *)",
-      "Bash(npx vite *)"
+      "Bash(npx vite *)",
+      "Bash(node -e ' *)"
     ]
   }
 }
