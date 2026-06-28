@@ -17,6 +17,7 @@ const FRAMEWORKS = [
 ];
 
 const CASCADE_MODES = [
+  { value: 'none',          label: 'Not Applicable (No Cascading)' },
   { value: 'top_down',      label: 'Top-Down' },
   { value: 'bottom_up',     label: 'Bottom-Up' },
   { value: 'bidirectional', label: 'Bidirectional' },
@@ -83,6 +84,51 @@ const ACTIVE_TYPE_GROUPS = [
     infoKey: 'custom_metric',
   },
 ];
+
+// Which type-group IDs are allowed (and default) per framework
+const FRAMEWORK_TYPE_RULES = {
+  okr:                { allowed: ['okr', 'competency', 'custom_metric'],                                   defaults: ['okr', 'competency'] },
+  kra_kpi:            { allowed: ['kra_kpi', 'competency', 'custom_metric'],                               defaults: ['kra_kpi', 'competency'] },
+  goals:              { allowed: ['goal', 'competency', 'custom_metric'],                                   defaults: ['goal', 'competency'] },
+  competency:         { allowed: ['competency'],                                                             defaults: ['competency'] },
+  balanced_scorecard: { allowed: ['bsc_metric', 'kra_kpi', 'competency', 'custom_metric'],                 defaults: ['bsc_metric', 'competency'] },
+  hybrid:             { allowed: ['okr', 'kra_kpi', 'goal', 'competency', 'bsc_metric', 'custom_metric'], defaults: null },
+  custom:             { allowed: ['okr', 'kra_kpi', 'goal', 'competency', 'bsc_metric', 'custom_metric'], defaults: null },
+};
+
+// Which cascade modes are allowed per framework
+// 'none' is always selectable; other modes may be restricted
+const FRAMEWORK_CASCADE_RULES = {
+  okr:                { allowed: ['none', 'top_down', 'bottom_up', 'bidirectional'], default: 'bidirectional' },
+  kra_kpi:            { allowed: ['none', 'top_down', 'bidirectional'],              default: 'top_down'      },
+  goals:              { allowed: ['none', 'top_down', 'bottom_up'],                   default: 'top_down'      },
+  competency:         { allowed: ['none'],                                             default: 'none'          },
+  balanced_scorecard: { allowed: ['none', 'top_down'],                                default: 'top_down'      },
+  hybrid:             { allowed: ['none', 'top_down', 'bottom_up', 'bidirectional'], default: 'bidirectional' },
+  custom:             { allowed: ['none', 'top_down', 'bottom_up', 'bidirectional'], default: 'none'          },
+};
+
+function getTypesForFramework(framework, currentTypes) {
+  const rule = FRAMEWORK_TYPE_RULES[framework];
+  if (!rule) return currentTypes;
+  const allowedValues = rule.allowed.flatMap(
+    gid => ACTIVE_TYPE_GROUPS.find(g => g.id === gid)?.values ?? []
+  );
+  // Always start with the framework's defaults (so switching to OKR always enables OKR types)
+  const defaultValues = rule.defaults
+    ? rule.defaults.flatMap(gid => ACTIVE_TYPE_GROUPS.find(g => g.id === gid)?.values ?? [])
+    : allowedValues;
+  // Also keep any currently-selected optional types that are still compatible
+  const compatibleExtra = (currentTypes || []).filter(t => allowedValues.includes(t));
+  return [...new Set([...defaultValues, ...compatibleExtra])];
+}
+
+function getCascadeForFramework(framework, currentMode) {
+  const rule = FRAMEWORK_CASCADE_RULES[framework];
+  if (!rule) return currentMode;
+  if (rule.allowed.includes(currentMode)) return currentMode;
+  return rule.default;
+}
 
 const GOAL_TYPES = new Set(['okr_objective', 'okr_kr', 'kra', 'kpi', 'goal', 'bsc_metric', 'custom_metric']);
 
@@ -256,85 +302,119 @@ function GeneralTab({ org, settings, onChange }) {
           <select
             className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
             value={settings.framework || ''}
-            onChange={e => onChange({ framework: e.target.value })}
+            onChange={e => {
+              const fw = e.target.value;
+              const newCascade = getCascadeForFramework(fw, settings.cascade_mode);
+              onChange({
+                framework: fw,
+                active_types: getTypesForFramework(fw, settings.active_types),
+                cascade_mode: newCascade,
+              });
+            }}
           >
             {FRAMEWORKS.map(f => <option key={f.value} value={f.value}>{f.label}</option>)}
           </select>
         </Field>
 
         <Field label="Cascade Mode" info={HELP.orgSettings.cascadeMode} onLearnMore={() => openModal('cascade_mode')}>
-          <select
-            className="w-full border border-slate-200 rounded-lg px-3 py-2 text-sm"
-            value={settings.cascade_mode || ''}
-            onChange={e => onChange({ cascade_mode: e.target.value })}
-          >
-            {CASCADE_MODES.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
-          </select>
+          {(() => {
+            const cascadeRule = FRAMEWORK_CASCADE_RULES[settings.framework];
+            const isNone = settings.cascade_mode === 'none';
+            return (
+              <>
+                <select
+                  className={`w-full border rounded-lg px-3 py-2 text-sm ${isNone ? 'border-amber-300 bg-amber-50 text-amber-800' : 'border-slate-200'}`}
+                  value={settings.cascade_mode || 'none'}
+                  onChange={e => onChange({ cascade_mode: e.target.value })}
+                >
+                  {CASCADE_MODES.map(m => {
+                    const isAllowed = !cascadeRule || cascadeRule.allowed.includes(m.value);
+                    return (
+                      <option key={m.value} value={m.value} disabled={!isAllowed}>
+                        {m.label}{!isAllowed ? ' — not available for this framework' : ''}
+                      </option>
+                    );
+                  })}
+                </select>
+                {isNone && (
+                  <p className="text-xs text-amber-700 mt-1">
+                    Cascading is disabled — employees set targets independently with no parent linkage required.
+                  </p>
+                )}
+              </>
+            );
+          })()}
         </Field>
       </div>
 
       <Field label="Active Performance Types" hint="Select which types employees can use when setting targets. Paired types (marked below) are always enabled together." info={HELP.orgSettings.activeTypes}>
         <div className="space-y-2 mt-1">
-          {ACTIVE_TYPE_GROUPS.map(group => {
-            const activeTypes = settings.active_types || [];
-            const allChecked = group.values.every(v => activeTypes.includes(v));
-            const isBscWarning = group.requiresFrameworks && allChecked &&
-              !group.requiresFrameworks.includes(settings.framework);
+          {(() => {
+            const fwRule = FRAMEWORK_TYPE_RULES[settings.framework];
+            const allowedGroupIds = fwRule?.allowed ?? ACTIVE_TYPE_GROUPS.map(g => g.id);
+            return ACTIVE_TYPE_GROUPS.map(group => {
+              const activeTypes = settings.active_types || [];
+              const allChecked = group.values.every(v => activeTypes.includes(v));
+              const isDisabled = !allowedGroupIds.includes(group.id);
 
-            const handleToggle = (checked) => {
-              const cur = settings.active_types || [];
-              const newTypes = checked
-                ? [...new Set([...cur, ...group.values])]
-                : cur.filter(v => !group.values.includes(v));
-              onChange({ active_types: newTypes });
-            };
+              const handleToggle = (checked) => {
+                if (isDisabled) return;
+                const cur = settings.active_types || [];
+                const newTypes = checked
+                  ? [...new Set([...cur, ...group.values])]
+                  : cur.filter(v => !group.values.includes(v));
+                onChange({ active_types: newTypes });
+              };
 
-            return (
-              <label
-                key={group.id}
-                className={`flex items-start gap-3 p-3 rounded-lg border cursor-pointer transition-colors ${
-                  isBscWarning
-                    ? 'border-amber-300 bg-amber-50'
-                    : allChecked
-                      ? 'border-indigo-200 bg-indigo-50'
-                      : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50'
-                }`}
-              >
-                <input
-                  type="checkbox"
-                  className="rounded mt-0.5 cursor-pointer flex-shrink-0"
-                  checked={allChecked}
-                  onChange={e => handleToggle(e.target.checked)}
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center flex-wrap gap-1.5">
-                    <span className={`text-sm font-medium ${allChecked ? 'text-slate-800' : 'text-slate-600'}`}>
-                      {group.label}
-                    </span>
-                    {group.paired && (
-                      <span className="text-[10px] bg-indigo-100 text-indigo-600 rounded-full px-2 py-0.5 font-medium whitespace-nowrap">
-                        always paired
+              return (
+                <label
+                  key={group.id}
+                  className={`flex items-start gap-3 p-3 rounded-lg border transition-colors ${
+                    isDisabled
+                      ? 'border-slate-100 bg-slate-50 opacity-50 cursor-not-allowed'
+                      : allChecked
+                        ? 'border-indigo-200 bg-indigo-50 cursor-pointer'
+                        : 'border-slate-200 bg-white hover:border-slate-300 hover:bg-slate-50 cursor-pointer'
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    className="rounded mt-0.5 flex-shrink-0"
+                    style={{ cursor: isDisabled ? 'not-allowed' : 'pointer' }}
+                    checked={allChecked}
+                    disabled={isDisabled}
+                    onChange={e => handleToggle(e.target.checked)}
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center flex-wrap gap-1.5">
+                      <span className={`text-sm font-medium ${isDisabled ? 'text-slate-400' : allChecked ? 'text-slate-800' : 'text-slate-600'}`}>
+                        {group.label}
                       </span>
-                    )}
-                    {HELP.performanceTypes[group.infoKey] && (
-                      <button
-                        type="button"
-                        onClick={e => { e.preventDefault(); setTypeModal(group.infoKey); }}
-                        title={`Learn about ${group.label}`}
-                        className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-slate-200 text-slate-500 hover:bg-indigo-100 hover:text-indigo-600 text-[10px] font-bold leading-none transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-400 flex-shrink-0"
-                      >i</button>
+                      {group.paired && !isDisabled && (
+                        <span className="text-[10px] bg-indigo-100 text-indigo-600 rounded-full px-2 py-0.5 font-medium whitespace-nowrap">
+                          always paired
+                        </span>
+                      )}
+                      {!isDisabled && HELP.performanceTypes[group.infoKey] && (
+                        <button
+                          type="button"
+                          onClick={e => { e.preventDefault(); setTypeModal(group.infoKey); }}
+                          title={`Learn about ${group.label}`}
+                          className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-slate-200 text-slate-500 hover:bg-indigo-100 hover:text-indigo-600 text-[10px] font-bold leading-none transition-colors focus:outline-none focus:ring-1 focus:ring-indigo-400 flex-shrink-0"
+                        >i</button>
+                      )}
+                    </div>
+                    <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">{group.hint}</p>
+                    {isDisabled && (
+                      <p className="text-xs text-slate-400 mt-1">
+                        Not available with the <strong>{FRAMEWORKS.find(f => f.value === settings.framework)?.label || settings.framework}</strong> framework.
+                      </p>
                     )}
                   </div>
-                  <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">{group.hint}</p>
-                  {isBscWarning && (
-                    <p className="text-xs text-amber-700 mt-1 font-medium">
-                      ⚠ BSC Metric works best with the Balanced Scorecard or Hybrid framework. Current framework: <strong>{settings.framework || 'none'}</strong>.
-                    </p>
-                  )}
-                </div>
-              </label>
-            );
-          })}
+                </label>
+              );
+            });
+          })()}
         </div>
         {(() => {
           const ts = getTypeStatus(settings.active_types);

@@ -38,6 +38,9 @@
 ### Validation
 
 - DONE: If the use has selected 'Framework' then why do they need to select 'Active performance types', is this a duplication? Do we really need 'Framework' selection?
+- DONE: check the mapping of 'Framework' with 'Active Performance Types' again, can we correct the mapping based on selection options of 'Active Performance Types' can be visible or selected
+- DONE: again check if I select OKR in framework type then it's not selecting 'OKR' by default and disable this selection itself, do the mapping again and also add option to disable cascading option in the selection, do verify cascading applicability based on framework type (if cascading is not applicable on Compentency-based then we can disable cascading also).
+- DONE: The cascading drop-down is not showing 'Not Applicable' option to disable the cascading option in the system.
 - Check the 'org settings' page the tabs like 'Rating Scale' etc should be applicable depend on the selection of 'Active Performance Types' or 'Framework' to avoid confusion at the user side.
 - it's still visible, I can see both Framework and Active Performance Types, do check if these both can co-exist.
 - Who can enter what configuration - CEO/VP/Directors can enter OKR or Key-results/Goals/KPI, Department heads can enter what OKR/KR/KPI/Goals/Compentancy, similarly mid-managers and employees can enter what OKR/KR/KPI/Goals/Compentancy - by default it should have correct mapping and configured in the system.
