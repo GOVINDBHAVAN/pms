@@ -126,8 +126,9 @@ function getTypesForFramework(framework, currentTypes) {
 function getCascadeForFramework(framework, currentMode) {
   const rule = FRAMEWORK_CASCADE_RULES[framework];
   if (!rule) return currentMode;
-  if (rule.allowed.includes(currentMode)) return currentMode;
-  return rule.default;
+  // 'none' means cascading was disabled — always reset to framework default when switching frameworks
+  if (currentMode === 'none' || !rule.allowed.includes(currentMode)) return rule.default;
+  return currentMode;
 }
 
 const GOAL_TYPES = new Set(['okr_objective', 'okr_kr', 'kra', 'kpi', 'goal', 'bsc_metric', 'custom_metric']);
