@@ -45,7 +45,8 @@
       "Skill(run:*)",
       "Bash(python3 -c ' *)",
       "Bash(npm run *)",
-      "Bash(node -e \"require\\('./routes/targets'\\); require\\('./services/validationService'\\); console.log\\('OK'\\)\")"
+      "Bash(node -e \"require\\('./routes/targets'\\); require\\('./services/validationService'\\); console.log\\('OK'\\)\")",
+      "Bash(node -e \"require\\('./routes/targets'\\); require\\('./services/validationService'\\); require\\('./db/database'\\); console.log\\('Server modules OK'\\)\")"
     ]
   }
 }

@@ -145,6 +145,7 @@
 ### Further refiment
 
 - Check which features of 'Org Settings' which are missed in the implementation in this POC, list down those features so those can be planned. Also help me understand that 'Org settings' has 'Performance Bands' and 'Target Rules' are these required and where it will be used, explain and implement them. Also check for 'Cycle Defaults' settings of 'Org Settings' if these are not used then implement them for 'Review Cycles' implementation.
+- Check 'Add Target' Popup of 'MyTargets' it's not complete for user experience and some default data.
 - Do need to the configuration like BSC or 9-box or OKR/KR/Goal at the 'org settings' or it should be there at 'Cycles' setup/configuration.
 - Prepare structural features of other options which are used in industries that we have not covered yet (other than OKR,KR,KPI,Goals), check industries like Pharma, Hospitals,Banks and suggest if they are following different approaches and methods, that we can provide and incorporate in this demo application.
 - SMART Goals in Key-results guidelines.
