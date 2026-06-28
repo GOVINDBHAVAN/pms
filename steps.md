@@ -50,6 +50,11 @@
 - DONE: FOLLOWUP PROMPT: if it's final score tab, check if that could be a better name of this tab along with changes inside the tab of 'score split' in '"Goals vs Competency Split' area
 - DONE: Fine-tune the 'org settings' page rating tab for groups and categorization to make the page more understable, currently it's displaying lots of fields which can confuse the end-users, can we add collapsable configuration for a better user experience.
 - DONE: FOLLOWUP PROMPT: By default all should be collapsed.
+- DONE: I can still see the dropown of Scale-type is showing in 'org settings' 'Rating tab' is this required now since the same would be available at end-user line item stage.
+- DONE: FOLLOWUP PROMPT: Under review scoring scale, check the heading 'Goals / KRA / KPI' is it okay here or it can be change to GOAL only depending on the options available inside it?
+- DONE: FOLLOWUP PROMPT: can you again validate the heading you have set is 'KRA / KPI' whereas the content is not seems related to KRA / KPI, it's seems to be of GOALS, (correct if I am doing mistake here).
+- DONE: FOLLOWUP PROMPT: can you re-confirm the words 'Goals Rating Scale KRA/KPI' are okay here and inside this section, correct my understanding is it related to KRA/KPI entry or approval or reviewal at any stage or it's just used for Goals review/status update
+- DONE: FOLLOWUP PROMPT: also check if these 'Performance Review Rating' will be used in Goals as well other than KR/KPI review time?
 - Who can enter what configuration - CEO/VP/Directors can enter OKR or Key-results/Goals/KPI, Department heads can enter what OKR/KR/KPI/Goals/Compentancy, similarly mid-managers and employees can enter what OKR/KR/KPI/Goals/Compentancy - by default it should have correct mapping and configured in the system.
 - If the approving authority has any subordinates data pending for submission or approval is pending by mid-managers then can see that status in a list form that they can take action while they are inputting their own target status or approving their subordinates data.
 - When approving authority is approving the submission of subordinates they can clearly view the data of their subordinates on the screen.

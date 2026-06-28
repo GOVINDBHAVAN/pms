@@ -134,6 +134,16 @@ function getCascadeForFramework(framework, currentMode) {
 
 const GOAL_TYPES = new Set(['okr_objective', 'okr_kr', 'kra', 'kpi', 'goal', 'bsc_metric', 'custom_metric']);
 
+function getGoalTypesLabel(active_types = []) {
+  const parts = [];
+  if (active_types.some(t => ['okr_objective', 'okr_kr'].includes(t))) parts.push('OKR');
+  if (active_types.some(t => ['kra', 'kpi'].includes(t)))              parts.push('KRA / KPI');
+  if (active_types.includes('goal'))                                    parts.push('Goals');
+  if (active_types.includes('bsc_metric'))                              parts.push('BSC');
+  if (active_types.includes('custom_metric'))                           parts.push('Custom');
+  return parts.length ? parts.join(' · ') : 'Goals';
+}
+
 function getTypeStatus(active_types = []) {
   const hasGoals = active_types.some(t => GOAL_TYPES.has(t));
   const hasComp = active_types.includes('competency');
@@ -647,6 +657,7 @@ function RatingScaleTab({ settings, onChange }) {
   const [activeModal, setActiveModal] = useState(null);
   const ratingScale = settings.rating_scale || {};
   const typeStatus = getTypeStatus(settings.active_types);
+  const goalLabel = getGoalTypesLabel(settings.active_types);
 
   const types = settings.measurement_types?.length
     ? settings.measurement_types
@@ -660,8 +671,8 @@ function RatingScaleTab({ settings, onChange }) {
   const scaleSummary = (scale) => {
     if (!scale) return 'Not configured';
     const parts = [];
-    if (scale.type) parts.push(scale.type.replace('_', '-'));
-    if (scale.labels?.length) parts.push(`${scale.labels.length} levels`);
+    if (scale.labels?.length) parts.push(`${scale.labels.length}-level scale`);
+    if (scale.labels?.length) parts.push(scale.labels[scale.labels.length - 1]);
     if (scale.pip_below != null) parts.push(`PIP ≤ ${scale.pip_below}`);
     return parts.join(' · ') || 'Not configured';
   };
@@ -698,21 +709,27 @@ function RatingScaleTab({ settings, onChange }) {
         </div>
         <div className="space-y-3">
 
-          {/* Goals / KRA / KPI */}
+          {/* Manager review rating scale for all non-competency targets */}
           <CollapsibleCard
-            title="Goals / KRA / KPI"
+            title="Performance Review Rating"
             icon="🎯"
             summary={typeStatus.hasGoals
               ? scaleSummary(ratingScale.goals)
-              : 'No goal types active — enable in General tab'}
+              : 'No performance types active — enable in General tab'}
             defaultOpen={false}
             titleExtra={typeStatus.hasGoals
-              ? <InfoIcon title="Goals Scoring Scale" content={HELP.ratingScale.goalsScaleSection} />
+              ? <InfoIcon title="Performance Review Rating" content={HELP.ratingScale.goalsScaleSection} />
               : null}
           >
+            {typeStatus.hasGoals && (
+              <p className="text-xs text-slate-400 mb-4">
+                Shared rating scale for <strong>all non-competency target types</strong> — OKR, KRA/KPI, Goals, BSC Metrics, and Custom Metrics all use these same labels at review time.
+                Currently active: <strong>{goalLabel}</strong>.
+              </p>
+            )}
             {typeStatus.hasGoals ? (
               <RatingScaleSection
-                title="Goals / KRA / KPI Scoring Scale"
+                title="Performance Review Rating"
                 scale={ratingScale.goals || {}}
                 onUpdate={patch => updateScale('goals', patch)}
                 sectionHelp={HELP.ratingScale.goalsScaleSection}
@@ -722,27 +739,33 @@ function RatingScaleTab({ settings, onChange }) {
               />
             ) : (
               <p className="text-sm text-slate-400">
-                No goal-type performance targets are active. Enable OKR, KRA/KPI, Goal, BSC Metric,
-                or Custom Metric in the <strong>General</strong> tab to configure goal ratings.
+                No performance target types are active. Enable OKR, KRA/KPI, Goal, BSC Metric,
+                or Custom Metric in the <strong>General</strong> tab to configure review ratings.
               </p>
             )}
           </CollapsibleCard>
 
-          {/* Competency */}
+          {/* Manager review rating scale for competency targets */}
           <CollapsibleCard
-            title="Competency"
+            title="Competency Review Rating"
             icon="🧩"
             summary={typeStatus.hasComp
               ? scaleSummary(ratingScale.competency)
               : 'Competency not active — enable in General tab'}
             defaultOpen={false}
             titleExtra={typeStatus.hasComp
-              ? <InfoIcon title="Competency Scoring Scale" content={HELP.ratingScale.competencyScaleSection} />
+              ? <InfoIcon title="Competency Review Rating" content={HELP.ratingScale.competencyScaleSection} />
               : null}
           >
+            {typeStatus.hasComp && (
+              <p className="text-xs text-slate-400 mb-4">
+                The labels and scores managers choose from when rating <strong>Competency</strong> targets
+                at review time. Scored separately from performance targets and combined via the Final Score split.
+              </p>
+            )}
             {typeStatus.hasComp ? (
               <RatingScaleSection
-                title="Competency Scoring Scale"
+                title="Competency Rating Scale"
                 scale={ratingScale.competency || {}}
                 onUpdate={patch => updateScale('competency', patch)}
                 sectionHelp={HELP.ratingScale.competencyScaleSection}
@@ -1074,17 +1097,7 @@ function RatingScaleSection({ title, scale, onUpdate, sectionHelp, keyPrefix, on
           {sectionHelp && <InfoIcon title={title} content={sectionHelp} />}
         </h3>
       )}
-      <Field label="Scale Type" info={HELP.ratingScale.scaleType} onLearnMore={() => onOpenModal(`${keyPrefix}_scale_type`)}>
-        <select
-          className="w-full max-w-xs border border-slate-200 rounded-lg px-3 py-2 text-sm"
-          value={scale.type || '5_point'}
-          onChange={e => onUpdate({ type: e.target.value })}
-        >
-          {RATING_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-        </select>
-      </Field>
-
-      <Field label="Scale Labels & Values" hint="One row per rating level, from lowest to highest" info={HELP.ratingScale.scaleLabelsValues} onLearnMore={() => onOpenModal(`${keyPrefix}_scale_labels`)}>
+      <Field label="Rating Levels" hint="One row per rating level, from lowest to highest" info={HELP.ratingScale.scaleLabelsValues} onLearnMore={() => onOpenModal(`${keyPrefix}_scale_labels`)}>
         <div className="space-y-2 mt-1">
           <div className="grid grid-cols-[1fr_80px_32px] gap-2 text-xs text-slate-400 px-1">
             <span>Label</span><span>Value</span><span></span>
@@ -1128,7 +1141,7 @@ function RatingScaleSection({ title, scale, onUpdate, sectionHelp, keyPrefix, on
         </div>
       </Field>
 
-      {scale.type?.includes('point') && (
+      {values.length > 0 && (
         <Field label="PIP Threshold" hint="Employees scoring at or below this value trigger a PIP flag" info={HELP.ratingScale.pipThreshold} onLearnMore={() => onOpenModal(`${keyPrefix}_pip`)}>
           <input
             type="number" step="0.5" min="0"
