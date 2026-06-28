@@ -3,6 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const { initDatabase, getDb } = require('./db/database');
 const { seed } = require('./db/seeds/01_demo');
+const { seedTargets } = require('./db/seeds/02_demo_targets');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -42,6 +43,7 @@ async function start() {
   try {
     await initDatabase();
     await seed();
+    await seedTargets();
     app.listen(PORT, () => {
       console.log(`PMS Server running on http://localhost:${PORT}`);
       console.log(`Health check: http://localhost:${PORT}/api/v1/health`);
