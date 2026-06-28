@@ -20,3 +20,18 @@ export async function getMe() {
 export async function logout() {
   await axios.post(`${BASE}/auth/logout`, {}, { headers: getHeaders() });
 }
+
+export async function getDemoOrgs() {
+  const { data } = await axios.get(`${BASE}/auth/demo-orgs`);
+  return data;
+}
+
+export async function getDemoEmployees(orgId) {
+  const { data } = await axios.get(`${BASE}/auth/demo-employees`, { params: { org_id: orgId } });
+  return data;
+}
+
+export async function demoLogin(employeeId) {
+  const { data } = await axios.post(`${BASE}/auth/demo-login`, { employee_id: employeeId });
+  return data;
+}

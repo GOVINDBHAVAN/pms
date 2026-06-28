@@ -23,7 +23,24 @@
       "PowerShell($r = Invoke-WebRequest -Uri \"http://localhost:3001/api/v1/health\" -TimeoutSec 5; $r.Content)",
       "Bash(curl -s http://localhost:3001/api/v1/health)",
       "Bash(curl -s -X POST http://localhost:3001/api/v1/auth/login -H \"Content-Type: application/json\" -d '{\"email\":\"arjun.mehta@techcorp.com\",\"password\":\"password123\"}')",
-      "Bash(node --input-type=module --eval \"import\\('./src/pages/OrgSettingsPage.jsx'\\)\")"
+      "Bash(node --input-type=module --eval \"import\\('./src/pages/OrgSettingsPage.jsx'\\)\")",
+      "Bash(node index.js)",
+      "Bash(curl -s http://localhost:3001/api/v1/auth/demo-orgs)",
+      "Bash(python -m json.tool)",
+      "Bash(curl -s \"http://localhost:3001/api/v1/auth/demo-employees?org_id=1\")",
+      "Bash(curl -s -X POST http://localhost:3001/api/v1/auth/demo-login -H 'Content-Type: application/json' -d '{\"employee_id\": 1}')",
+      "Bash(curl -s -X POST http://localhost:3001/api/v1/auth/demo-login -H 'Content-Type: application/json' -d '{}')",
+      "Bash(curl -s \"http://localhost:3001/api/v1/auth/demo-employees\")",
+      "Bash(curl -s -X POST http://localhost:3001/api/v1/auth/demo-login -H 'Content-Type: application/json' -d '{\"employee_id\": 11}')",
+      "Bash(curl -s \"http://localhost:3001/api/v1/auth/demo-employees?org_id=3\")",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" http://localhost:5173/)",
+      "Bash(npx playwright *)",
+      "Bash(curl -s http://localhost:5173/)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code}\" \"http://localhost:5173/src/pages/LoginPage.jsx\")",
+      "Bash(Read \"C:\\\\Users\\\\govin\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\d--Practice-my-pms\\\\64eaa8ec-597a-4c65-b2b4-159f5f561084\\\\tasks\\\\br8sxxcjx.output\")",
+      "Bash(npm install *)",
+      "Bash(mkdir -p \"C:/Users/govin/AppData/Local/Temp/claude/d--Practice-my-pms/84c5c63c-a566-452f-815e-57e31cc1c1ef/scratchpad/pw-test\")",
+      "Bash(npm init *)"
     ]
   }
 }
