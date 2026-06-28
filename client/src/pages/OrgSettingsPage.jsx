@@ -160,6 +160,22 @@ const TERMINOLOGY_KEYS = [
   { key: 'performance_band', label: 'Performance Band' },
 ];
 
+// Which active_types must be present for this terminology row to be relevant.
+// null = always show (universal terms not tied to a specific performance type).
+const TERM_TYPE_DEPS = {
+  kra:              ['kra', 'kpi'],
+  kpi:              ['kra', 'kpi'],
+  objective:        ['okr_objective'],
+  key_result:       ['okr_kr'],
+  goal:             ['goal'],
+  competency:       ['competency'],
+  weight:           null,
+  planned:          null,
+  actual:           null,
+  stretch:          null,
+  performance_band: null,
+};
+
 const BAND_COLORS = ['#16a34a', '#2563eb', '#d97706', '#dc2626', '#7f1d1d', '#7c3aed', '#0891b2'];
 
 const BASE_TABS = ['General', 'Rating Scale', 'Weightage', 'Terminology', 'Performance Bands', 'Target Rules'];
@@ -178,6 +194,7 @@ export default function OrgSettingsPage() {
     : BASE_TABS;
   const typeStatus = settings ? getTypeStatus(settings.active_types) : {};
   const isWeightageAuto = typeStatus.compOnly || typeStatus.goalsOnly;
+  const isCascadeOff = settings?.cascade_mode === 'none';
 
   useEffect(() => {
     getOrgSettings()
@@ -242,6 +259,7 @@ export default function OrgSettingsPage() {
           <nav className="flex gap-1">
             {tabs.map(tab => {
               const isAuto = tab === 'Weightage' && isWeightageAuto;
+              const isNoCascade = tab === 'Target Rules' && isCascadeOff;
               return (
                 <button
                   key={tab}
@@ -255,6 +273,9 @@ export default function OrgSettingsPage() {
                   {tab}
                   {isAuto && (
                     <span className="text-[10px] bg-amber-100 text-amber-600 rounded px-1.5 py-0.5 font-medium leading-none">Auto</span>
+                  )}
+                  {isNoCascade && (
+                    <span className="text-[10px] bg-slate-100 text-slate-500 rounded px-1.5 py-0.5 font-medium leading-none">Cascade Off</span>
                   )}
                 </button>
               );
@@ -853,11 +874,20 @@ function WeightageTab({ settings, onChange }) {
 /* ── Terminology Tab ─────────────────────────────────────────────────────── */
 function TerminologyTab({ settings, onChange }) {
   const [activeModal, setActiveModal] = useState(null);
+  const [showAll, setShowAll] = useState(false);
   const terms = settings.terminology || {};
+  const activeTypes = settings.active_types || [];
 
   const updateTerm = (key, value) => {
     onChange({ terminology: { ...terms, [key]: value } });
   };
+
+  const visibleKeys = TERMINOLOGY_KEYS.filter(({ key }) => {
+    const deps = TERM_TYPE_DEPS[key];
+    return deps === null || deps.some(t => activeTypes.includes(t));
+  });
+  const hiddenCount = TERMINOLOGY_KEYS.length - visibleKeys.length;
+  const displayKeys = showAll ? TERMINOLOGY_KEYS : visibleKeys;
 
   return (
     <div className="space-y-4">
@@ -877,6 +907,22 @@ function TerminologyTab({ settings, onChange }) {
           onClose={() => setActiveModal(null)}
         />
       )}
+
+      {hiddenCount > 0 && (
+        <div className="flex items-center justify-between bg-slate-50 border border-slate-200 rounded-lg px-4 py-2.5">
+          <p className="text-xs text-slate-500">
+            Showing <strong>{visibleKeys.length}</strong> of {TERMINOLOGY_KEYS.length} terms — {hiddenCount} term{hiddenCount > 1 ? 's' : ''} hidden because the corresponding performance type{hiddenCount > 1 ? 's are' : ' is'} not active.
+          </p>
+          <button
+            type="button"
+            onClick={() => setShowAll(v => !v)}
+            className="text-xs text-indigo-600 hover:text-indigo-800 font-medium whitespace-nowrap ml-4"
+          >
+            {showAll ? 'Show active only' : 'Show all'}
+          </button>
+        </div>
+      )}
+
       <div className="rounded-lg border border-slate-200 overflow-hidden">
         <table className="w-full text-sm">
           <thead className="bg-slate-50 border-b border-slate-200">
@@ -886,29 +932,34 @@ function TerminologyTab({ settings, onChange }) {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {TERMINOLOGY_KEYS.map(({ key, label }) => (
-              <tr key={key} className="hover:bg-slate-50">
-                <td className="px-4 py-3">
-                  <span className="flex items-center gap-1 text-slate-600 font-medium">
-                    {label}
-                    {HELP.terminology[key] && (
-                      <InfoIcon title={label} content={HELP.terminology[key]} />
-                    )}
-                    {HELP.settingModals[`term_${key}`] && (
-                      <button type="button" onClick={() => setActiveModal(`term_${key}`)} className="text-[10px] text-indigo-500 hover:text-indigo-700 font-medium underline underline-offset-2 leading-none">Learn more</button>
-                    )}
-                  </span>
-                </td>
-                <td className="px-4 py-3">
-                  <input
-                    className="w-full border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-400"
-                    placeholder={`Leave blank to use "${label}"`}
-                    value={terms[key] || ''}
-                    onChange={e => updateTerm(key, e.target.value)}
-                  />
-                </td>
-              </tr>
-            ))}
+            {displayKeys.map(({ key, label }) => {
+              const deps = TERM_TYPE_DEPS[key];
+              const isInactive = deps !== null && !deps.some(t => activeTypes.includes(t));
+              return (
+                <tr key={key} className={isInactive ? 'opacity-40 bg-slate-50' : 'hover:bg-slate-50'}>
+                  <td className="px-4 py-3">
+                    <span className="flex items-center gap-1 text-slate-600 font-medium">
+                      {label}
+                      {HELP.terminology[key] && (
+                        <InfoIcon title={label} content={HELP.terminology[key]} />
+                      )}
+                      {HELP.settingModals[`term_${key}`] && (
+                        <button type="button" onClick={() => setActiveModal(`term_${key}`)} className="text-[10px] text-indigo-500 hover:text-indigo-700 font-medium underline underline-offset-2 leading-none">Learn more</button>
+                      )}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <input
+                      className="w-full border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-1 focus:ring-indigo-400 disabled:bg-slate-100 disabled:cursor-not-allowed"
+                      placeholder={`Leave blank to use "${label}"`}
+                      value={terms[key] || ''}
+                      disabled={isInactive}
+                      onChange={e => updateTerm(key, e.target.value)}
+                    />
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
       </div>
@@ -1033,6 +1084,7 @@ function BandsTab({ settings, onChange }) {
 function TargetRulesTab({ settings, onChange }) {
   const [activeModal, setActiveModal] = useState(null);
   const rules = settings.target_rules || {};
+  const cascadeOff = settings.cascade_mode === 'none';
 
   const update = (patch) => onChange({ target_rules: { ...rules, ...patch } });
 
@@ -1115,14 +1167,27 @@ function TargetRulesTab({ settings, onChange }) {
         )}
       </div>
 
-      <div className="border border-slate-200 rounded-xl p-4 space-y-3">
-        <h4 className="font-medium text-slate-700">Linkage & Proposal Rules</h4>
+      <div className={`border rounded-xl p-4 space-y-3 ${cascadeOff ? 'border-slate-100 bg-slate-50' : 'border-slate-200'}`}>
+        <div className="flex items-center gap-2">
+          <h4 className={`font-medium ${cascadeOff ? 'text-slate-400' : 'text-slate-700'}`}>Linkage &amp; Proposal Rules</h4>
+          {cascadeOff && (
+            <span className="text-[10px] bg-slate-200 text-slate-500 rounded px-2 py-0.5 font-medium">Not applicable — cascading is off</span>
+          )}
+        </div>
 
-        <label className="flex items-start gap-3 cursor-pointer">
+        {cascadeOff && (
+          <p className="text-xs text-slate-400">
+            These rules only apply when a cascade mode (Top-Down, Bottom-Up, or Bidirectional) is active.
+            Enable cascading in the <strong>General</strong> tab to configure them.
+          </p>
+        )}
+
+        <label className={`flex items-start gap-3 ${cascadeOff ? 'opacity-40 cursor-not-allowed pointer-events-none' : 'cursor-pointer'}`}>
           <input
             type="checkbox"
             className="rounded mt-0.5"
             checked={rules.require_parent_linkage ?? true}
+            disabled={cascadeOff}
             onChange={e => update({ require_parent_linkage: e.target.checked })}
           />
           <div>
@@ -1137,11 +1202,12 @@ function TargetRulesTab({ settings, onChange }) {
           </div>
         </label>
 
-        <label className="flex items-start gap-3 cursor-pointer">
+        <label className={`flex items-start gap-3 ${cascadeOff ? 'opacity-40 cursor-not-allowed pointer-events-none' : 'cursor-pointer'}`}>
           <input
             type="checkbox"
             className="rounded mt-0.5"
             checked={rules.allow_self_propose ?? true}
+            disabled={cascadeOff}
             onChange={e => update({ allow_self_propose: e.target.checked })}
           />
           <div>
