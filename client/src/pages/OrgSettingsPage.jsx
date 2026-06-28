@@ -5,6 +5,7 @@ import InfoIcon from '../components/shared/InfoIcon';
 import PerformanceTypeModal from '../components/shared/PerformanceTypeModal';
 import SettingInfoModal from '../components/shared/SettingInfoModal';
 import { HELP } from '../utils/helpContent';
+import { DEFAULT_ORG_MEASUREMENT_TYPES, PREDEFINED_MEASUREMENT_TYPES } from '../utils/measurementTypes';
 
 const FRAMEWORKS = [
   { value: 'okr',               label: 'OKR (Objectives & Key Results)' },
@@ -619,43 +620,346 @@ function RatingScaleTab({ settings, onChange }) {
         />
       )}
 
-      {typeStatus.hasGoals ? (
-        <RatingScaleSection
-          title="Goals / KRA / KPI Rating Scale"
-          scale={ratingScale.goals || {}}
-          onUpdate={patch => updateScale('goals', patch)}
-          sectionHelp={HELP.ratingScale.goalsScaleSection}
-          keyPrefix="goals"
-          onOpenModal={setActiveModal}
-        />
-      ) : (
-        <div className="bg-slate-50 border border-slate-200 rounded-lg px-5 py-4">
-          <p className="text-sm font-medium text-slate-500 mb-1">Goals / KRA / KPI Rating Scale</p>
-          <p className="text-xs text-slate-400">
-            No goal-type performance targets are active. Enable OKR, KRA/KPI, Goal, BSC Metric, or Custom Metric in the General tab to configure goal ratings.
+      {/* ── Section 1: Measurement Types Library ── */}
+      <MeasurementTypesSection settings={settings} onChange={onChange} />
+
+      {/* ── Section 2: Review Scoring Scale ── */}
+      <div className="border-t border-slate-200 pt-6 space-y-6">
+        <div>
+          <h3 className="font-semibold text-slate-800 mb-0.5">Review Scoring Scale</h3>
+          <p className="text-sm text-slate-500">
+            Defines the labels and numeric values used when managers rate performance at review time.
+            Applied to all targets regardless of their individual measurement type.
           </p>
         </div>
-      )}
 
-      <div className="border-t border-slate-100 pt-6">
-        {typeStatus.hasComp ? (
+        {typeStatus.hasGoals ? (
           <RatingScaleSection
-            title="Competency Rating Scale"
-            scale={ratingScale.competency || {}}
-            onUpdate={patch => updateScale('competency', patch)}
-            sectionHelp={HELP.ratingScale.competencyScaleSection}
-            keyPrefix="comp"
+            title="Goals / KRA / KPI Scoring Scale"
+            scale={ratingScale.goals || {}}
+            onUpdate={patch => updateScale('goals', patch)}
+            sectionHelp={HELP.ratingScale.goalsScaleSection}
+            keyPrefix="goals"
             onOpenModal={setActiveModal}
           />
         ) : (
           <div className="bg-slate-50 border border-slate-200 rounded-lg px-5 py-4">
-            <p className="text-sm font-medium text-slate-500 mb-1">Competency Rating Scale</p>
+            <p className="text-sm font-medium text-slate-500 mb-1">Goals / KRA / KPI Scoring Scale</p>
             <p className="text-xs text-slate-400">
-              Competency is not an active type. Enable it in the General tab to configure competency ratings.
+              No goal-type performance targets are active. Enable OKR, KRA/KPI, Goal, BSC Metric, or Custom Metric in the General tab to configure goal ratings.
             </p>
           </div>
         )}
+
+        <div className="border-t border-slate-100 pt-4">
+          {typeStatus.hasComp ? (
+            <RatingScaleSection
+              title="Competency Scoring Scale"
+              scale={ratingScale.competency || {}}
+              onUpdate={patch => updateScale('competency', patch)}
+              sectionHelp={HELP.ratingScale.competencyScaleSection}
+              keyPrefix="comp"
+              onOpenModal={setActiveModal}
+            />
+          ) : (
+            <div className="bg-slate-50 border border-slate-200 rounded-lg px-5 py-4">
+              <p className="text-sm font-medium text-slate-500 mb-1">Competency Scoring Scale</p>
+              <p className="text-xs text-slate-400">
+                Competency is not an active type. Enable it in the General tab to configure competency ratings.
+              </p>
+            </div>
+          )}
+        </div>
       </div>
+    </div>
+  );
+}
+
+/* ── Measurement Types Library ───────────────────────────────────────────── */
+const FORMULA_LABELS = {
+  actual_over_planned: 'Auto: (actual ÷ planned) × 100%',
+  direct_percentage:   'Direct %: employee enters achievement %',
+  boolean:             'Binary: done = 100%, not done = 0%',
+  rated_directly:      'Direct rating: manager rates at review',
+};
+
+function MeasurementTypesSection({ settings, onChange }) {
+  const [editingId, setEditingId] = useState(null);
+  const [newType, setNewType] = useState(null);
+
+  const types = settings.measurement_types?.length
+    ? settings.measurement_types
+    : DEFAULT_ORG_MEASUREMENT_TYPES;
+
+  const updateTypes = (updated) => onChange({ measurement_types: updated });
+
+  const toggleEnabled = (id) => {
+    updateTypes(types.map(t => t.id === id ? { ...t, enabled: !t.enabled } : t));
+  };
+
+  const updateType = (id, patch) => {
+    updateTypes(types.map(t => t.id === id ? { ...t, ...patch } : t));
+  };
+
+  const deleteCustom = (id) => {
+    updateTypes(types.filter(t => t.id !== id));
+  };
+
+  const addCustomType = () => {
+    const id = `custom_${Date.now()}`;
+    setNewType({
+      id,
+      label: '',
+      unit: '',
+      description: '',
+      formula: 'actual_over_planned',
+      requires_planned: true,
+      enabled: true,
+      system: false,
+    });
+  };
+
+  const saveNewType = () => {
+    if (!newType.label.trim()) return;
+    updateTypes([...types, newType]);
+    setNewType(null);
+  };
+
+  const enabledCount = types.filter(t => t.enabled !== false).length;
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <h3 className="flex items-center gap-1 font-semibold text-slate-800 mb-0.5">
+          Measurement Types
+          <InfoIcon title="Measurement Types" content={HELP.measurementTypes.section} />
+        </h3>
+        <p className="text-sm text-slate-500">
+          Define <em>how</em> each target's value is entered and achievement is computed.
+          End-users choose one of these when creating a KPI, Key Result, or Goal.
+          <span className="ml-1 text-slate-400">({enabledCount} of {types.length} enabled)</span>
+        </p>
+      </div>
+
+      <div className="space-y-2">
+        {types.map(type => {
+          const predefined = PREDEFINED_MEASUREMENT_TYPES.find(p => p.id === type.id);
+          const isEditing = editingId === type.id;
+          const isEnabled = type.enabled !== false;
+
+          return (
+            <div
+              key={type.id}
+              className={`rounded-xl border transition-colors ${
+                isEnabled ? 'border-slate-200 bg-white' : 'border-slate-100 bg-slate-50 opacity-60'
+              }`}
+            >
+              {/* Row header */}
+              <div className="flex items-center gap-3 px-4 py-3">
+                {/* enable toggle */}
+                <input
+                  type="checkbox"
+                  className="rounded flex-shrink-0"
+                  checked={isEnabled}
+                  onChange={() => toggleEnabled(type.id)}
+                />
+
+                {/* icon */}
+                <span className="w-6 h-6 flex items-center justify-center rounded-md bg-indigo-50 text-indigo-600 text-xs font-bold flex-shrink-0">
+                  {predefined?.icon ?? '◆'}
+                </span>
+
+                {/* label + formula badge */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center flex-wrap gap-2">
+                    <span className={`text-sm font-medium ${isEnabled ? 'text-slate-800' : 'text-slate-400'}`}>
+                      {type.label}
+                    </span>
+                    {type.unit && (
+                      <span className="text-[10px] bg-slate-100 text-slate-500 rounded px-1.5 py-0.5 font-mono leading-none">
+                        {type.unit}
+                      </span>
+                    )}
+                    {type.system && (
+                      <span className="text-[10px] bg-indigo-50 text-indigo-500 rounded px-1.5 py-0.5 leading-none">system</span>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-400 mt-0.5 truncate">{FORMULA_LABELS[type.formula] ?? type.formula}</p>
+                </div>
+
+                {/* actions */}
+                <div className="flex items-center gap-1 flex-shrink-0">
+                  {HELP.measurementTypes[type.id] && (
+                    <InfoIcon title={type.label} content={HELP.measurementTypes[type.id]} />
+                  )}
+                  <button
+                    type="button"
+                    onClick={() => setEditingId(isEditing ? null : type.id)}
+                    className="text-xs text-indigo-500 hover:text-indigo-700 px-2 py-1 rounded hover:bg-indigo-50 transition-colors"
+                  >
+                    {isEditing ? 'Done' : 'Edit'}
+                  </button>
+                  {!type.system && (
+                    <button
+                      type="button"
+                      onClick={() => deleteCustom(type.id)}
+                      className="text-red-400 hover:text-red-600 px-1.5 py-1 rounded hover:bg-red-50 transition-colors text-xs"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {/* inline editor */}
+              {isEditing && (
+                <div className="border-t border-slate-100 px-4 py-3 bg-slate-50 rounded-b-xl space-y-3">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="flex items-center gap-0.5 text-xs text-slate-500 mb-1">
+                        Label <InfoIcon title="Type Label" content={HELP.measurementTypes.typeLabel} />
+                      </label>
+                      <input
+                        className="w-full border border-slate-200 rounded-lg px-3 py-1.5 text-sm"
+                        value={type.label}
+                        onChange={e => updateType(type.id, { label: e.target.value })}
+                        placeholder="e.g. Revenue / Volume"
+                      />
+                    </div>
+                    <div>
+                      <label className="flex items-center gap-0.5 text-xs text-slate-500 mb-1">
+                        Default Unit <InfoIcon title="Unit" content={HELP.measurementTypes.typeUnit} />
+                      </label>
+                      <input
+                        className="w-full border border-slate-200 rounded-lg px-3 py-1.5 text-sm"
+                        value={type.unit || ''}
+                        onChange={e => updateType(type.id, { unit: e.target.value })}
+                        placeholder={predefined?.unit_placeholder ?? 'e.g. ₹, %, units'}
+                      />
+                    </div>
+                  </div>
+
+                  {!type.system && (
+                    <div className="grid grid-cols-2 gap-3">
+                      <div>
+                        <label className="flex items-center gap-0.5 text-xs text-slate-500 mb-1">
+                          Achievement Formula <InfoIcon title="Formula" content={HELP.measurementTypes.typeFormula} />
+                        </label>
+                        <select
+                          className="w-full border border-slate-200 rounded-lg px-3 py-1.5 text-sm"
+                          value={type.formula}
+                          onChange={e => {
+                            const f = e.target.value;
+                            updateType(type.id, {
+                              formula: f,
+                              requires_planned: f === 'actual_over_planned',
+                            });
+                          }}
+                        >
+                          {Object.entries(FORMULA_LABELS).map(([val, lbl]) => (
+                            <option key={val} value={val}>{lbl}</option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  )}
+
+                  <div>
+                    <label className="text-xs text-slate-500 mb-1 block">Description (shown to end-users)</label>
+                    <input
+                      className="w-full border border-slate-200 rounded-lg px-3 py-1.5 text-sm"
+                      value={type.description || ''}
+                      onChange={e => updateType(type.id, { description: e.target.value })}
+                      placeholder="Brief description shown in the measurement type dropdown"
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          );
+        })}
+
+        {/* New custom type form */}
+        {newType && (
+          <div className="rounded-xl border-2 border-dashed border-indigo-300 bg-indigo-50 p-4 space-y-3">
+            <p className="text-sm font-medium text-indigo-700">New Custom Measurement Type</p>
+            <div className="grid grid-cols-2 gap-3">
+              <div>
+                <label className="text-xs text-slate-500 mb-1 block">Label *</label>
+                <input
+                  className="w-full border border-slate-200 rounded-lg px-3 py-1.5 text-sm bg-white"
+                  value={newType.label}
+                  onChange={e => setNewType(p => ({ ...p, label: e.target.value }))}
+                  placeholder="e.g. Milestone Count"
+                  autoFocus
+                />
+              </div>
+              <div>
+                <label className="text-xs text-slate-500 mb-1 block">Default Unit</label>
+                <input
+                  className="w-full border border-slate-200 rounded-lg px-3 py-1.5 text-sm bg-white"
+                  value={newType.unit}
+                  onChange={e => setNewType(p => ({ ...p, unit: e.target.value }))}
+                  placeholder="e.g. milestones"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="flex items-center gap-0.5 text-xs text-slate-500 mb-1">
+                Achievement Formula <InfoIcon title="Formula" content={HELP.measurementTypes.typeFormula} />
+              </label>
+              <select
+                className="w-full border border-slate-200 rounded-lg px-3 py-1.5 text-sm bg-white"
+                value={newType.formula}
+                onChange={e => {
+                  const f = e.target.value;
+                  setNewType(p => ({ ...p, formula: f, requires_planned: f === 'actual_over_planned' }));
+                }}
+              >
+                {Object.entries(FORMULA_LABELS).map(([val, lbl]) => (
+                  <option key={val} value={val}>{lbl}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-xs text-slate-500 mb-1 block">Description</label>
+              <input
+                className="w-full border border-slate-200 rounded-lg px-3 py-1.5 text-sm bg-white"
+                value={newType.description}
+                onChange={e => setNewType(p => ({ ...p, description: e.target.value }))}
+                placeholder="Brief description shown to end-users"
+              />
+            </div>
+            <div className="flex gap-2 pt-1">
+              <button
+                type="button"
+                onClick={saveNewType}
+                disabled={!newType.label.trim()}
+                className="px-4 py-1.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700 disabled:opacity-40"
+              >
+                Add Type
+              </button>
+              <button
+                type="button"
+                onClick={() => setNewType(null)}
+                className="px-4 py-1.5 border border-slate-200 text-slate-600 rounded-lg text-sm hover:bg-slate-50"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {!newType && (
+        <button
+          type="button"
+          onClick={addCustomType}
+          className="text-indigo-600 text-sm hover:underline"
+        >
+          + Add Custom Measurement Type
+        </button>
+      )}
     </div>
   );
 }

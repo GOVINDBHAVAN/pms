@@ -119,10 +119,15 @@ export default function StepRating({ initialData, onNext, onBack, saving }) {
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-slate-900">Choose a Rating Scale</h2>
+        <h2 className="text-2xl font-bold text-slate-900">Choose a Review Scoring Scale</h2>
         <p className="text-slate-500 mt-1">
-          This determines how employee performance is scored. The same scale applies to both goals and competencies by default.
+          This is the scale managers use to rate performance at review time — e.g., a 5-point scale from Poor to Exceptional.
+          It applies to both goals and competencies by default.
         </p>
+        <div className="mt-3 bg-blue-50 border border-blue-200 rounded-lg px-4 py-2.5 text-xs text-blue-700">
+          <strong>Note:</strong> This is separate from <em>measurement types</em> (how each KPI or Key Result's value is entered — number, %, Yes/No, BARS, etc.).
+          Measurement types are configured per-target and can be managed in <strong>Org Settings → Rating Scale</strong> after setup.
+        </div>
       </div>
 
       <div className="space-y-3">

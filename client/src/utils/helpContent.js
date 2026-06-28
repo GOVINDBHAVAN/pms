@@ -354,6 +354,57 @@ export const HELP = {
       'Competencies measure HOW an employee works (skills, behaviours) rather than WHAT they deliver. BARS is commonly used here because each level describes an observable behaviour, making ratings more consistent across managers.',
   },
 
+  /* ─── Org Settings — Measurement Types ─────────────────────────────────── */
+  measurementTypes: {
+    section:
+      'Measurement Types define HOW each target\'s actual value is entered and how achievement is computed.\n\n' +
+      'This is separate from the Scoring Scale — the Scoring Scale converts achievement % into a rating label (e.g., "Exceeds Expectation"). Measurement Types determine what "achievement" even means for a given target.\n\n' +
+      'Enable only the types your organisation uses. End-users choose one per target when they create a KPI, Key Result, or Goal.',
+
+    typeEnabled:
+      'Toggle this type on or off. When disabled, it will not appear in the measurement type dropdown during target creation.\n\n' +
+      'You can disable types your org never uses to keep the target creation form clean.',
+
+    typeLabel:
+      'The name shown to employees and managers in the target creation form.\n\n' +
+      'Rename to match your org\'s language — e.g., rename "Number (Absolute)" to "Revenue / Volume" for a sales team.',
+
+    typeUnit:
+      'The default unit label shown next to the planned and actual value inputs for this type.\n\n' +
+      'Example: "₹" for a revenue KPI, "%" for a percentage target, "hrs" for time-based targets. Employees can override this per target.',
+
+    typeFormula:
+      'The formula used to automatically compute achievement % from the planned and actual values.\n\n' +
+      'actual_over_planned: achievement = (actual ÷ planned) × 100%.\n' +
+      'direct_percentage: employee enters the % directly — no formula applied.\n' +
+      'boolean: done = 100%, not done = 0%.\n' +
+      'rated_directly: no achievement % — manager assigns a rating at review time.',
+
+    number:
+      'An absolute numeric KPI or target. Examples: revenue in ₹, units sold, tickets resolved, NPS score.\n\n' +
+      'Achievement = actual ÷ planned × 100%. A sales rep who hits ₹85L against a ₹100L target achieves 85%.',
+
+    percentage:
+      'Target and actual are both percentage values (0–100%). Examples: defect-free rate, attendance %, test coverage.\n\n' +
+      'Achievement = actual ÷ planned × 100%. An attendance target of 95% with actual 93% = 97.9% achievement.',
+
+    boolean:
+      'Binary completion — either done or not done. Examples: "Submit ISO audit report", "Complete leadership training", "Launch new product".\n\n' +
+      'Achievement = 100% if done, 0% if not done. No planned value is needed.',
+
+    percentage_of_target:
+      'Employee directly enters their achievement % — no planned/actual formula applied. Examples: satisfaction surveys, qualitative milestones.\n\n' +
+      'Use when the employee or manager best judges the % completion subjectively.',
+
+    bars:
+      'Behaviorally Anchored Rating Scale — manager selects an anchor level describing observable behaviors at review time.\n\n' +
+      'No planned target or actual value needed. The manager picks a level (e.g., "Proficient", "Advanced") which maps to a numeric rating. Best for competency-style KPIs and soft-skill targets.',
+
+    rating:
+      'Manager directly assigns a numeric rating from the org\'s scoring scale. No planned/actual values required.\n\n' +
+      'Use for qualitative targets where the only meaningful assessment is the manager\'s direct judgment.',
+  },
+
   /* ─── Org Settings — Weightage Tab ─────────────────────────────────────── */
   weightage: {
     split:
