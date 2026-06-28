@@ -5,6 +5,40 @@ Must appear on the login page and home page header.
 
 ---
 
+## MANDATORY: Domain Business Logic Gate
+
+**`BUSINESS_LOGIC.md` is the authoritative domain reference. Read it before writing or modifying any feature.**
+
+### Before every feature or change:
+1. Open `BUSINESS_LOGIC.md` and identify which Parts/Rules apply to the change.
+2. Validate the proposed change against every applicable rule.
+3. If the change conflicts with any rule in `BUSINESS_LOGIC.md`, **do not proceed** — surface the conflict to the user and request clarification.
+4. If the change covers a use case not in `BUSINESS_LOGIC.md`, apply the nearest applicable rule and flag the gap.
+
+### Non-negotiable prohibitions (from BUSINESS_LOGIC.md §14):
+- NEVER auto-assign weights — users must consciously set every weight (Rule W6)
+- NEVER delete KRAs, KPIs, Competencies, or historical targets — only deactivate (is_active = 0)
+- NEVER allow a Key Result to exist without an Objective (Rule KR2)
+- NEVER allow a KPI to exist without a KRA (Rule KPI4)
+- NEVER carry over targets automatically to a new cycle
+- NEVER score an Initiative or Task — only KR Targets, KPI Targets, Goals, and Competencies
+- NEVER allow a Competency to have a parent_target_id (Rule V11 / Part 5.1)
+
+### Known compliance gaps (audit 2026-06-28):
+| Area | Status | File |
+|---|---|---|
+| validationService.js V1–V13 | EMPTY STUB — must be implemented | server/services/validationService.js |
+| cascadeService.js | EMPTY STUB | server/services/cascadeService.js |
+| Folder Rule enforcement (KPI→KRA, KR→Obj) | MISSING server-side check | server/routes/targets.js |
+| Status state machine transitions | NOT enforced server-side | server/routes/targets.js |
+| Competency cascade block (V11) | NOT enforced at creation | server/routes/targets.js |
+| Library DELETE route | VIOLATION — hard-deletes, must be soft-delete | server/routes/org.js:240–249 |
+| OKR rules O3/O4 (min 1 KR, max 5 KRs) | MISSING | server/routes/targets.js |
+
+Every new feature must not worsen these gaps, and ideally moves one toward PASS.
+
+---
+
 ## Tech Stack
 
 | Layer | Choice | Notes |
