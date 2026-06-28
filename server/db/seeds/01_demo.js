@@ -77,11 +77,11 @@ async function seed() {
 
   // ── 2. Grades ────────────────────────────────────────────────────────────
   const gradeRows = [
-    ['L1', 'Junior Developer',   1, 0],
-    ['L2', 'Developer',          2, 0],
-    ['L3', 'Senior Developer',   3, 0],
-    ['L4', 'Engineering Manager',4, 1],
-    ['L5', 'VP / Director',      5, 1],
+    ['L1', 'Director / VP',   5, 1],
+    ['L2', 'HOD',             4, 1],
+    ['L3', 'Asst. Manager',   3, 0],
+    ['L4', 'Senior Executive',2, 0],
+    ['L5', 'Executive',       1, 0],
   ];
   const gradeIds = {};
   gradeRows.forEach(([code, label, level, canManage], i) => {
@@ -119,16 +119,16 @@ async function seed() {
   }
 
   //                         code    name                     email                            dept      grade  reports  role
-  const ceo   = insertEmployee(orgId,'EMP001','Arjun Mehta',     'arjun.mehta@techcorp.com',    deptEng,  'L5', null,   'admin');
-  const vpEng = insertEmployee(orgId,'EMP002','Ramesh Kumar',    'ramesh.kumar@techcorp.com',   deptEng,  'L5', ceo,    'manager');
-  const mgr   = insertEmployee(orgId,'EMP003','Priya Sharma',    'priya.sharma@techcorp.com',   deptEng,  'L4', vpEng,  'manager');
+  const ceo   = insertEmployee(orgId,'EMP001','Arjun Mehta',     'arjun.mehta@techcorp.com',    deptEng,  'L1', null,   'admin');
+  const vpEng = insertEmployee(orgId,'EMP002','Ramesh Kumar',    'ramesh.kumar@techcorp.com',   deptEng,  'L1', ceo,    'manager');
+  const mgr   = insertEmployee(orgId,'EMP003','Priya Sharma',    'priya.sharma@techcorp.com',   deptEng,  'L2', vpEng,  'manager');
   const sr1   = insertEmployee(orgId,'EMP004','Kiran Patel',     'kiran.patel@techcorp.com',    deptEng,  'L3', mgr,    'employee');
   const sr2   = insertEmployee(orgId,'EMP005','Ananya Singh',    'ananya.singh@techcorp.com',   deptEng,  'L3', mgr,    'employee');
-  const dev1  = insertEmployee(orgId,'EMP006','Dev Kumar',       'dev.kumar@techcorp.com',      deptEng,  'L2', mgr,    'employee');
-  const vpSal = insertEmployee(orgId,'EMP007','Suresh Nair',     'suresh.nair@techcorp.com',    deptSales,'L5', ceo,    'manager');
-  const sMgr  = insertEmployee(orgId,'EMP008','Meera Reddy',     'meera.reddy@techcorp.com',    deptSales,'L4', vpSal,  'manager');
-  const rep1  = insertEmployee(orgId,'EMP009','Raj Kapoor',      'raj.kapoor@techcorp.com',     deptSales,'L2', sMgr,   'employee');
-  const rep2  = insertEmployee(orgId,'EMP010','Kavya Rao',       'kavya.rao@techcorp.com',      deptSales,'L2', sMgr,   'employee');
+  const dev1  = insertEmployee(orgId,'EMP006','Dev Kumar',       'dev.kumar@techcorp.com',      deptEng,  'L4', mgr,    'employee');
+  const vpSal = insertEmployee(orgId,'EMP007','Suresh Nair',     'suresh.nair@techcorp.com',    deptSales,'L1', ceo,    'manager');
+  const sMgr  = insertEmployee(orgId,'EMP008','Meera Reddy',     'meera.reddy@techcorp.com',    deptSales,'L2', vpSal,  'manager');
+  const rep1  = insertEmployee(orgId,'EMP009','Raj Kapoor',      'raj.kapoor@techcorp.com',     deptSales,'L4', sMgr,   'employee');
+  const rep2  = insertEmployee(orgId,'EMP010','Kavya Rao',       'kavya.rao@techcorp.com',      deptSales,'L4', sMgr,   'employee');
 
   // ── 5. Review Cycle ──────────────────────────────────────────────────────
   db.run(

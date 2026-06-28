@@ -22,7 +22,8 @@
       "PowerShell(Start-Sleep -Seconds 4; try { $r = Invoke-WebRequest -Uri \"http://localhost:3001/api/v1/health\" -TimeoutSec 5; $r.Content } catch { \"Not up yet: $_\" })",
       "PowerShell($r = Invoke-WebRequest -Uri \"http://localhost:3001/api/v1/health\" -TimeoutSec 5; $r.Content)",
       "Bash(curl -s http://localhost:3001/api/v1/health)",
-      "Bash(curl -s -X POST http://localhost:3001/api/v1/auth/login -H \"Content-Type: application/json\" -d '{\"email\":\"arjun.mehta@techcorp.com\",\"password\":\"password123\"}')"
+      "Bash(curl -s -X POST http://localhost:3001/api/v1/auth/login -H \"Content-Type: application/json\" -d '{\"email\":\"arjun.mehta@techcorp.com\",\"password\":\"password123\"}')",
+      "Bash(node --input-type=module --eval \"import\\('./src/pages/OrgSettingsPage.jsx'\\)\")"
     ]
   }
 }

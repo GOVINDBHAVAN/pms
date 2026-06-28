@@ -55,9 +55,12 @@
 - DONE: FOLLOWUP PROMPT: can you again validate the heading you have set is 'KRA / KPI' whereas the content is not seems related to KRA / KPI, it's seems to be of GOALS, (correct if I am doing mistake here).
 - DONE: FOLLOWUP PROMPT: can you re-confirm the words 'Goals Rating Scale KRA/KPI' are okay here and inside this section, correct my understanding is it related to KRA/KPI entry or approval or reviewal at any stage or it's just used for Goals review/status update
 - DONE: FOLLOWUP PROMPT: also check if these 'Performance Review Rating' will be used in Goals as well other than KR/KPI review time?
-- Who can enter what configuration - CEO/VP/Directors can enter OKR or Key-results/Goals/KPI, Department heads can enter what OKR/KR/KPI/Goals/Compentancy, similarly mid-managers and employees can enter what OKR/KR/KPI/Goals/Compentancy - by default it should have correct mapping and configured in the system.
-- If the approving authority has any subordinates data pending for submission or approval is pending by mid-managers then can see that status in a list form that they can take action while they are inputting their own target status or approving their subordinates data.
-- When approving authority is approving the submission of subordinates they can clearly view the data of their subordinates on the screen.
+- DONE: Who can enter what configuration - CEO/VP/Directors can enter OKR or Key-results/Goals/KPI, Department heads can enter what OKR/KR/KPI/Goals/Compentancy, similarly mid-managers and employees can enter what OKR/KR/KPI/Goals/Compentancy - by default it should have correct mapping and configured in the system.
+- DONE: FOLLOWUP PROMPT: The employees profile shown resembles IT Tech company, change the employees profiile shown non-IT specific designations
+- DONE: FOLLOWUP PROMPT: Keep director/CEO/VP as the first hirarchy, then HOD, Assistant Manager, Senior Executive, Executive
+- DONE: FOLLOWUP PROMPT: Reorganize the Levels, Director is L1 not L5, rearrange others.
+- DONE: FOLLOWUP PROMPT: The L1 Director/CEO should update the OKR of the company, if the OKR is selected, make the configuration default, to avoid selection of this manually.
+- DONE: FOLLOWUP PROMPT: If OKR is selected then Key Result should be selected by default at all levels, similarly if KRA and KPI is selected then KPI should be selected by default at all level, check if this logic is correct
 
 ### Cascading
 
@@ -107,6 +110,8 @@
 
 - When employees or department head is updating the reviews, they can see their cummulative/consolidated ratings (average) as well, so that they can track the progress i.e. April to May average visible when they are enterring the June month data (including June numbers).
 - Approving authorities should see their subordinates performance are they inline with expectation or not, clear and easy indication for approving person to quickly understand and they can provide their own ratings and values (by default it should be same as per subordinates data). Assessment of those reflection in the top and HR management dashboard, along with consolidated and cummulative results of the entire year data.
+- If the approving authority has any subordinates data pending for submission or approval is pending by mid-managers then can see that status in a list form that they can take action while they are inputting their own target status or approving their subordinates data.
+- When approving authority is approving the submission of subordinates they can clearly view the data of their subordinates on the screen.
 
 
 ### Salary and increment/hide

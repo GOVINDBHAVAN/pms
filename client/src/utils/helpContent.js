@@ -62,6 +62,30 @@ export const HELP = {
       'Relative importance (%) of each BSC perspective in the overall scorecard. Must total 100%.\n\n' +
       'Example: Financial 35%, Customer 30%, Process 20%, Learning 15% for a bank.\n\n' +
       'These weights determine how per-perspective scores are aggregated into the BSC component of the final score.',
+
+    entryRules:
+      'Controls which grade/level of employee is allowed to create each type of performance target.\n\n' +
+      'Example: Only CEO/VP grades can create OKR Objectives (strategic direction). Mid-managers and below create KPIs, Goals, and Competencies (operational targets).\n\n' +
+      'This prevents junior employees from accidentally creating high-level strategic items meant only for leadership. Defaults are set based on your industry and grade levels.',
+
+    entryRulesType: {
+      okr_objective:
+        'OKR Objectives are qualitative direction statements (e.g., "Become the most trusted platform"). Only senior leadership should define these — they are the root of all strategic cascade.\n\nTypically: CEO / MD level only.',
+      okr_kr:
+        'Key Results are specific measurable outcomes that prove an Objective was achieved. Usually set by VP, Director, and HOD levels who translate strategic direction into measurable commitments.\n\nTypically: VP / Director / HOD levels.',
+      kra:
+        'Key Result Areas are named responsibility buckets (e.g., "Revenue Growth", "Quality"). Typically defined by HOD/Department Head level and assigned downward.\n\nTypically: HOD / Senior Manager and above.',
+      kpi:
+        'KPIs are specific metrics inside a KRA (e.g., "Monthly Revenue", "Defect Rate"). Managers and individual contributors set targets against KPIs each cycle.\n\nTypically: Manager / Individual Contributor levels.',
+      goal:
+        'Goals are simple standalone targets with no OKR/KRA structure. Flexible — can apply at any level. Suitable for teams using Goals-only or Hybrid frameworks.\n\nTypically: All levels (can be restricted if needed).',
+      competency:
+        'Competencies are behavioural/skills attributes assessed per role (e.g., "Communication", "Problem Solving"). Assessed at individual and manager level during reviews.\n\nTypically: All individual contributor and manager levels.',
+      bsc_metric:
+        'BSC Metrics are KPIs tagged to one of the four Balanced Scorecard perspectives. Usually defined at leadership and HOD levels who own strategic scorecards.\n\nTypically: HOD / Director and above.',
+      custom_metric:
+        'Custom Metrics are org-specific target types. Assign entry rights based on how your organisation uses this type.',
+    },
   },
 
   /* ─── Performance Type Detailed Info (for modal) ───────────────────────── */

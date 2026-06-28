@@ -1,6 +1,6 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import AppLayout from '../components/layout/AppLayout';
-import { getOrgSettings, updateOrgSettings } from '../api/orgApi';
+import { getOrgSettings, updateOrgSettings, getGrades } from '../api/orgApi';
 import InfoIcon from '../components/shared/InfoIcon';
 import PerformanceTypeModal from '../components/shared/PerformanceTypeModal';
 import SettingInfoModal from '../components/shared/SettingInfoModal';
@@ -189,12 +189,13 @@ const TERM_TYPE_DEPS = {
 
 const BAND_COLORS = ['#16a34a', '#2563eb', '#d97706', '#dc2626', '#7f1d1d', '#7c3aed', '#0891b2'];
 
-const BASE_TABS = ['General', 'Rating Scale', 'Final Score', 'Terminology', 'Performance Bands', 'Target Rules'];
+const BASE_TABS = ['General', 'Rating Scale', 'Final Score', 'Terminology', 'Performance Bands', 'Target Rules', 'Entry Rules'];
 
 export default function OrgSettingsPage() {
   const [activeTab, setActiveTab] = useState('General');
   const [org, setOrg] = useState(null);
   const [settings, setSettings] = useState(null);
+  const [grades, setGrades] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -208,10 +209,11 @@ export default function OrgSettingsPage() {
   const isCascadeOff = settings?.cascade_mode === 'none';
 
   useEffect(() => {
-    getOrgSettings()
-      .then(data => {
+    Promise.all([getOrgSettings(), getGrades()])
+      .then(([data, gradeData]) => {
         setOrg(data);
         setSettings(data.settings || {});
+        setGrades([...gradeData].sort((a, b) => b.level - a.level));
       })
       .catch(e => setError(e?.response?.data?.error || e.message))
       .finally(() => setLoading(false));
@@ -225,13 +227,20 @@ export default function OrgSettingsPage() {
     setSaving(true);
     setError('');
     try {
+      // Auto-compute entry permissions if never configured,
+      // so OKR/type defaults (e.g. L1→OKR Objective) apply without manual setup.
+      const finalSettings = { ...settings };
+      if (!finalSettings.entry_permissions || Object.keys(finalSettings.entry_permissions).length === 0) {
+        finalSettings.entry_permissions = computeDefaultPermissions(grades, finalSettings.active_types || []);
+      }
       await updateOrgSettings({
         name: org.name,
-        industry: settings.industry || org.industry,
-        framework: settings.framework || org.framework,
-        cascade_mode: settings.cascade_mode || org.cascade_mode,
-        settings,
+        industry: finalSettings.industry || org.industry,
+        framework: finalSettings.framework || org.framework,
+        cascade_mode: finalSettings.cascade_mode || org.cascade_mode,
+        settings: finalSettings,
       });
+      setSettings(finalSettings);
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
     } catch (e) {
@@ -302,6 +311,7 @@ export default function OrgSettingsPage() {
           {activeTab === 'Terminology'     && <TerminologyTab settings={settings} onChange={updateSettings} />}
           {activeTab === 'Performance Bands' && <BandsTab settings={settings} onChange={updateSettings} />}
           {activeTab === 'Target Rules'    && <TargetRulesTab settings={settings} onChange={updateSettings} />}
+          {activeTab === 'Entry Rules'     && <EntryRulesTab settings={settings} grades={grades} onChange={updateSettings} />}
           {activeTab === 'Talent Grid'     && <TalentGridTab settings={settings} onChange={updateSettings} />}
         </div>
       </div>
@@ -1814,6 +1824,225 @@ function TalentGridTab({ settings, onChange }) {
           Reset to defaults
         </button>
       </div>
+    </div>
+  );
+}
+
+/* ── Entry Rules Tab ─────────────────────────────────────────────────────── */
+
+const ENTRY_TYPE_META = [
+  { value: 'okr_objective', label: 'OKR Objective',  shortLabel: 'OKR Obj'    },
+  { value: 'okr_kr',        label: 'Key Result',     shortLabel: 'Key Result' },
+  { value: 'kra',           label: 'KRA',            shortLabel: 'KRA'        },
+  { value: 'kpi',           label: 'KPI',            shortLabel: 'KPI'        },
+  { value: 'goal',          label: 'Goal',           shortLabel: 'Goal'       },
+  { value: 'competency',    label: 'Competency',     shortLabel: 'Competency' },
+  { value: 'bsc_metric',    label: 'BSC Metric',     shortLabel: 'BSC'        },
+  { value: 'custom_metric', label: 'Custom Metric',  shortLabel: 'Custom'     },
+];
+
+function computeDefaultPermissions(grades, activeTypes) {
+  const sorted = [...grades].sort((a, b) => b.level - a.level);
+  const total = sorted.length;
+
+  // Per RULE OL1: Key Results apply at EVERY level when OKR is active.
+  // Per RULE KPI3: KPI targets apply at EVERY level when KPI is active.
+  const okrActive = activeTypes.includes('okr_kr');
+  const kpiActive = activeTypes.includes('kpi');
+
+  const result = {};
+  sorted.forEach((grade, idx) => {
+    const rank = total <= 1 ? 0 : idx / (total - 1);
+
+    // Level-specific strategic types (get narrower as we go down the hierarchy)
+    let candidates;
+    if (rank < 0.33) {
+      // Top level (Director / VP / CEO) — OKR Objectives + KRAs
+      candidates = ['okr_objective', 'kra', 'goal', 'bsc_metric', 'custom_metric'];
+    } else if (rank < 0.66) {
+      // Mid level (HOD / Asst. Manager) — KRAs + Goals + Competency
+      candidates = ['kra', 'goal', 'competency', 'bsc_metric', 'custom_metric'];
+    } else {
+      // Operational (Senior Executive / Executive) — Goals + Competency
+      candidates = ['goal', 'competency', 'custom_metric'];
+    }
+
+    // Always grant Key Result at every level when OKR is enabled (RULE OL1)
+    if (okrActive) candidates.push('okr_kr');
+    // Always grant KPI at every level when KPI is enabled (RULE KPI3)
+    if (kpiActive) candidates.push('kpi');
+
+    result[grade.code] = candidates.filter(t => activeTypes.includes(t));
+  });
+  return result;
+}
+
+function EntryRulesTab({ settings, grades, onChange }) {
+  const activeTypes = settings.active_types || [];
+  const savedPermissions = settings.entry_permissions || {};
+
+  const effectivePermissions = useMemo(
+    () => Object.keys(savedPermissions).length > 0
+      ? savedPermissions
+      : computeDefaultPermissions(grades, activeTypes),
+    [savedPermissions, grades, activeTypes]
+  );
+
+  const visibleTypes = ENTRY_TYPE_META.filter(t => activeTypes.includes(t.value));
+
+  function toggle(gradeCode, typeValue) {
+    const current = effectivePermissions[gradeCode] || [];
+    const updated = current.includes(typeValue)
+      ? current.filter(t => t !== typeValue)
+      : [...current, typeValue];
+    onChange({ entry_permissions: { ...effectivePermissions, [gradeCode]: updated } });
+  }
+
+  function resetToDefaults() {
+    onChange({ entry_permissions: computeDefaultPermissions(grades, activeTypes) });
+  }
+
+  function selectAll(gradeCode) {
+    onChange({ entry_permissions: { ...effectivePermissions, [gradeCode]: activeTypes } });
+  }
+
+  function clearAll(gradeCode) {
+    onChange({ entry_permissions: { ...effectivePermissions, [gradeCode]: [] } });
+  }
+
+  return (
+    <div className="space-y-5">
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-1.5">
+            <h3 className="text-sm font-semibold text-slate-800">Who Can Enter What</h3>
+            <InfoIcon title="Who Can Enter What" content={HELP.orgSettings.entryRules} />
+          </div>
+          <p className="text-xs text-slate-500 mt-1 max-w-xl">
+            For each grade level, tick which performance target types they are allowed to create.
+            Only your active types (from the General tab) appear as columns.
+            Higher grades typically create strategic targets (OKR Objectives, KRAs);
+            lower grades create operational targets (KPIs, Goals, Competencies).
+          </p>
+        </div>
+        {grades.length > 0 && (
+          <button
+            className="text-xs text-indigo-600 hover:text-indigo-800 font-medium whitespace-nowrap flex-shrink-0 border border-indigo-200 rounded px-3 py-1.5 hover:bg-indigo-50 transition-colors"
+            onClick={resetToDefaults}
+          >
+            Reset to Defaults
+          </button>
+        )}
+      </div>
+
+      {/* Empty states */}
+      {!activeTypes.length && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-700">
+          No active performance types configured. Go to the <strong>General</strong> tab and select at least one type first.
+        </div>
+      )}
+      {activeTypes.length > 0 && grades.length === 0 && (
+        <div className="bg-amber-50 border border-amber-200 rounded-lg px-4 py-3 text-sm text-amber-700">
+          No grade levels found. Go to the Setup Wizard → <strong>Grades / Levels</strong> to define your org's grade structure.
+        </div>
+      )}
+
+      {/* Matrix table */}
+      {grades.length > 0 && activeTypes.length > 0 && (
+        <div className="overflow-x-auto rounded-xl border border-slate-200">
+          <table className="w-full text-sm border-collapse">
+            <thead>
+              <tr className="bg-slate-50 border-b border-slate-200">
+                <th className="text-left px-4 py-3 text-slate-500 font-medium text-xs min-w-[180px] sticky left-0 bg-slate-50 z-10">
+                  Grade / Level
+                </th>
+                {visibleTypes.map(t => (
+                  <th key={t.value} className="px-3 py-3 text-center min-w-[90px] border-l border-slate-100">
+                    <div className="flex flex-col items-center gap-0.5">
+                      <span className="text-xs font-medium text-slate-600 leading-tight">{t.shortLabel}</span>
+                      <InfoIcon
+                        title={t.label}
+                        content={HELP.orgSettings.entryRulesType[t.value]}
+                        side="bottom"
+                      />
+                    </div>
+                  </th>
+                ))}
+                <th className="px-3 py-3 text-center min-w-[100px] border-l border-slate-100">
+                  <span className="text-xs font-medium text-slate-400">Actions</span>
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {grades.map((grade, i) => {
+                const allowed = effectivePermissions[grade.code] || [];
+                const checkedCount = visibleTypes.filter(t => allowed.includes(t.value)).length;
+                return (
+                  <tr key={grade.code} className="hover:bg-slate-50 transition-colors group">
+                    <td className="px-4 py-3 sticky left-0 bg-white group-hover:bg-slate-50 transition-colors z-10">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-semibold text-slate-800 text-sm">{grade.code}</span>
+                        <span className="text-slate-500 text-sm">{grade.label}</span>
+                        {i === 0 && (
+                          <span className="text-[10px] bg-indigo-100 text-indigo-600 rounded-full px-2 py-0.5 font-medium leading-none">
+                            Most Senior
+                          </span>
+                        )}
+                        {grade.can_manage && i !== 0 && (
+                          <span className="text-[10px] bg-emerald-100 text-emerald-600 rounded-full px-2 py-0.5 font-medium leading-none">
+                            Manager
+                          </span>
+                        )}
+                        {checkedCount === 0 && (
+                          <span className="text-[10px] bg-red-100 text-red-500 rounded-full px-2 py-0.5 font-medium leading-none">
+                            None
+                          </span>
+                        )}
+                      </div>
+                    </td>
+                    {visibleTypes.map(t => (
+                      <td key={t.value} className="px-3 py-3 text-center border-l border-slate-100">
+                        <input
+                          type="checkbox"
+                          className="w-4 h-4 rounded cursor-pointer accent-indigo-600"
+                          checked={allowed.includes(t.value)}
+                          onChange={() => toggle(grade.code, t.value)}
+                        />
+                      </td>
+                    ))}
+                    <td className="px-3 py-3 text-center border-l border-slate-100">
+                      <div className="flex items-center justify-center gap-2">
+                        <button
+                          className="text-[10px] text-indigo-500 hover:text-indigo-700 hover:underline leading-none"
+                          onClick={() => selectAll(grade.code)}
+                        >
+                          All
+                        </button>
+                        <span className="text-slate-200 select-none">|</span>
+                        <button
+                          className="text-[10px] text-slate-400 hover:text-slate-600 hover:underline leading-none"
+                          onClick={() => clearAll(grade.code)}
+                        >
+                          None
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Guidance note */}
+      {grades.length > 0 && activeTypes.length > 0 && (
+        <div className="bg-slate-50 border border-slate-200 rounded-lg px-4 py-3 text-xs text-slate-600 space-y-1">
+          <p><strong>How defaults are computed:</strong> The most senior grade is given only strategic types (OKR Objective, Goal). Mid-levels get cascading types (Key Result, KRA). Lower grades get operational types (KPI, Goal, Competency).</p>
+          <p><strong>Warning:</strong> A grade with <span className="text-red-500 font-medium">None</span> checked will see an empty "Add Target" form. Ensure every grade has at least one type enabled.</p>
+        </div>
+      )}
     </div>
   );
 }
