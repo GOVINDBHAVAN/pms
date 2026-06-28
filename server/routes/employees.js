@@ -96,20 +96,28 @@ router.put('/:id', requireAuth, (req, res) => {
   try {
     const { getDb: _db, saveDb } = require('../db/database');
     const db = _db();
-    const { name, emp_code, dept_id, grade_id, reporting_to, role, is_active } = req.body;
+    const { name, emp_code, dept_id, grade_id, role, is_active } = req.body;
+
+    // reporting_to can be explicitly set to null (to make someone a root-level employee)
+    const rtProvided = Object.prototype.hasOwnProperty.call(req.body, 'reporting_to');
+    const rtVal = rtProvided ? (req.body.reporting_to || null) : undefined;
+
     db.run(
       `UPDATE employees SET
-         name       = COALESCE(?, name),
-         emp_code   = COALESCE(?, emp_code),
-         dept_id    = COALESCE(?, dept_id),
-         grade_id   = COALESCE(?, grade_id),
-         reporting_to = COALESCE(?, reporting_to),
-         role       = COALESCE(?, role),
-         is_active  = COALESCE(?, is_active)
+         name         = COALESCE(?, name),
+         emp_code     = COALESCE(?, emp_code),
+         dept_id      = COALESCE(?, dept_id),
+         grade_id     = COALESCE(?, grade_id),
+         reporting_to = CASE WHEN ? = 1 THEN ? ELSE reporting_to END,
+         role         = COALESCE(?, role),
+         is_active    = COALESCE(?, is_active)
        WHERE id = ? AND org_id = ?`,
-      [name || null, emp_code || null, dept_id || null, grade_id || null,
-       reporting_to || null, role || null, is_active != null ? is_active : null,
-       req.params.id, req.user.org_id]
+      [
+        name || null, emp_code || null, dept_id || null, grade_id || null,
+        rtProvided ? 1 : 0, rtVal,
+        role || null, is_active != null ? is_active : null,
+        req.params.id, req.user.org_id,
+      ]
     );
     saveDb();
     res.json({ ok: true });

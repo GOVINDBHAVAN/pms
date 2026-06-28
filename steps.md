@@ -61,6 +61,8 @@
 - DONE: FOLLOWUP PROMPT: Reorganize the Levels, Director is L1 not L5, rearrange others.
 - DONE: FOLLOWUP PROMPT: The L1 Director/CEO should update the OKR of the company, if the OKR is selected, make the configuration default, to avoid selection of this manually.
 - DONE: FOLLOWUP PROMPT: If OKR is selected then Key Result should be selected by default at all levels, similarly if KRA and KPI is selected then KPI should be selected by default at all level, check if this logic is correct
+- Check-in feature is to be developed along with review-cycle wise input by employees/managers, the check-in feature will result in timely update of the status by employees wihtout rely on HR/Admin to open the review cycle window to them. These check-ins will help employees to update the status in the system and also to update the progress of their OKR/KR/KPI/Goals on time and reflect them in the organization dashboard of managers.
+  
 
 ### Cascading
 
@@ -68,8 +70,9 @@
 
 ### Sample Data and multiple companies sample for POC
 
-- Revise login page functionality to first select the demo database type (IT company, Manufacturing company, Pharma company, etc) and the user/employee to login with without remembering/typing any user/employee along with their password this will be use for a quick demostration. 
-- Sample data of employees (upto 50 employees spread accross multiple departments) with L1 to L9 each reporting structure L1 = 1 (MD/CEO/Director), L2 = 4 (Sales Head, Product Head, Support Head, HR and Admin Head), Upto L9. At L3 to L9 there will be multiple reportees and each will have their own targets drived from L2 (L2 targets are driven from L1 company targets), The L4 to L9 will give stretch targets (overcommittment or undercommitment) the visualization is required that company's target is separately visible the upper layer target should be visible to current reportees so that they can plan their targets and similarly when manager is enterring their target they can suggest targets to their reportees (it's most critical aspect of the system to make this complex mapping so simple that it can be easily configure by the clients). This feature we can enable in cascading with OKR based appraoch (check if my understanding is correct with cascading).  Employee master page modification for manager and reportees mapping to form the hierarchy of organization structure.
+- DONE: Revise login page functionality to first select the demo database type (IT company, Manufacturing company, Pharma company, etc) and the user/employee to login with without remembering/typing any user/employee along with their password this will be use for a quick demostration. 
+- DONE (Phase 1): 50-employee TechCorp Demo seeded — L1 CEO → L2 VPs (4) → L3 GMs (8) → L4 Sr Managers (12) → L5 Managers (16) → L6 Sr Executives (6) → L7 Associates (3) across 4 depts (Sales, Engineering, Support, HR). Grades L1→L9 defined. Employee Master page built at /org/employees with List + Org Chart views, reporting chain panel, and Add/Edit modal. PUT /employees/:id fixed to allow reporting_to = null (root employee).
+- PENDING (Phase 2): OKR cascade target visualization — when employee enters targets, show company OKR (L1) and parent manager's KR as context panel. Manager-suggest-to-reportee feature (push draft KR to direct reportees). Stretch target (over/under plan) visualization across the cascade chain. These require the My Targets page to be built.
 
 
 ### Templates of KR/KPI (later)
@@ -79,7 +82,7 @@
 ### Cycles
 
 - In 'Org settings' Do we need 'Cycle Defaults' or it will come in the 'Cycles' section/configuration?
-- Review cycle can be defined by the client such that daily, weekly, bi-weekly, monthly, quarterly, semin-annually, annually. 
+- Review cycle can be defined by the client such that daily, weekly, bi-weekly, monthly, quarterly, semin-annually, annually.
 - Input screens of updating the progress of employees, mid-managers and HOD to enter their daily, weekly, bi-weekly, monthly, quarterly, semi-annually, annually reviews. When the person logged-in, they should see a notification on their dashboard/home-page to quickly understand some action is pending at their end. If the person has missed to enter their previous cycle data, then system should first restrict them to update that first and then current cycle data can be entered in the system.
 - Whether can it be possible that company OKR be reviewed quarterly or semi-annually or annually and other supporting things like employee or HOD reviews are done as per given cycle, the management (CEO/VP/Directors) can track / view the company vs others status but they can update their status in different frequency of cycle. Similarly HOD can update their status at different frequency of cycle than their subordinates who might update the status daily, weekly, monthly etc and HOD updating the status monthly or quarterly.
 

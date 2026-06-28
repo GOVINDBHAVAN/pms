@@ -40,7 +40,11 @@
       "Bash(Read \"C:\\\\Users\\\\govin\\\\AppData\\\\Local\\\\Temp\\\\claude\\\\d--Practice-my-pms\\\\64eaa8ec-597a-4c65-b2b4-159f5f561084\\\\tasks\\\\br8sxxcjx.output\")",
       "Bash(npm install *)",
       "Bash(mkdir -p \"C:/Users/govin/AppData/Local/Temp/claude/d--Practice-my-pms/84c5c63c-a566-452f-815e-57e31cc1c1ef/scratchpad/pw-test\")",
-      "Bash(npm init *)"
+      "Bash(npm init *)",
+      "Skill(run)",
+      "Skill(run:*)",
+      "Bash(python3 -c ' *)",
+      "Bash(npm run *)"
     ]
   }
 }
