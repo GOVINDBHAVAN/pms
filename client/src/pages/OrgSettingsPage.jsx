@@ -179,7 +179,7 @@ const TERM_TYPE_DEPS = {
 
 const BAND_COLORS = ['#16a34a', '#2563eb', '#d97706', '#dc2626', '#7f1d1d', '#7c3aed', '#0891b2'];
 
-const BASE_TABS = ['General', 'Rating Scale', 'Weightage', 'Terminology', 'Performance Bands', 'Target Rules'];
+const BASE_TABS = ['General', 'Rating Scale', 'Final Score', 'Terminology', 'Performance Bands', 'Target Rules'];
 
 export default function OrgSettingsPage() {
   const [activeTab, setActiveTab] = useState('General');
@@ -259,7 +259,7 @@ export default function OrgSettingsPage() {
         <div className="border-b border-slate-200">
           <nav className="flex gap-1">
             {tabs.map(tab => {
-              const isAuto = tab === 'Weightage' && isWeightageAuto;
+              const isAuto = tab === 'Final Score' && isWeightageAuto;
               const isNoCascade = tab === 'Target Rules' && isCascadeOff;
               return (
                 <button
@@ -288,7 +288,7 @@ export default function OrgSettingsPage() {
         <div className="bg-white rounded-xl border border-slate-200 p-6">
           {activeTab === 'General'         && <GeneralTab org={org} settings={settings} onChange={updateSettings} />}
           {activeTab === 'Rating Scale'    && <RatingScaleTab settings={settings} onChange={updateSettings} />}
-          {activeTab === 'Weightage'       && <WeightageTab settings={settings} onChange={updateSettings} />}
+          {activeTab === 'Final Score'      && <WeightageTab settings={settings} onChange={updateSettings} />}
           {activeTab === 'Terminology'     && <TerminologyTab settings={settings} onChange={updateSettings} />}
           {activeTab === 'Performance Bands' && <BandsTab settings={settings} onChange={updateSettings} />}
           {activeTab === 'Target Rules'    && <TargetRulesTab settings={settings} onChange={updateSettings} />}
@@ -446,12 +446,12 @@ function GeneralTab({ org, settings, onChange }) {
           );
           if (ts.compOnly) return (
             <p className="text-xs text-amber-600 mt-2">
-              Only Competency is active — the Weightage tab will auto-set to 0% Goals / 100% Competency.
+              Only Competency is active — the Final Score tab will auto-set to 0% Goals / 100% Competency.
             </p>
           );
           if (ts.goalsOnly) return (
             <p className="text-xs text-amber-600 mt-2">
-              No Competency type active — the Weightage tab will auto-set to 100% Goals / 0% Competency.
+              No Competency type active — the Final Score tab will auto-set to 100% Goals / 0% Competency.
             </p>
           );
           return null;
@@ -1042,7 +1042,7 @@ function RatingScaleSection({ title, scale, onUpdate, sectionHelp, keyPrefix, on
   );
 }
 
-/* ── Weightage Tab ───────────────────────────────────────────────────────── */
+/* ── Final Score Tab ─────────────────────────────────────────────────────── */
 function WeightageTab({ settings, onChange }) {
   const [activeModal, setActiveModal] = useState(null);
   const typeStatus = getTypeStatus(settings.active_types);
@@ -1075,8 +1075,8 @@ function WeightageTab({ settings, onChange }) {
       )}
       <div>
         <h3 className="flex items-center gap-1 font-semibold text-slate-800 mb-1">
-          Goals vs Competency Split
-          <InfoIcon title="Weightage Split" content={HELP.weightage.split} />
+          Score Split
+          <InfoIcon title="Score Split" content={HELP.weightage.split} />
           <button type="button" onClick={() => setActiveModal('weightage_split')} className="ml-1 text-[10px] text-indigo-500 hover:text-indigo-700 font-medium underline underline-offset-2 leading-none">Learn more</button>
         </h3>
         <p className="text-sm text-slate-500">

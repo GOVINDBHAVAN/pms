@@ -405,10 +405,10 @@ export const HELP = {
       'Use for qualitative targets where the only meaningful assessment is the manager\'s direct judgment.',
   },
 
-  /* ─── Org Settings — Weightage Tab ─────────────────────────────────────── */
+  /* ─── Org Settings — Final Score Tab ───────────────────────────────────── */
   weightage: {
     split:
-      'The weightage split determines how much each category contributes to an employee\'s final performance score.\n\n' +
+      'The score split determines how much each category contributes to an employee\'s final performance score.\n\n' +
       'Example: Goals 70% + Competency 30% = 100% final score.\n' +
       'Formula: (weighted avg of goal ratings × 70%) + (weighted avg of competency ratings × 30%)\n\n' +
       'This applies to every employee across all cycles. A higher goals % makes delivery of measurable targets the primary driver; a higher competency % makes behaviours and skills more important.',
@@ -830,7 +830,7 @@ export const HELP = {
       ],
       reflects: [
         { where: 'Appraisal Form — Competency Section', what: 'Competency rating input shows separately from the goals rating, using these competency-specific labels.' },
-        { where: 'Final Scorecard', what: 'Competency ratings feed into the competency portion based on the Weightage split setting.' },
+        { where: 'Final Scorecard', what: 'Competency ratings feed into the competency portion based on the Score Split setting.' },
       ],
       practices: [
         { context: 'Large Enterprises (200+)', rec: 'BARS. Inter-rater reliability matters when many managers rate the same competencies across different teams.' },
@@ -909,7 +909,7 @@ export const HELP = {
     },
 
     weightage_split: {
-      title: 'Goals vs Competency Split', icon: '⚖️', color: 'indigo',
+      title: 'Score Split', icon: '⚖️', color: 'indigo',
       tagline: 'How much each category contributes to the final performance score',
       what: [
         'The final score is a weighted combination: (Goals Score × Goals%) + (Competency Score × Competency%) = 100%. Example: Goals 70% + Competency 30%. If an employee scores 4.0 on Goals and 3.0 on Competency → Final = (4.0 × 0.70) + (3.0 × 0.30) = 3.70.',

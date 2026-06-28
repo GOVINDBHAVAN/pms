@@ -46,7 +46,8 @@
 - DONE: Check the 'org settings' page the tabs like 'Rating Scale' etc should be applicable tabs depend on the selection of 'Active Performance Types' or 'Framework' to avoid confusion at the user side.
 - DONE: Refer this image, I want the ratings can be defined when individual/users/HR creating the measurable things like Key-results or KPI so that in some of the measurables sales values in number can be entered, whereas some can be yes/no, or percentage, BARS, do we really need this to be fixed for all measurables in the system and not allow the end-users to customize and choose different measurables against their each line-items?
 - DONE: FOLLOWUP PROMPT: Yes proceed, and regarding 'Org Settings → Rating Scale', I would like to suggest that in 'org settings' we can allow the users to create or modify the measurement types. Here predefined measurement types should be there and users can verify and configure them, and at end-users data-entry stages, they can choose the available measurable types from this 'org settings rating scale'
-- I have confusion over this 'Weightage' Tab, is it only applicable to Goals / Compentency? If so then can we rename it appropriately so that end-users can understand it?
+- DONE: I have confusion over this 'Weightage' Tab in the 'org settings' page, is it only applicable to Goals / Compentency? If so then can we rename it appropriately so that end-users can understand it?
+- DONE: FOLLOWUP PROMPT: if it's final score tab, check if that could be a better name of this tab along with changes inside the tab of 'score split' in '"Goals vs Competency Split' area
 - Who can enter what configuration - CEO/VP/Directors can enter OKR or Key-results/Goals/KPI, Department heads can enter what OKR/KR/KPI/Goals/Compentancy, similarly mid-managers and employees can enter what OKR/KR/KPI/Goals/Compentancy - by default it should have correct mapping and configured in the system.
 - If the approving authority has any subordinates data pending for submission or approval is pending by mid-managers then can see that status in a list form that they can take action while they are inputting their own target status or approving their subordinates data.
 - When approving authority is approving the submission of subordinates they can clearly view the data of their subordinates on the screen.
@@ -125,6 +126,7 @@
 - Do need to the configuration like BSC or 9-box or OKR/KR/Goal at the 'org settings' or it should be there at 'Cycles' setup/configuration.
 - Prepare structural features of other options which are used in industries that we have not covered yet (other than OKR,KR,KPI,Goals), check industries like Pharma, Hospitals,Banks and suggest if they are following different approaches and methods, that we can provide and incorporate in this demo application.
 - SMART Goals in Key-results guidelines.
+- Fine-tune the 'org settings' page rating tab for groups and categorization to make the page more understable, currently it's displaying lots of fields which can confuse the end-users, can we add collapsable configuration for a better user experience.
 
 ### Product developed features list
 
