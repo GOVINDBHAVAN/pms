@@ -601,18 +601,73 @@ function GeneralTab({ org, settings, onChange }) {
   );
 }
 
+/* ── Collapsible Card ────────────────────────────────────────────────────── */
+function CollapsibleCard({ title, summary, icon, badge, defaultOpen = false, children, titleExtra }) {
+  const [open, setOpen] = useState(defaultOpen);
+  return (
+    <div className="border border-slate-200 rounded-xl overflow-hidden">
+      <button
+        type="button"
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center gap-3 px-5 py-3.5 text-left hover:bg-slate-50 transition-colors"
+      >
+        {icon && <span className="text-sm select-none">{icon}</span>}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="font-medium text-slate-800 text-sm">{title}</span>
+            {badge && (
+              <span className="text-[10px] bg-slate-100 text-slate-500 rounded px-2 py-0.5 font-medium leading-none">
+                {badge}
+              </span>
+            )}
+            {titleExtra}
+          </div>
+          {!open && summary && (
+            <p className="text-xs text-slate-400 mt-0.5 truncate">{summary}</p>
+          )}
+        </div>
+        <svg
+          className={`w-4 h-4 text-slate-400 flex-shrink-0 transition-transform ${open ? 'rotate-180' : ''}`}
+          fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}
+        >
+          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+        </svg>
+      </button>
+      {open && (
+        <div className="border-t border-slate-100 px-5 py-5">
+          {children}
+        </div>
+      )}
+    </div>
+  );
+}
+
 /* ── Rating Scale Tab ────────────────────────────────────────────────────── */
 function RatingScaleTab({ settings, onChange }) {
   const [activeModal, setActiveModal] = useState(null);
   const ratingScale = settings.rating_scale || {};
   const typeStatus = getTypeStatus(settings.active_types);
 
+  const types = settings.measurement_types?.length
+    ? settings.measurement_types
+    : DEFAULT_ORG_MEASUREMENT_TYPES;
+  const enabledCount = types.filter(t => t.enabled !== false).length;
+
   const updateScale = (kind, patch) => {
     onChange({ rating_scale: { ...ratingScale, [kind]: { ...(ratingScale[kind] || {}), ...patch } } });
   };
 
+  const scaleSummary = (scale) => {
+    if (!scale) return 'Not configured';
+    const parts = [];
+    if (scale.type) parts.push(scale.type.replace('_', '-'));
+    if (scale.labels?.length) parts.push(`${scale.labels.length} levels`);
+    if (scale.pip_below != null) parts.push(`PIP ≤ ${scale.pip_below}`);
+    return parts.join(' · ') || 'Not configured';
+  };
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-4">
       {activeModal && (
         <SettingInfoModal
           info={HELP.settingModals[activeModal]}
@@ -620,55 +675,89 @@ function RatingScaleTab({ settings, onChange }) {
         />
       )}
 
-      {/* ── Section 1: Measurement Types Library ── */}
-      <MeasurementTypesSection settings={settings} onChange={onChange} />
+      {/* ── Section 1: Measurement Types (collapsed by default — advanced) ── */}
+      <CollapsibleCard
+        title="Measurement Types"
+        icon="📐"
+        badge="Advanced"
+        summary={`${enabledCount} of ${types.length} types enabled · how target values are tracked`}
+        defaultOpen={false}
+        titleExtra={<InfoIcon title="Measurement Types" content={HELP.measurementTypes.section} />}
+      >
+        <MeasurementTypesSection settings={settings} onChange={onChange} showTitle={false} />
+      </CollapsibleCard>
 
       {/* ── Section 2: Review Scoring Scale ── */}
-      <div className="border-t border-slate-200 pt-6 space-y-6">
-        <div>
-          <h3 className="font-semibold text-slate-800 mb-0.5">Review Scoring Scale</h3>
-          <p className="text-sm text-slate-500">
-            Defines the labels and numeric values used when managers rate performance at review time.
-            Applied to all targets regardless of their individual measurement type.
-          </p>
-        </div>
-
-        {typeStatus.hasGoals ? (
-          <RatingScaleSection
-            title="Goals / KRA / KPI Scoring Scale"
-            scale={ratingScale.goals || {}}
-            onUpdate={patch => updateScale('goals', patch)}
-            sectionHelp={HELP.ratingScale.goalsScaleSection}
-            keyPrefix="goals"
-            onOpenModal={setActiveModal}
+      <div>
+        <div className="flex items-center gap-1.5 mb-3 px-1">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Review Scoring Scale</p>
+          <InfoIcon
+            title="Review Scoring Scale"
+            content="Defines the labels and numeric values managers use when rating performance at review time. Applied to all targets regardless of individual measurement type."
           />
-        ) : (
-          <div className="bg-slate-50 border border-slate-200 rounded-lg px-5 py-4">
-            <p className="text-sm font-medium text-slate-500 mb-1">Goals / KRA / KPI Scoring Scale</p>
-            <p className="text-xs text-slate-400">
-              No goal-type performance targets are active. Enable OKR, KRA/KPI, Goal, BSC Metric, or Custom Metric in the General tab to configure goal ratings.
-            </p>
-          </div>
-        )}
+        </div>
+        <div className="space-y-3">
 
-        <div className="border-t border-slate-100 pt-4">
-          {typeStatus.hasComp ? (
-            <RatingScaleSection
-              title="Competency Scoring Scale"
-              scale={ratingScale.competency || {}}
-              onUpdate={patch => updateScale('competency', patch)}
-              sectionHelp={HELP.ratingScale.competencyScaleSection}
-              keyPrefix="comp"
-              onOpenModal={setActiveModal}
-            />
-          ) : (
-            <div className="bg-slate-50 border border-slate-200 rounded-lg px-5 py-4">
-              <p className="text-sm font-medium text-slate-500 mb-1">Competency Scoring Scale</p>
-              <p className="text-xs text-slate-400">
-                Competency is not an active type. Enable it in the General tab to configure competency ratings.
+          {/* Goals / KRA / KPI */}
+          <CollapsibleCard
+            title="Goals / KRA / KPI"
+            icon="🎯"
+            summary={typeStatus.hasGoals
+              ? scaleSummary(ratingScale.goals)
+              : 'No goal types active — enable in General tab'}
+            defaultOpen={false}
+            titleExtra={typeStatus.hasGoals
+              ? <InfoIcon title="Goals Scoring Scale" content={HELP.ratingScale.goalsScaleSection} />
+              : null}
+          >
+            {typeStatus.hasGoals ? (
+              <RatingScaleSection
+                title="Goals / KRA / KPI Scoring Scale"
+                scale={ratingScale.goals || {}}
+                onUpdate={patch => updateScale('goals', patch)}
+                sectionHelp={HELP.ratingScale.goalsScaleSection}
+                keyPrefix="goals"
+                onOpenModal={setActiveModal}
+                showTitle={false}
+              />
+            ) : (
+              <p className="text-sm text-slate-400">
+                No goal-type performance targets are active. Enable OKR, KRA/KPI, Goal, BSC Metric,
+                or Custom Metric in the <strong>General</strong> tab to configure goal ratings.
               </p>
-            </div>
-          )}
+            )}
+          </CollapsibleCard>
+
+          {/* Competency */}
+          <CollapsibleCard
+            title="Competency"
+            icon="🧩"
+            summary={typeStatus.hasComp
+              ? scaleSummary(ratingScale.competency)
+              : 'Competency not active — enable in General tab'}
+            defaultOpen={false}
+            titleExtra={typeStatus.hasComp
+              ? <InfoIcon title="Competency Scoring Scale" content={HELP.ratingScale.competencyScaleSection} />
+              : null}
+          >
+            {typeStatus.hasComp ? (
+              <RatingScaleSection
+                title="Competency Scoring Scale"
+                scale={ratingScale.competency || {}}
+                onUpdate={patch => updateScale('competency', patch)}
+                sectionHelp={HELP.ratingScale.competencyScaleSection}
+                keyPrefix="comp"
+                onOpenModal={setActiveModal}
+                showTitle={false}
+              />
+            ) : (
+              <p className="text-sm text-slate-400">
+                Competency is not an active type. Enable it in the <strong>General</strong> tab
+                to configure competency ratings.
+              </p>
+            )}
+          </CollapsibleCard>
+
         </div>
       </div>
     </div>
@@ -683,7 +772,7 @@ const FORMULA_LABELS = {
   rated_directly:      'Direct rating: manager rates at review',
 };
 
-function MeasurementTypesSection({ settings, onChange }) {
+function MeasurementTypesSection({ settings, onChange, showTitle = true }) {
   const [editingId, setEditingId] = useState(null);
   const [newType, setNewType] = useState(null);
 
@@ -729,17 +818,26 @@ function MeasurementTypesSection({ settings, onChange }) {
 
   return (
     <div className="space-y-4">
-      <div>
-        <h3 className="flex items-center gap-1 font-semibold text-slate-800 mb-0.5">
-          Measurement Types
-          <InfoIcon title="Measurement Types" content={HELP.measurementTypes.section} />
-        </h3>
+      {showTitle && (
+        <div>
+          <h3 className="flex items-center gap-1 font-semibold text-slate-800 mb-0.5">
+            Measurement Types
+            <InfoIcon title="Measurement Types" content={HELP.measurementTypes.section} />
+          </h3>
+          <p className="text-sm text-slate-500">
+            Define <em>how</em> each target's value is entered and achievement is computed.
+            End-users choose one of these when creating a KPI, Key Result, or Goal.
+            <span className="ml-1 text-slate-400">({enabledCount} of {types.length} enabled)</span>
+          </p>
+        </div>
+      )}
+      {!showTitle && (
         <p className="text-sm text-slate-500">
           Define <em>how</em> each target's value is entered and achievement is computed.
           End-users choose one of these when creating a KPI, Key Result, or Goal.
           <span className="ml-1 text-slate-400">({enabledCount} of {types.length} enabled)</span>
         </p>
-      </div>
+      )}
 
       <div className="space-y-2">
         {types.map(type => {
@@ -964,16 +1062,18 @@ function MeasurementTypesSection({ settings, onChange }) {
   );
 }
 
-function RatingScaleSection({ title, scale, onUpdate, sectionHelp, keyPrefix, onOpenModal }) {
+function RatingScaleSection({ title, scale, onUpdate, sectionHelp, keyPrefix, onOpenModal, showTitle = true }) {
   const labels = scale.labels || [];
   const values = scale.values || [];
 
   return (
     <div className="space-y-4">
-      <h3 className="flex items-center gap-1 font-semibold text-slate-800">
-        {title}
-        {sectionHelp && <InfoIcon title={title} content={sectionHelp} />}
-      </h3>
+      {showTitle && (
+        <h3 className="flex items-center gap-1 font-semibold text-slate-800">
+          {title}
+          {sectionHelp && <InfoIcon title={title} content={sectionHelp} />}
+        </h3>
+      )}
       <Field label="Scale Type" info={HELP.ratingScale.scaleType} onLearnMore={() => onOpenModal(`${keyPrefix}_scale_type`)}>
         <select
           className="w-full max-w-xs border border-slate-200 rounded-lg px-3 py-2 text-sm"
