@@ -3,7 +3,7 @@ import { useAuthStore } from '../../store/authStore';
 
 const NAV = [
   { label: 'Dashboard',       to: '/dashboard',          roles: ['admin','hr','manager','employee'] },
-  { label: 'My Targets',      to: '/my-targets',         roles: ['employee','manager'] },
+  { label: 'My Targets',      to: '/my-targets',         roles: ['admin','hr','employee','manager'] },
   { label: 'Team Targets',    to: '/team-targets',       roles: ['manager','admin','hr'] },
   { label: 'Self Appraisal',  to: '/appraisal/self',     roles: ['employee','manager'] },
   { label: 'Team Appraisal',  to: '/appraisal/team',     roles: ['manager','admin','hr'] },

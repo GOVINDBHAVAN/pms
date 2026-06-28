@@ -6,6 +6,7 @@ import DashboardPage   from './pages/DashboardPage';
 import OrgSettingsPage from './pages/OrgSettingsPage';
 import EmployeesPage   from './pages/EmployeesPage';
 import CyclesPage      from './pages/CyclesPage';
+import MyTargetsPage   from './pages/MyTargetsPage';
 import PrivateRoute    from './components/layout/PrivateRoute';
 import WizardShell     from './components/wizard/WizardShell';
 import AppLayout       from './components/layout/AppLayout';
@@ -76,9 +77,9 @@ export default function App() {
         <Route path="/cycles/new"    element={<PrivateRoute><CyclesPage /></PrivateRoute>} />
         <Route path="/cycles/:id"    element={<PrivateRoute><CyclesPage /></PrivateRoute>} />
 
-        <Route path="/my-targets"         element={<PrivateRoute><Placeholder title="My Targets" /></PrivateRoute>} />
-        <Route path="/my-targets/add"     element={<PrivateRoute><Placeholder title="Add Target" /></PrivateRoute>} />
-        <Route path="/my-targets/:id/edit"element={<PrivateRoute><Placeholder title="Edit Target" /></PrivateRoute>} />
+        <Route path="/my-targets"         element={<PrivateRoute><MyTargetsPage /></PrivateRoute>} />
+        <Route path="/my-targets/add"     element={<PrivateRoute><MyTargetsPage /></PrivateRoute>} />
+        <Route path="/my-targets/:id/edit"element={<PrivateRoute><MyTargetsPage /></PrivateRoute>} />
 
         <Route path="/team-targets"              element={<PrivateRoute><Placeholder title="Team Targets" /></PrivateRoute>} />
         <Route path="/team-targets/proposed"     element={<PrivateRoute><Placeholder title="Proposed Targets" /></PrivateRoute>} />
