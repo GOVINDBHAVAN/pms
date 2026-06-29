@@ -172,4 +172,5 @@
 - DONE: help me understand why the Goal is showing 170% in InfoBuz client Employee login of Rahul Mehta.
 - DONE: FOLLOWUP PROMPT: then why only Goals is showing, instead of break-up of all line items.
 - DONE: help me understand in Infobuz Rohit Verma login, when approving Ankit Joshi goals, 'Link to My Target' button is showing, I am not able to understand the purpose of this button, can you add some information on the UI and also explain the purpose of this action, there is no approve button is visible.
-- 
+- can we also improve 'Team Targets' screen for managers to understand at a glance somewhere in the screen if their team target is as per expectation or now, is there any scope of improvement? It's InfoBuz client and Arun Kumar as manager login
+- I still not convienced with what has been developed, my important demo point is bidirectional cascading is not intuitive 

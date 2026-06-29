@@ -766,6 +766,148 @@ function ReporteeView({ employeeId, cycle, myApprovedCount, isHrAdmin, onBack })
   );
 }
 
+// ── Per-reportee computed metrics ─────────────────────────────────────────────
+function computeReporteeMetrics(reportee) {
+  const targets = reportee.targets || [];
+  const active = targets.filter(t => !['rejected', 'deleted'].includes(t.status));
+  const weightSum = active.reduce((s, t) => s + (parseFloat(t.weight) || 0), 0);
+  const weightOk = active.length === 0 || Math.abs(weightSum - 100) <= 0.5;
+  const overPlannedCount = active.filter(t =>
+    t.is_over_planned === 1 && ['submitted', 'proposed', 'linked'].includes(t.status)
+  ).length;
+  const unlinkedCount = active.filter(t =>
+    !t.parent_target_id && t.framework_type !== 'competency' &&
+    ['submitted', 'proposed'].includes(t.status)
+  ).length;
+  return { weightSum, weightOk, overPlannedCount, unlinkedCount };
+}
+
+// ── Team Health Panel ─────────────────────────────────────────────────────────
+function TeamHealthPanel({ reportees }) {
+  if (!reportees.length) return null;
+
+  const total = reportees.length;
+  const allApproved = reportees.filter(r => {
+    const t = r.targets?.length || 0;
+    return t > 0 && r.approvedCount === t;
+  }).length;
+  const hasSubmitted = reportees.filter(r => r.submittedCount > 0).length;
+  const notStarted = reportees.filter(r => (r.targets?.length || 0) === 0).length;
+  const approvalPct = total > 0 ? Math.round((allApproved / total) * 100) : 0;
+
+  let totalOverPlanned = 0;
+  let totalUnlinked = 0;
+  let weightIssues = 0;
+  for (const r of reportees) {
+    const m = computeReporteeMetrics(r);
+    totalOverPlanned += m.overPlannedCount;
+    totalUnlinked += m.unlinkedCount;
+    if ((r.targets?.length || 0) > 0 && !m.weightOk) weightIssues++;
+  }
+
+  const stats = [
+    {
+      label: 'Fully Approved',
+      value: `${allApproved}/${total}`,
+      sub: allApproved === total ? 'Team ready' : `${approvalPct}% done`,
+      ok: allApproved === total && total > 0,
+      urgent: false,
+    },
+    {
+      label: 'Awaiting Review',
+      value: hasSubmitted,
+      sub: hasSubmitted === 0 ? 'Nothing pending' : `member${hasSubmitted !== 1 ? 's' : ''} to action`,
+      ok: hasSubmitted === 0,
+      urgent: hasSubmitted > 0,
+    },
+    {
+      label: 'Over-Planned',
+      value: totalOverPlanned,
+      sub: totalOverPlanned === 0 ? 'None flagged' : 'need acknowledgment',
+      ok: totalOverPlanned === 0,
+      urgent: totalOverPlanned > 0,
+    },
+    {
+      label: 'Unlinked',
+      value: totalUnlinked,
+      sub: totalUnlinked === 0 ? 'All linked' : 'blocking cycle advance',
+      ok: totalUnlinked === 0,
+      urgent: totalUnlinked > 0,
+    },
+  ];
+
+  return (
+    <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs font-bold text-slate-500 uppercase tracking-wider">Team Readiness</span>
+        <span className="text-xs text-slate-400">{total} direct report{total !== 1 ? 's' : ''}</span>
+      </div>
+
+      {/* Progress bar */}
+      <div>
+        <div className="flex items-center justify-between mb-1">
+          <span className="text-xs text-slate-500">{allApproved} of {total} members fully approved</span>
+          <span className={`text-xs font-semibold ${allApproved === total && total > 0 ? 'text-emerald-600' : 'text-slate-500'}`}>
+            {approvalPct}%
+          </span>
+        </div>
+        <div className="h-2 bg-slate-100 rounded-full overflow-hidden">
+          <div
+            className={`h-full rounded-full transition-all duration-500 ${allApproved === total && total > 0 ? 'bg-emerald-500' : 'bg-blue-500'}`}
+            style={{ width: `${approvalPct}%` }}
+          />
+        </div>
+      </div>
+
+      {/* 4-stat grid */}
+      <div className="grid grid-cols-4 gap-2">
+        {stats.map(s => (
+          <div
+            key={s.label}
+            className={`rounded-lg px-3 py-2.5 text-center ${
+              s.urgent ? 'bg-amber-50 border border-amber-200' :
+              s.ok ? 'bg-emerald-50 border border-emerald-100' :
+              'bg-slate-50 border border-slate-100'
+            }`}
+          >
+            <p className={`text-xl font-bold tabular-nums leading-none ${
+              s.urgent ? 'text-amber-700' :
+              s.ok ? 'text-emerald-700' :
+              'text-slate-400'
+            }`}>
+              {s.value}
+            </p>
+            <p className={`text-[10px] font-semibold uppercase tracking-wide mt-1 ${
+              s.urgent ? 'text-amber-600' :
+              s.ok ? 'text-emerald-600' :
+              'text-slate-400'
+            }`}>{s.label}</p>
+            <p className="text-[10px] text-slate-400 mt-0.5 leading-tight">{s.sub}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Secondary alerts */}
+      {weightIssues > 0 && (
+        <div className="flex items-center gap-2 bg-orange-50 border border-orange-200 rounded-lg px-3 py-2 text-xs text-orange-800">
+          <span className="font-bold">⚠</span>
+          <span>
+            <strong>{weightIssues} member{weightIssues !== 1 ? 's' : ''}</strong> have targets whose weights don't sum to 100% — check before approving.
+          </span>
+        </div>
+      )}
+      {notStarted > 0 && (
+        <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-xs text-slate-600">
+          <span>○</span>
+          <span>
+            <strong>{notStarted} member{notStarted !== 1 ? 's' : ''}</strong> have not submitted any targets yet.
+          </span>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Reportee Card (team list view) ────────────────────────────────────────────
 function ReporteeCard({ reportee, onReview }) {
   const total = reportee.targets?.length || 0;
@@ -773,16 +915,18 @@ function ReporteeCard({ reportee, onReview }) {
   const approved = reportee.approvedCount || 0;
   const draft = total - submitted - approved;
 
+  const { weightSum, weightOk, overPlannedCount, unlinkedCount } = computeReporteeMetrics(reportee);
+
   const status = total === 0 ? 'none'
     : approved === total ? 'all_approved'
     : submitted > 0 ? 'needs_review'
     : 'draft_only';
 
   const statusInfo = {
-    none:         { label: 'No targets yet',   color: 'text-slate-400',    dot: 'bg-slate-300' },
-    all_approved: { label: 'All approved',     color: 'text-emerald-600',  dot: 'bg-emerald-500' },
-    needs_review: { label: 'Needs review',     color: 'text-yellow-700',   dot: 'bg-yellow-500' },
-    draft_only:   { label: 'Not submitted yet',color: 'text-slate-500',    dot: 'bg-slate-400' },
+    none:         { label: 'No targets yet',    color: 'text-slate-400',   dot: 'bg-slate-300' },
+    all_approved: { label: 'All approved',      color: 'text-emerald-600', dot: 'bg-emerald-500' },
+    needs_review: { label: 'Needs review',      color: 'text-yellow-700',  dot: 'bg-yellow-500' },
+    draft_only:   { label: 'Not submitted yet', color: 'text-slate-500',   dot: 'bg-slate-400' },
   }[status];
 
   return (
@@ -808,6 +952,26 @@ function ReporteeCard({ reportee, onReview }) {
             </span>
           )}
         </div>
+        {/* Per-person health flags */}
+        {total > 0 && (
+          <div className="flex items-center gap-1.5 mt-1.5 flex-wrap">
+            <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded ${
+              weightOk ? 'bg-emerald-50 text-emerald-700' : 'bg-orange-100 text-orange-700'
+            }`}>
+              ∑ {weightSum.toFixed(0)}%{weightOk ? ' ✓' : ' ≠ 100'}
+            </span>
+            {overPlannedCount > 0 && (
+              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-orange-100 text-orange-700">
+                ⚠ {overPlannedCount} over-planned
+              </span>
+            )}
+            {unlinkedCount > 0 && (
+              <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded bg-blue-50 text-blue-700">
+                ○ {unlinkedCount} unlinked
+              </span>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Action */}
@@ -848,8 +1012,6 @@ function TeamView({ cycle, onReview }) {
 
   useEffect(() => { load(); }, [load]);
 
-  const needsReviewCount = reportees.filter(r => r.submittedCount > 0).length;
-
   return (
     <div className="space-y-4">
       {error && (
@@ -867,10 +1029,8 @@ function TeamView({ cycle, onReview }) {
         </div>
       )}
 
-      {!loading && needsReviewCount > 0 && (
-        <div className="bg-yellow-50 border border-yellow-200 rounded-xl px-4 py-3 text-sm text-yellow-800">
-          <strong>{needsReviewCount} team member{needsReviewCount !== 1 ? 's' : ''}</strong> have submitted targets awaiting your review.
-        </div>
+      {!loading && reportees.length > 0 && (
+        <TeamHealthPanel reportees={reportees} />
       )}
 
       {reportees.map(r => (
