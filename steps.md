@@ -170,4 +170,5 @@
 
 - DONE: help me understand why the Goal is showing 170% in InfoBuz client Employee login of Rahul Mehta.
 - DONE: FOLLOWUP PROMPT: then why only Goals is showing, instead of break-up of all line items.
+- help me understand in Infobuz Rohit Verma login, when approving Ankit Joshi goals, 'Link to My Target' button is showing, I am not able to understand the purpose of this button, can you add some information on the UI and also explain the purpose of this action, there is no approve button is visible.
 - 

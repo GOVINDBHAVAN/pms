@@ -514,41 +514,65 @@ function TargetApprovalCard({ target, myApprovedCount, isHrAdmin, onApprove, onR
 
       {/* Action buttons */}
       {canAct && needsAction && (
-        <div className="flex items-center gap-2 pt-1">
-          {/* Proposed targets need linking first (unless already linked) */}
+        <div className="flex flex-col gap-2 pt-1">
+          {/* Two-step explanation for bottom-up proposed targets */}
           {target.status === 'proposed' && (
+            <div className="bg-teal-50 border border-teal-200 rounded-lg px-3 py-2.5 text-xs">
+              <div className="flex items-center gap-2 mb-1">
+                <span className="inline-flex items-center gap-1 bg-teal-600 text-white text-[10px] font-bold px-1.5 py-0.5 rounded">
+                  STEP 1 OF 2
+                </span>
+                <span className="font-semibold text-teal-800">Link this proposal to your target</span>
+              </div>
+              <p className="text-teal-700 leading-snug">
+                This is a <strong>bottom-up proposal</strong> — the employee set this target independently.
+                You must connect it to one of your approved targets to establish the cascade chain.
+                An <strong>Approve button</strong> will appear after you link it.
+              </p>
+            </div>
+          )}
+
+          <div className="flex items-center gap-2">
+            {/* Proposed targets need linking first (unless already linked) */}
+            {target.status === 'proposed' && (
+              <button
+                onClick={() => onLink(target)}
+                className="px-3 py-1.5 text-xs font-semibold bg-teal-600 text-white rounded-lg hover:bg-teal-700"
+              >
+                ⬡ Link to My Target
+              </button>
+            )}
+
+            {/* Can approve if: submitted, or linked (already has parent) */}
+            {['submitted', 'linked'].includes(target.status) && (
+              <button
+                onClick={() => onApprove(target)}
+                disabled={!canApproveNow}
+                title={!canApproveNow ? 'You need approved targets before you can approve (Rule V9)' : ''}
+                className="px-3 py-1.5 text-xs font-semibold bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                ✓ Approve
+              </button>
+            )}
+            {target.status === 'linked' && (
+              <span className="text-[10px] text-teal-700 bg-teal-50 border border-teal-200 px-2 py-1 rounded">
+                Step 2 of 2: approve or reject
+              </span>
+            )}
+
             <button
-              onClick={() => onLink(target)}
-              className="px-3 py-1.5 text-xs font-semibold bg-teal-600 text-white rounded-lg hover:bg-teal-700"
+              onClick={() => onReject(target)}
+              className="px-3 py-1.5 text-xs font-semibold border border-red-300 text-red-600 rounded-lg hover:bg-red-50"
             >
-              ⬡ Link to My Target
+              ✗ Reject
             </button>
-          )}
 
-          {/* Can approve if: submitted, or linked (already has parent) */}
-          {['submitted', 'linked'].includes(target.status) && (
-            <button
-              onClick={() => onApprove(target)}
-              disabled={!canApproveNow}
-              title={!canApproveNow ? 'You need approved targets before you can approve (Rule V9)' : ''}
-              className="px-3 py-1.5 text-xs font-semibold bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 disabled:opacity-40 disabled:cursor-not-allowed"
-            >
-              ✓ Approve
-            </button>
-          )}
-
-          <button
-            onClick={() => onReject(target)}
-            className="px-3 py-1.5 text-xs font-semibold border border-red-300 text-red-600 rounded-lg hover:bg-red-50"
-          >
-            ✗ Reject
-          </button>
-
-          {!canApproveNow && !isHrAdmin && (
-            <span className="text-[10px] text-amber-700 bg-amber-50 px-2 py-1 rounded">
-              You need approved targets first (Rule V9)
-            </span>
-          )}
+            {!canApproveNow && !isHrAdmin && (
+              <span className="text-[10px] text-amber-700 bg-amber-50 px-2 py-1 rounded">
+                You need approved targets first (Rule V9)
+              </span>
+            )}
+          </div>
         </div>
       )}
 

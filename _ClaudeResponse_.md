@@ -53,3 +53,24 @@ arun.kumar@infobuz.in (L5.3)	Karan 15K (-5K) + Preethi 20K + Sujith 20K = 55K (5
 vikram.joshi@infobuz.in (VP Sales L2)	Full team rollup: North 315K (+5K from Ankit) vs South 550K, total 950K exactly — over/under net-cancel
 V13 block: All 18 L6 proposals have parentId=null → cycle cannot advance to active until a manager links each proposal to a top-down target.
 
+
+
+
+
+# Explain Link to My Target button in goal approval
+
+How the flow works (bidirectional cascade)
+Why there's no Approve button for proposed targets:
+
+In bidirectional cascade, employees can self-propose targets without waiting for the manager. But the cascade chain rule requires every target to have a parent_target_id before it can be approved — otherwise the cascade tree is broken and the cycle can't advance (Rule V13).
+
+So the flow is forced to be two steps:
+
+Step	Action	Status change
+1	Manager clicks "Link to My Target" → selects which of their own approved targets this contributes to	proposed → linked
+2	Approve button appears → manager reviews and approves	linked → approved
+What I added to the UI:
+
+A teal explanatory banner appears on proposed targets: "STEP 1 OF 2 — Link this proposal to your target. This is a bottom-up proposal… An Approve button will appear after you link it."
+For linked targets (after step 1 is done), a label shows "Step 2 of 2: approve or reject" next to the Approve button
+The V9 blocker (no approved targets yet) is a separate issue — Rohit Verma needs to get his own targets approved before he can approve anyone else's, regardless of the link/propose f
