@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import AppLayout from '../components/layout/AppLayout';
 import { useAuthStore } from '../store/authStore';
 import {
@@ -589,7 +589,7 @@ function TargetApprovalCard({ target, myApprovedCount, isHrAdmin, onApprove, onR
 // ── Reportee Detail View ──────────────────────────────────────────────────────
 // ── Team Coverage Widget ──────────────────────────────────────────────────────
 // Shows manager's numeric targets vs sum of team proposals — the cascade math.
-function TeamCoverageWidget({ myApprovedTargets, allReportees, currentEmployeeId }) {
+function TeamCoverageWidget({ myApprovedTargets, allReportees, currentEmployeeId, cycle }) {
   const NUMERIC_TYPES = ['kpi', 'goal', 'okr_kr', 'bsc_metric'];
 
   const coverageItems = myApprovedTargets
@@ -616,36 +616,90 @@ function TeamCoverageWidget({ myApprovedTargets, allReportees, currentEmployeeId
 
   if (!coverageItems.length) return null;
 
+  function fmtDate(d) {
+    if (!d) return '';
+    return new Date(d).toLocaleDateString('en-IN', { month: 'short', year: 'numeric' });
+  }
+
+  const cycleRange = cycle?.period_start && cycle?.period_end
+    ? `${fmtDate(cycle.period_start)} – ${fmtDate(cycle.period_end)}`
+    : null;
+
   return (
     <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
-      <div className="px-4 py-3 bg-slate-50 border-b border-slate-100 flex items-center gap-2">
-        <span className="text-sm font-bold text-slate-700">Cascade Coverage</span>
-        <span className="text-xs text-slate-400">— how your team's commitments compare to your target</span>
+      {/* Widget header */}
+      <div className="px-4 py-3 bg-slate-50 border-b border-slate-100 flex items-center justify-between gap-3">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-bold text-slate-700">Cascade Coverage</span>
+          <span className="text-xs text-slate-400">— team commitment vs your target</span>
+        </div>
+        {cycleRange && (
+          <span className="text-[11px] text-slate-500 bg-white border border-slate-200 px-2.5 py-1 rounded-full whitespace-nowrap">
+            {cycle.name} · {cycleRange}
+          </span>
+        )}
       </div>
-      <div className="p-4 space-y-5">
+
+      <div className="divide-y divide-slate-100">
         {coverageItems.map(({ managerTarget, contributions, teamTotal, gap, pct }) => {
+          const meta = FW_META[managerTarget.framework_type];
+          const isHigherBetter = (managerTarget.measurement_type || 'higher_better') === 'higher_better';
+          const unit = managerTarget.unit || '';
+          const managerPlan = parseFloat(managerTarget.planned_target);
           const isShort = gap > 0;
           const isOver = gap < 0;
+
           return (
-            <div key={managerTarget.id}>
-              {/* Manager's target */}
-              <div className="flex items-center justify-between mb-2">
-                <div>
-                  <span className="text-xs font-semibold text-slate-700">
+            <div key={managerTarget.id} className="p-4 space-y-3">
+
+              {/* Target header row */}
+              <div className="flex items-start justify-between gap-3">
+                <div className="space-y-1.5 flex-1 min-w-0">
+                  {/* Badges: framework type + measurement direction */}
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {meta && (
+                      <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold ${meta.color}`}>
+                        {meta.label}
+                      </span>
+                    )}
+                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                      isHigherBetter ? 'bg-green-50 text-green-700' : 'bg-orange-50 text-orange-700'
+                    }`}>
+                      {isHigherBetter ? '↑ Higher is better' : '↓ Lower is better'}
+                    </span>
+                    {unit && (
+                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-600">
+                        unit: {unit}
+                      </span>
+                    )}
+                  </div>
+                  {/* Title */}
+                  <p className="text-sm font-semibold text-slate-800 leading-snug">
                     {managerTarget.title.replace(/— L[0-9]\.[0-9] Team.*$/, '').trim()}
-                  </span>
-                  {managerTarget.unit && (
-                    <span className="text-xs text-slate-400 ml-1">· {managerTarget.unit}</span>
-                  )}
+                  </p>
                 </div>
-                <span className="text-xs text-slate-500">
-                  Your target: <strong className="text-slate-800">{Number(managerTarget.planned_target).toLocaleString('en-IN')}</strong>
-                </span>
+
+                {/* Target values (right side) */}
+                <div className="text-right flex-shrink-0 space-y-0.5">
+                  {managerTarget.company_target != null && (
+                    <p className="text-[10px] text-slate-400">
+                      Company: <span className="font-semibold text-slate-600">
+                        {Number(managerTarget.company_target).toLocaleString('en-IN')}{unit ? ` ${unit}` : ''}
+                      </span>
+                    </p>
+                  )}
+                  <p className="text-xs text-slate-500">
+                    Your target:{' '}
+                    <strong className="text-slate-800">
+                      {Number(managerPlan).toLocaleString('en-IN')}{unit ? ` ${unit}` : ''}
+                    </strong>
+                  </p>
+                </div>
               </div>
 
               {/* Progress bar */}
-              <div className="mb-2">
-                <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+              <div>
+                <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
                   <div
                     className={`h-full rounded-full transition-all ${
                       pct >= 100 ? 'bg-emerald-500' : pct >= 70 ? 'bg-blue-500' : 'bg-amber-500'
@@ -655,55 +709,76 @@ function TeamCoverageWidget({ myApprovedTargets, allReportees, currentEmployeeId
                 </div>
                 <div className="flex items-center justify-between mt-1">
                   <span className="text-xs text-slate-500">
-                    Team commits: <strong>{Number(teamTotal).toLocaleString('en-IN')}</strong>
+                    Team total: <strong>{Number(teamTotal).toLocaleString('en-IN')}{unit ? ` ${unit}` : ''}</strong>
                   </span>
-                  <span className={`text-xs font-semibold ${pct >= 100 ? 'text-emerald-600' : 'text-amber-600'}`}>
+                  <span className={`text-xs font-bold ${
+                    pct >= 100 ? 'text-emerald-600' : pct >= 70 ? 'text-blue-600' : 'text-amber-600'
+                  }`}>
                     {pct}% covered
                   </span>
                 </div>
               </div>
 
-              {/* Per-person breakdown */}
-              <div className="bg-slate-50 rounded-lg divide-y divide-slate-100">
-                {contributions.map(c => (
-                  <div key={c.id} className={`flex items-center gap-3 px-3 py-2 ${c.isCurrent ? 'bg-blue-50' : ''}`}>
-                    <span className={`text-xs flex-1 ${c.isCurrent ? 'font-semibold text-blue-800' : 'text-slate-600'}`}>
-                      {c.name}{c.isCurrent && ' (viewing now)'}
-                    </span>
-                    <span className="text-xs font-semibold text-slate-700 tabular-nums">
-                      {Number(c.sum).toLocaleString('en-IN')}
-                    </span>
-                  </div>
-                ))}
-                <div className="flex items-center gap-3 px-3 py-2 bg-white rounded-b-lg">
-                  <span className="text-xs font-bold text-slate-500 flex-1">Team Total</span>
+              {/* Per-person breakdown with share bars */}
+              <div className="border border-slate-100 rounded-lg overflow-hidden">
+                <div className="bg-slate-50 px-3 py-1.5">
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+                    Per-person breakdown
+                  </span>
+                </div>
+                {contributions.map(c => {
+                  const sharePct = managerPlan > 0 ? Math.round((c.sum / managerPlan) * 100) : 0;
+                  return (
+                    <div key={c.id} className={`px-3 py-2.5 border-t border-slate-100 ${c.isCurrent ? 'bg-blue-50' : 'bg-white'}`}>
+                      <div className="flex items-center justify-between mb-1">
+                        <span className={`text-xs ${c.isCurrent ? 'font-semibold text-blue-800' : 'text-slate-700'}`}>
+                          {c.name}
+                          {c.isCurrent && <span className="ml-1.5 text-[10px] text-blue-500 font-normal">(viewing)</span>}
+                        </span>
+                        <span className="text-xs tabular-nums text-right">
+                          <strong className="text-slate-800">{Number(c.sum).toLocaleString('en-IN')}</strong>
+                          {unit && <span className="text-slate-400"> {unit}</span>}
+                          <span className="text-slate-400 ml-1">· {sharePct}%</span>
+                        </span>
+                      </div>
+                      <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all ${c.isCurrent ? 'bg-blue-400' : 'bg-slate-400'}`}
+                          style={{ width: `${Math.min(sharePct, 100)}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+                <div className="flex items-center justify-between px-3 py-2 bg-slate-50 border-t border-slate-100">
+                  <span className="text-xs font-bold text-slate-600">Team Total</span>
                   <span className="text-xs font-bold text-slate-800 tabular-nums">
-                    {Number(teamTotal).toLocaleString('en-IN')}
+                    {Number(teamTotal).toLocaleString('en-IN')}{unit ? ` ${unit}` : ''}
                   </span>
                 </div>
               </div>
 
               {/* Gap callout */}
               {isShort && (
-                <div className="mt-2 flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-800">
+                <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-800">
                   <span className="font-bold mt-0.5">⚠</span>
                   <span>
-                    Team is short by <strong>{Number(gap).toLocaleString('en-IN')} {managerTarget.unit || ''}</strong> —
-                    you must personally cover this gap, or reject and push for higher commitments.
+                    Short by <strong>{Number(gap).toLocaleString('en-IN')}{unit ? ` ${unit}` : ''}</strong> ({100 - pct}% uncovered) —
+                    reject and push for higher commitments, or cover the gap yourself.
                   </span>
                 </div>
               )}
               {isOver && (
-                <div className="mt-2 flex items-start gap-2 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 text-xs text-emerald-800">
+                <div className="flex items-start gap-2 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 text-xs text-emerald-800">
                   <span className="font-bold mt-0.5">↑</span>
                   <span>
-                    Team over-commits by <strong>{Number(Math.abs(gap)).toLocaleString('en-IN')} {managerTarget.unit || ''}</strong> —
-                    your personal burden reduces, or you can raise your own target to match.
+                    Over-committed by <strong>{Number(Math.abs(gap)).toLocaleString('en-IN')}{unit ? ` ${unit}` : ''}</strong> —
+                    team exceeds your target by {Math.abs(pct - 100)}%.
                   </span>
                 </div>
               )}
               {gap === 0 && (
-                <div className="mt-2 flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 text-xs text-emerald-700">
+                <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 text-xs text-emerald-700">
                   <span>✓</span>
                   <span>Team commitment exactly matches your target — cascade fully covered.</span>
                 </div>
@@ -783,7 +858,7 @@ function ReporteeView({ employeeId, cycle, myApprovedCount, isHrAdmin, onBack })
           onClick={onBack}
           className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 transition-colors"
         >
-          ← Team
+          ← Overview
         </button>
         <span className="text-slate-300">/</span>
         {reportee && (
@@ -830,6 +905,7 @@ function ReporteeView({ employeeId, cycle, myApprovedCount, isHrAdmin, onBack })
           myApprovedTargets={myTargets}
           allReportees={allReportees}
           currentEmployeeId={parseInt(employeeId)}
+          cycle={cycle}
         />
       )}
 
@@ -1050,7 +1126,7 @@ function TeamHealthPanel({ reportees }) {
 }
 
 // ── Reportee Card (team list view) ────────────────────────────────────────────
-function ReporteeCard({ reportee, onReview }) {
+function ReporteeCard({ reportee, selected, onReview }) {
   const total = reportee.targets?.length || 0;
   const submitted = reportee.submittedCount || 0;
   const approved = reportee.approvedCount || 0;
@@ -1071,9 +1147,18 @@ function ReporteeCard({ reportee, onReview }) {
   }[status];
 
   return (
-    <div className="bg-white border border-slate-200 rounded-xl p-5 flex items-center gap-4 hover:shadow-sm transition-shadow">
+    <div
+      onClick={() => onReview(reportee.id)}
+      className={`border rounded-xl p-4 flex items-center gap-3 cursor-pointer transition-all ${
+        selected
+          ? 'border-blue-400 bg-blue-50 shadow-sm ring-1 ring-blue-300'
+          : 'border-slate-200 bg-white hover:shadow-sm hover:border-slate-300'
+      }`}
+    >
       {/* Avatar */}
-      <div className="w-10 h-10 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 font-bold text-sm flex-shrink-0">
+      <div className={`w-9 h-9 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 ${
+        selected ? 'bg-blue-200 text-blue-800' : 'bg-slate-200 text-slate-600'
+      }`}>
         {reportee.name?.charAt(0).toUpperCase()}
       </div>
 
@@ -1115,68 +1200,18 @@ function ReporteeCard({ reportee, onReview }) {
         )}
       </div>
 
-      {/* Action */}
-      <button
-        onClick={() => onReview(reportee.id)}
-        className={`flex-shrink-0 px-4 py-2 rounded-lg text-xs font-semibold transition-colors ${
-          status === 'needs_review'
-            ? 'bg-yellow-500 text-white hover:bg-yellow-600'
-            : status === 'all_approved'
-            ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-200'
-            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-        }`}
-      >
-        {status === 'needs_review' ? 'Review →' : 'View →'}
-      </button>
-    </div>
-  );
-}
-
-// ── Team List View ────────────────────────────────────────────────────────────
-function TeamView({ cycle, onReview }) {
-  const [reportees, setReportees] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-
-  const load = useCallback(async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const data = await getManagerView(cycle?.id);
-      setReportees(data);
-    } catch (e) {
-      setError(e?.response?.data?.error || 'Failed to load team');
-    } finally {
-      setLoading(false);
-    }
-  }, [cycle?.id]);
-
-  useEffect(() => { load(); }, [load]);
-
-  return (
-    <div className="space-y-4">
-      {error && (
-        <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700">{error}</div>
-      )}
-
-      {loading && (
-        <div className="text-sm text-slate-400 py-12 text-center">Loading team…</div>
-      )}
-
-      {!loading && reportees.length === 0 && (
-        <div className="bg-white border border-slate-200 border-dashed rounded-xl py-12 text-center">
-          <p className="text-slate-400 text-sm">You have no direct reportees assigned.</p>
-          <p className="text-slate-400 text-xs mt-1">Check that employees have reporting_to set correctly in the Employees page.</p>
-        </div>
-      )}
-
-      {!loading && reportees.length > 0 && (
-        <TeamHealthPanel reportees={reportees} />
-      )}
-
-      {reportees.map(r => (
-        <ReporteeCard key={r.id} reportee={r} onReview={onReview} />
-      ))}
+      {/* Status indicator / action */}
+      <div className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold ${
+        selected
+          ? 'bg-blue-600 text-white'
+          : status === 'needs_review'
+          ? 'bg-yellow-500 text-white'
+          : status === 'all_approved'
+          ? 'bg-emerald-100 text-emerald-700'
+          : 'bg-slate-100 text-slate-600'
+      }`}>
+        {selected ? 'Viewing' : status === 'needs_review' ? 'Review →' : 'View →'}
+      </div>
     </div>
   );
 }
@@ -1184,21 +1219,26 @@ function TeamView({ cycle, onReview }) {
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function TeamTargetsPage() {
   const { employee } = useAuthStore();
-  const { employeeId } = useParams();
-  const navigate = useNavigate();
+  const { employeeId: urlEmployeeId } = useParams();
 
   const [cycles, setCycles] = useState([]);
   const [selectedCycleId, setSelectedCycleId] = useState(null);
   const [cycle, setCycle] = useState(null);
   const [orgSettings, setOrgSettings] = useState(null);
-  const [myApprovedCount, setMyApprovedCount] = useState(0);
+  const [myTargets, setMyTargets] = useState([]);
+  const [reportees, setReportees] = useState([]);
+  const [selectedEmployeeId, setSelectedEmployeeId] = useState(
+    urlEmployeeId ? parseInt(urlEmployeeId) : null
+  );
+  const [activeTab, setActiveTab] = useState(urlEmployeeId ? 'team' : 'coverage');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
   const isHrAdmin = ['admin', 'hr'].includes(employee?.role);
   const effectiveCascade = cycle?.cascade_mode || orgSettings?.cascade_mode || 'top_down';
+  const myApprovedCount = myTargets.length;
 
-  // Init: load all cycles + org settings once, default to active cycle
+  // Load cycles + org settings on mount
   useEffect(() => {
     async function fetchInitial() {
       setLoading(true);
@@ -1214,12 +1254,6 @@ export default function TeamTargetsPage() {
         const def = active || sorted[0] || null;
         setCycle(def);
         setSelectedCycleId(def?.id || null);
-        if (!def) {
-          setLoading(false);
-          return;
-        }
-        const ownTargets = await getTargets({ cycle_id: def.id });
-        setMyApprovedCount(ownTargets.filter(t => t.status === 'approved').length);
       } catch (e) {
         setError(e?.response?.data?.error || 'Failed to load');
       } finally {
@@ -1229,30 +1263,32 @@ export default function TeamTargetsPage() {
     fetchInitial();
   }, []);
 
-  // Reload when selected cycle changes (after initial load)
+  // Fetch team list + own approved targets whenever cycle changes
+  useEffect(() => {
+    if (!cycle?.id) return;
+    async function fetchTeamData() {
+      try {
+        const [teamData, ownTargets] = await Promise.all([
+          getManagerView(cycle.id),
+          getTargets({ cycle_id: cycle.id }),
+        ]);
+        setReportees(teamData);
+        setMyTargets(ownTargets.filter(t => t.status === 'approved'));
+      } catch (_) {}
+    }
+    fetchTeamData();
+  }, [cycle?.id]);
+
+  // Sync cycle selector to cycle state
   useEffect(() => {
     if (!selectedCycleId || cycles.length === 0) return;
     const selected = cycles.find(c => c.id === selectedCycleId) || null;
-    if (!selected || selected === cycle) return;
+    if (!selected || selected?.id === cycle?.id) return;
     setCycle(selected);
-    setMyApprovedCount(0);
-    async function reloadForCycle() {
-      try {
-        const ownTargets = await getTargets({ cycle_id: selected.id });
-        setMyApprovedCount(ownTargets.filter(t => t.status === 'approved').length);
-      } catch (_) {}
-    }
-    reloadForCycle();
+    setReportees([]);
+    setMyTargets([]);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCycleId]);
-
-  function handleReview(empId) {
-    navigate(`/team-targets/${empId}`);
-  }
-
-  function handleBack() {
-    navigate('/team-targets');
-  }
 
   return (
     <AppLayout>
@@ -1264,7 +1300,7 @@ export default function TeamTargetsPage() {
             <p className="text-slate-500 text-sm mt-1">
               {cycle
                 ? `${cycle.name} · ${effectiveCascade.replace('_', '-')} cascade · Review and approve your team's targets`
-                : 'Review and approve your direct reportees\' targets'}
+                : "Review and approve your direct reportees' targets"}
             </p>
           </div>
         </div>
@@ -1311,40 +1347,179 @@ export default function TeamTargetsPage() {
           </div>
         )}
 
-        {!loading && cycle && (
-          <>
-            {/* V9 status — manager's own approval state */}
-            <V9StatusBar myApprovedCount={myApprovedCount} isHrAdmin={isHrAdmin} />
+        {!loading && cycle && (() => {
+          const pendingCount = reportees.reduce((s, r) => s + (r.submittedCount || 0), 0);
 
-            {/* Cascade mode hint */}
-            {!employeeId && (
-              <div className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-600">
-                {effectiveCascade === 'top_down' && (
-                  <><strong>Top-Down mode:</strong> Targets were submitted by your team after your own targets were approved. Review each submission for alignment to your targets.</>
-                )}
-                {effectiveCascade === 'bottom_up' && (
-                  <><strong>Bottom-Up mode:</strong> Your team proposed their own targets. Link each proposal to one of your targets, then approve.</>
-                )}
-                {effectiveCascade === 'bidirectional' && (
-                  <><strong>Bidirectional mode:</strong> Your team has both assigned and proposed targets. Proposed targets need linking before approval.</>
-                )}
+          function switchTab(tab) {
+            setActiveTab(tab);
+            setSelectedEmployeeId(null);
+          }
+
+          return (
+            <>
+              <V9StatusBar myApprovedCount={myApprovedCount} isHrAdmin={isHrAdmin} />
+
+              {/* Tab bar */}
+              <div className="border-b border-slate-200">
+                <div className="flex">
+                  {[
+                    { key: 'coverage',   label: 'Coverage Overview' },
+                    { key: 'readiness',  label: 'Team Readiness' },
+                    { key: 'team',       label: 'Review Team' },
+                  ].map(tab => (
+                    <button
+                      key={tab.key}
+                      onClick={() => switchTab(tab.key)}
+                      className={`px-5 py-3 text-sm font-semibold border-b-2 transition-colors flex items-center gap-2 ${
+                        activeTab === tab.key
+                          ? 'border-blue-600 text-blue-700'
+                          : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300'
+                      }`}
+                    >
+                      {tab.label}
+                      {tab.key === 'team' && pendingCount > 0 && (
+                        <span className="bg-yellow-100 text-yellow-800 text-[10px] font-bold px-1.5 py-0.5 rounded-full">
+                          {pendingCount}
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
               </div>
-            )}
 
-            {/* Conditional view: list or detail */}
-            {!employeeId ? (
-              <TeamView cycle={cycle} onReview={handleReview} />
-            ) : (
-              <ReporteeView
-                employeeId={parseInt(employeeId)}
-                cycle={cycle}
-                myApprovedCount={myApprovedCount}
-                isHrAdmin={isHrAdmin}
-                onBack={handleBack}
-              />
-            )}
-          </>
-        )}
+              {/* ── Tab 1: Coverage Overview ── */}
+              {activeTab === 'coverage' && (
+                <div className="space-y-4">
+                  {/* Cascade mode explanation */}
+                  {effectiveCascade === 'top_down' && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-3">
+                      <p className="text-sm font-semibold text-blue-800">How Top-Down Cascading Works</p>
+                      <ol className="text-xs text-blue-700 space-y-1.5 list-decimal list-inside leading-relaxed">
+                        <li>You set and get your own targets approved first.</li>
+                        <li>Each of your direct reportees then enters their targets, linked to yours.</li>
+                        <li>Their targets cannot be submitted until your targets are approved (Rule V9).</li>
+                        <li>Coverage below shows how much of your committed target your team has collectively taken on.</li>
+                        <li>A shortfall means team members planned less than your total — you must personally cover the gap or push members to revise upward.</li>
+                      </ol>
+                    </div>
+                  )}
+                  {effectiveCascade === 'bottom_up' && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-3">
+                      <p className="text-sm font-semibold text-blue-800">How Bottom-Up Cascading Works</p>
+                      <ol className="text-xs text-blue-700 space-y-1.5 list-decimal list-inside leading-relaxed">
+                        <li>Your team members propose their own targets independently — no waiting for yours.</li>
+                        <li>You review each proposal in the <strong>Review Team</strong> tab and link it to one of your approved targets.</li>
+                        <li>Linking creates the cascade chain; approval locks the commitment.</li>
+                        <li>Coverage here aggregates all approved proposals vs your own committed target.</li>
+                        <li>Unlinked proposals block the cycle from advancing to Active — all must be linked first.</li>
+                      </ol>
+                    </div>
+                  )}
+                  {effectiveCascade === 'bidirectional' && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 space-y-3">
+                      <p className="text-sm font-semibold text-blue-800">How Bidirectional Cascading Works</p>
+                      <ol className="text-xs text-blue-700 space-y-1.5 list-decimal list-inside leading-relaxed">
+                        <li>Two tracks run simultaneously: you push targets down (top-down), and your team proposes targets up (bottom-up).</li>
+                        <li><strong>Top-down assigned targets</strong> appear on employees automatically once you approve them downward.</li>
+                        <li><strong>Bottom-up proposed targets</strong> are entered by employees independently — you link them to your targets in the Review Team tab.</li>
+                        <li>An employee can have both kinds. Together they must sum to 100% weight.</li>
+                        <li>Coverage shows the combined committed total vs your planned target. A gap here means either no one absorbed that portion top-down, or proposals don't cover it bottom-up.</li>
+                        <li>Peer redistribution: if one reportee (e.g. L6.1) plans less, you can reject and ask L6.2 / L6.3 to absorb the difference via over-planning (which requires their justification and your explicit acknowledgement).</li>
+                      </ol>
+                    </div>
+                  )}
+
+                  {/* Coverage widget */}
+                  {myTargets.length > 0 && reportees.length > 0 ? (
+                    <TeamCoverageWidget
+                      myApprovedTargets={myTargets}
+                      allReportees={reportees}
+                      currentEmployeeId={null}
+                      cycle={cycle}
+                    />
+                  ) : (
+                    <div className="bg-white border border-slate-200 border-dashed rounded-xl py-12 text-center">
+                      <p className="text-slate-400 text-sm">Coverage will appear once your targets are approved.</p>
+                      <p className="text-slate-400 text-xs mt-1">Your approved targets form the baseline; team commitments are compared against them.</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ── Tab 2: Team Readiness ── */}
+              {activeTab === 'readiness' && (
+                <div className="space-y-4">
+                  <div className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-600 leading-relaxed">
+                    <strong>Team Readiness</strong> shows the goal-setting completion state across your direct reports —
+                    how many have submitted, how many are fully approved, and who has issues (unlinked targets, weight
+                    mismatches, over-plans needing acknowledgement). Use this to decide who to prioritise in the{' '}
+                    <button
+                      onClick={() => switchTab('team')}
+                      className="text-blue-600 underline underline-offset-2 hover:text-blue-800"
+                    >
+                      Review Team
+                    </button>{' '}
+                    tab.
+                  </div>
+                  {reportees.length > 0 ? (
+                    <TeamHealthPanel reportees={reportees} />
+                  ) : (
+                    <div className="bg-white border border-slate-200 border-dashed rounded-xl py-12 text-center">
+                      <p className="text-slate-400 text-sm">No direct reportees assigned yet.</p>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* ── Tab 3: Review Team ── */}
+              {activeTab === 'team' && (
+                <div className="space-y-4">
+                  {/* Condensed cascade hint for context while reviewing */}
+                  {!selectedEmployeeId && (
+                    <div className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-600">
+                      {effectiveCascade === 'top_down' && (
+                        <><strong>Top-Down mode:</strong> Review each submission for alignment to your approved targets. Reject with a note if the commitment is too low.</>
+                      )}
+                      {effectiveCascade === 'bottom_up' && (
+                        <><strong>Bottom-Up mode:</strong> Link each proposal to one of your targets (Step 1), then approve (Step 2). Unlinked proposals block cycle advancement.</>
+                      )}
+                      {effectiveCascade === 'bidirectional' && (
+                        <><strong>Bidirectional mode:</strong> Employees may have both assigned and proposed targets. Proposed targets need linking before approval. Both must together sum to 100% weight.</>
+                      )}
+                    </div>
+                  )}
+
+                  {!selectedEmployeeId ? (
+                    <>
+                      {reportees.length === 0 && (
+                        <div className="bg-white border border-slate-200 border-dashed rounded-xl py-12 text-center">
+                          <p className="text-slate-400 text-sm">No direct reportees assigned.</p>
+                          <p className="text-slate-400 text-xs mt-1">Check that employees have reporting_to set correctly in the Employees page.</p>
+                        </div>
+                      )}
+                      {reportees.map(r => (
+                        <ReporteeCard
+                          key={r.id}
+                          reportee={r}
+                          selected={false}
+                          onReview={setSelectedEmployeeId}
+                        />
+                      ))}
+                    </>
+                  ) : (
+                    <ReporteeView
+                      employeeId={selectedEmployeeId}
+                      cycle={cycle}
+                      myApprovedCount={myApprovedCount}
+                      isHrAdmin={isHrAdmin}
+                      onBack={() => setSelectedEmployeeId(null)}
+                    />
+                  )}
+                </div>
+              )}
+            </>
+          );
+        })()}
       </div>
     </AppLayout>
   );

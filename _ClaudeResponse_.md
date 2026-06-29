@@ -74,3 +74,36 @@ What I added to the UI:
 A teal explanatory banner appears on proposed targets: "STEP 1 OF 2 — Link this proposal to your target. This is a bottom-up proposal… An Approve button will appear after you link it."
 For linked targets (after step 1 is done), a label shows "Step 2 of 2: approve or reject" next to the Approve button
 The V9 blocker (no approved targets yet) is a separate issue — Rohit Verma needs to get his own targets approved before he can approve anyone else's, regardless of the link/propose f
+
+
+
+# Improve Team Targets screen visibility for managers
+
+Everything looks correct:
+
+Arun Kumar (L5.3) goal targets: KPI weight: 70 + KRA weight: 30 = 100%
+Arun Kumar competency targets: Leadership 40 + Ownership 35 + Strategic 25 = 100%
+L6.1 Ankit goal: weight: 100 ✓ | L6.1 competencies: 50 + 50 = 100%
+L6.7 Karan goal: weight: 100 ✓ | L6.7 competencies: 60 + 40 = 100%
+All other L6 employees: single goal at weight: 100 ✓
+To apply all seed data changes, run these commands:
+
+
+# 1. Reset the database
+.\reset-db.ps1
+
+# 2. Start the server (it will reseed automatically)
+.\dev.ps1
+Here's a summary of everything that's now demo-ready:
+
+Seed data (04_infobuz_targets.js)
+
+L1 CEO → L2 VP → L3 Regionals → L4 Area Managers → L5 Sr Executives: all approved — no more V9 block for Arun Kumar
+L6 (18 employees): bottom-up MRR proposals at weight: 100% (was 80, which violated V1)
+Ankit Joshi (L6.1): commits ₹25,000 vs ₹20,000 baseline (over-plan +25%), plus 2 competencies
+Karan Singh (L6.7): commits ₹15,000 vs ₹20,000 baseline (under by ₹5K), plus 2 competencies — this is the key demo story where Arun must personally absorb the gap
+Arun Kumar (L5.3): 3 competency targets (Leadership/Ownership/Strategic, summing 100%) — now has a full performance profile for the demo
+Frontend (from previous session)
+
+TeamTargetsPage: TeamCoverageWidget shows the cascade math — team total vs Arun's own target, with per-person breakdown and the gap callout
+MyTargetsPage: ContextPanel redesigned to show allocation baseline vs committed amount comparison; over/under delta badge on each target row
