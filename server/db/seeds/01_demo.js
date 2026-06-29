@@ -138,6 +138,49 @@ const HEALTH_SETTINGS = {
   cycle_defaults: { type: 'annual', goal_setting_days: 30, review_days: 21 },
 };
 
+const NEXAFLOW_SETTINGS = {
+  framework: 'okr',
+  cascade_mode: 'bidirectional',
+  industry: 'it',
+  terminology: {
+    kra: 'Key Result Area', kpi: 'Key Performance Indicator',
+    objective: 'Objective', key_result: 'Key Result',
+    goal: 'Goal', competency: 'Competency',
+    weight: 'Weight (%)', planned: 'Target',
+    actual: 'Achieved', stretch: 'Stretch',
+    performance_band: 'Performance Band',
+  },
+  active_types: ['okr_objective', 'okr_kr', 'competency'],
+  primary_type: 'okr',
+  rating_scale: {
+    goals: {
+      type: '5_point',
+      labels: ['Missed', 'Partial', 'Met', 'Exceeded', 'Crushed It'],
+      values: [1, 2, 3, 4, 5], pip_below: 2,
+    },
+    competency: {
+      type: '5_point',
+      labels: ['Unacceptable', 'Developing', 'Proficient', 'Advanced', 'Expert'],
+      values: [1, 2, 3, 4, 5],
+    },
+  },
+  weightage: { goals_percent: 70, competency_percent: 30 },
+  performance_bands: [
+    { label: 'Exceptional',       min: 4.5, max: 5.0,  color: '#16a34a' },
+    { label: 'Exceeds',           min: 3.5, max: 4.49, color: '#2563eb' },
+    { label: 'Meets Expectation', min: 2.5, max: 3.49, color: '#d97706' },
+    { label: 'Below Expectation', min: 1.5, max: 2.49, color: '#dc2626' },
+    { label: 'Poor',              min: 0,   max: 1.49, color: '#7f1d1d' },
+  ],
+  target_rules: {
+    min_target_weight: 5, max_target_weight: 60,
+    overplan_allowed: true, overplan_max_multiplier: 1.20,
+    require_parent_linkage: true, allow_self_propose: true, mandatory_kras: [],
+  },
+  bsc_perspectives: ['Financial', 'Customer', 'Internal Process', 'Learning & Growth'],
+  cycle_defaults: { type: 'annual', goal_setting_days: 45, review_days: 30 },
+};
+
 // ── Seeder helpers ─────────────────────────────────────────────────────────────
 
 function orgExists(db, name) {
@@ -498,6 +541,144 @@ async function seedHealthcareOrg(db, passwordHash) {
   console.log(`MediCare Hospital seeded — org_id=${orgId}, 10 employees`);
 }
 
+// ── NexaFlow Technologies (IT, pure OKR, bidirectional, 24 employees) ──────────
+
+async function seedNexaFlowOrg(db, passwordHash) {
+  if (orgExists(db, 'NexaFlow Technologies')) {
+    console.log('NexaFlow Technologies already exists — skipping');
+    return;
+  }
+
+  console.log('Seeding NexaFlow Technologies — pure OKR bidirectional, 24 employees...');
+  db.run(
+    `INSERT INTO organizations (name, industry, framework, cascade_mode, settings, wizard_completed, is_demo)
+     VALUES (?, ?, ?, ?, ?, ?, ?)`,
+    ['NexaFlow Technologies', 'it', 'okr', 'bidirectional', JSON.stringify(NEXAFLOW_SETTINGS), 1, 1]
+  );
+  const orgId = lastId(db);
+
+  // ── Grades ──────────────────────────────────────────────────────────────────
+  const grades = {};
+  [
+    ['L1', 'CEO / Co-Founder',         9, 1],
+    ['L2', 'Vice President',           8, 1],
+    ['L3', 'Director / Head',          7, 1],
+    ['L4', 'Senior Manager / Lead',    6, 1],
+    ['L5', 'Engineer / Manager',       5, 0],
+    ['L6', 'Associate',                3, 0],
+  ].forEach(([code, label, level, canManage], i) => {
+    db.run(`INSERT INTO grades (org_id,code,label,level,can_manage,sort_order) VALUES (?,?,?,?,?,?)`,
+      [orgId, code, label, level, canManage, i + 1]);
+    grades[code] = lastId(db);
+  });
+
+  // ── Departments ─────────────────────────────────────────────────────────────
+  db.run(`INSERT INTO departments (org_id,name,code) VALUES (?,?,?)`, [orgId, 'Revenue & Growth',   'REV']);
+  const dRev = lastId(db);
+  db.run(`INSERT INTO departments (org_id,name,code) VALUES (?,?,?)`, [orgId, 'Product & Platform', 'PROD']);
+  const dProd = lastId(db);
+  db.run(`INSERT INTO departments (org_id,name,code) VALUES (?,?,?)`, [orgId, 'Customer Experience','CX']);
+  const dCX = lastId(db);
+  db.run(`INSERT INTO departments (org_id,name,code) VALUES (?,?,?)`, [orgId, 'People & Operations','PEO']);
+  const dPeo = lastId(db);
+
+  function emp(code, name, email, deptId, grade, reportsTo, role) {
+    db.run(
+      `INSERT INTO employees (org_id,emp_code,name,email,password_hash,dept_id,grade_id,reporting_to,role,joined_on)
+       VALUES (?,?,?,?,?,?,?,?,?,?)`,
+      [orgId, code, name, email, passwordHash, deptId, grades[grade], reportsTo, role, '2022-07-01']
+    );
+    return lastId(db);
+  }
+
+  // ── L1: CEO ──────────────────────────────────────────────────────────────────
+  const ceo = emp('NX-001', 'Srinivas Rao',    'srinivas.rao@nexaflow.com',    dProd, 'L1', null,   'admin');
+
+  // ── L2: VPs ──────────────────────────────────────────────────────────────────
+  const vpRev  = emp('NX-002', 'Arjun Shah',    'arjun.shah@nexaflow.com',     dRev,  'L2', ceo,    'manager');
+  const vpProd = emp('NX-003', 'Karthik Nair',  'karthik.nair@nexaflow.com',   dProd, 'L2', ceo,    'manager');
+  const vpCX   = emp('NX-004', 'Meera Desai',   'meera.desai@nexaflow.com',    dCX,   'L2', ceo,    'manager');
+  /*const hPeo = */ emp('NX-005', 'Pooja Mehta', 'pooja.mehta@nexaflow.com',   dPeo,  'L3', ceo,    'manager');
+
+  // ── L3: Directors / Heads ────────────────────────────────────────────────────
+  const hEntSal  = emp('NX-006', 'Nalini Rao',     'nalini.rao@nexaflow.com',     dRev,  'L3', vpRev,  'manager');
+  const hSMB     = emp('NX-007', 'Deepak Jain',    'deepak.jain@nexaflow.com',    dRev,  'L3', vpRev,  'manager');
+  const hPlat    = emp('NX-008', 'Divya Krishnan', 'divya.krishnan@nexaflow.com', dProd, 'L3', vpProd, 'manager');
+  const hPM      = emp('NX-009', 'Aditya Bose',    'aditya.bose@nexaflow.com',    dProd, 'L3', vpProd, 'manager');
+  const hOnboard = emp('NX-010', 'Sunita Bhatia',  'sunita.bhatia@nexaflow.com',  dCX,   'L3', vpCX,   'manager');
+  const hSupport = emp('NX-011', 'Ganesh Iyer',    'ganesh.iyer@nexaflow.com',    dCX,   'L3', vpCX,   'manager');
+
+  // ── L4: Senior Managers / Leads ──────────────────────────────────────────────
+  const smEntSal  = emp('NX-012', 'Priya Menon',   'priya.menon@nexaflow.com',    dRev,  'L4', hEntSal,  'manager');
+  const smSMB     = emp('NX-013', 'Ravi Kumar',    'ravi.kumar@nexaflow.com',     dRev,  'L4', hSMB,     'manager');
+  const smBE      = emp('NX-014', 'Sneha Pillai',  'sneha.pillai@nexaflow.com',   dProd, 'L4', hPlat,    'manager');
+  /*const smFE  = */ emp('NX-015', 'Manish Verma', 'manish.verma@nexaflow.com',   dProd, 'L4', hPlat,    'employee');
+  const smCSM     = emp('NX-016', 'Ritika Gupta',  'ritika.gupta@nexaflow.com',   dCX,   'L4', hOnboard, 'manager');
+  const smSup     = emp('NX-017', 'Arun Pillai',   'arun.pillai@nexaflow.com',    dCX,   'L4', hSupport, 'manager');
+
+  // ── L5: ICs / Engineers ──────────────────────────────────────────────────────
+  emp('NX-018', 'Kavya Singh',     'kavya.singh@nexaflow.com',    dRev,  'L5', smEntSal, 'employee');
+  emp('NX-019', 'Rohit Agarwal',   'rohit.agarwal@nexaflow.com',  dRev,  'L5', smSMB,    'employee');
+  emp('NX-020', 'Zubair Ahmed',    'zubair.ahmed@nexaflow.com',   dProd, 'L5', smBE,     'employee');
+  emp('NX-021', 'Ankita Sharma',   'ankita.sharma@nexaflow.com',  dProd, 'L5', hPlat,    'employee');
+  emp('NX-022', 'Pavan Rao',       'pavan.rao@nexaflow.com',      dProd, 'L5', hPlat,    'employee');
+  emp('NX-023', 'Divyanka Kumar',  'divyanka.kumar@nexaflow.com', dCX,   'L5', smCSM,    'employee');
+  emp('NX-024', 'Rishab Nair',     'rishab.nair@nexaflow.com',    dCX,   'L5', smSup,    'employee');
+
+  // ── Review Cycle (FY 2025-26, goal_setting) ──────────────────────────────────
+  db.run(
+    `INSERT INTO review_cycles
+       (org_id,name,cycle_type,period_start,period_end,goal_set_open,goal_set_close,review_open,review_close,cascade_mode,status,created_by)
+     VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
+    [orgId, 'FY 2025-26 Annual', 'annual',
+     '2025-04-01', '2026-03-31',
+     '2025-04-01', '2025-05-31',
+     '2026-02-01', '2026-03-15',
+     'bidirectional', 'goal_setting', ceo]
+  );
+
+  // ── Performance Library (pure OKR + Competency) ──────────────────────────────
+  [
+    ['okr_objective', 'Scale NexaFlow to ₹60 Cr ARR with Profitable Unit Economics',          'financial', null,      'higher_better', 0],
+    ['okr_objective', 'Deliver a Product Customers Love — NPS 90+ and Zero Critical Bugs',    'customer',  null,      'higher_better', 0],
+    ['okr_objective', 'Create Customer Advocates — Zero Churn in Top 20 Accounts',            'customer',  null,      'higher_better', 0],
+    ['okr_objective', 'Build NexaFlow as the Best Tech Workplace in India',                    'people',    null,      'higher_better', 0],
+    ['okr_objective', 'Achieve Zero-Downtime Deployments with Full CI/CD Automation',         'process',   null,      'higher_better', 0],
+    ['okr_objective', 'Reduce Customer Time-to-Value to 21 Days',                             'customer',  null,      'higher_better', 0],
+    ['okr_objective', 'Build SMB Sales Engine — 100 New Logos per Quarter',                   'financial', null,      'higher_better', 0],
+    ['okr_kr', 'New Annual Recurring Revenue (ARR)',          'financial', 'INR Cr',  'higher_better', 0],
+    ['okr_kr', 'Customer Net Promoter Score (NPS)',           'customer',  'score',   'higher_better', 0],
+    ['okr_kr', 'Platform Uptime (SLA)',                       'process',   '%',       'higher_better', 0],
+    ['okr_kr', 'Feature Adoption Rate',                       'product',   '%',       'higher_better', 0],
+    ['okr_kr', 'Time to Value (New Customers)',               'customer',  'days',    'lower_better',  0],
+    ['okr_kr', 'Customer Churn Rate',                         'customer',  '%',       'lower_better',  0],
+    ['okr_kr', 'Monthly Active Users (MAU)',                  'product',   'users',   'higher_better', 0],
+    ['okr_kr', 'Sprint Velocity',                             'process',   'points',  'higher_better', 0],
+    ['okr_kr', 'CI/CD Build Pipeline Duration',               'process',   'minutes', 'lower_better',  0],
+    ['okr_kr', 'Tier-1 Ticket SLA Compliance',               'customer',  '%',       'higher_better', 0],
+    ['okr_kr', 'Customer Onboarding Completion Rate',         'customer',  '%',       'higher_better', 0],
+    ['okr_kr', 'Sales Win Rate',                              'financial', '%',       'higher_better', 0],
+    ['okr_kr', 'Employee eNPS',                               'people',    'score',   'higher_better', 0],
+    ['okr_kr', 'P0/P1 Bugs in Production',                   'process',   'count',   'lower_better',  0],
+    ['okr_kr', '90-Day Customer Activation Rate',             'customer',  '%',       'higher_better', 0],
+    ['competency', 'Strategic Thinking & Vision',             'people',    null,      'higher_better', 0],
+    ['competency', 'Customer Obsession',                      'people',    null,      'higher_better', 0],
+    ['competency', 'Technical Excellence',                    'people',    null,      'higher_better', 0],
+    ['competency', 'Leadership & Coaching',                   'people',    null,      'higher_better', 0],
+    ['competency', 'Ownership & Accountability',              'people',    null,      'higher_better', 0],
+    ['competency', 'Communication & Influence',               'people',    null,      'higher_better', 0],
+    ['competency', 'Adaptability & Learning',                 'people',    null,      'higher_better', 0],
+    ['competency', 'Collaboration & Teamwork',                'people',    null,      'higher_better', 0],
+  ].forEach(([itemType, name, category, unit, measurementType, isMandatory]) => {
+    db.run(
+      `INSERT INTO performance_library (org_id,name,item_type,category,unit,measurement_type,is_mandatory) VALUES (?,?,?,?,?,?,?)`,
+      [orgId, name, itemType, category, unit, measurementType, isMandatory]
+    );
+  });
+
+  console.log(`NexaFlow Technologies seeded — org_id=${orgId}, 24 employees, pure OKR bidirectional`);
+}
+
 // ── Main Seed Entry Point ──────────────────────────────────────────────────────
 
 async function seed() {
@@ -507,6 +688,7 @@ async function seed() {
   await seedItOrg(db, passwordHash);
   await seedManufacturingOrg(db, passwordHash);
   await seedHealthcareOrg(db, passwordHash);
+  await seedNexaFlowOrg(db, passwordHash);
 
   saveDb();
   console.log('Demo seed complete');

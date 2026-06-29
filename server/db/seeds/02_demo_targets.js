@@ -1510,12 +1510,1340 @@ function seedManufacturingTargets(db) {
   console.log('Precision Manufacturing targets seeded: 2 cycles (FY23-24 closed, FY25-26 goal_setting).');
 }
 
+// ─── NexaFlow Technologies targets ──────────────────────────────────────────
+//
+// Bidirectional cascade showcase:
+//   FY 2023-24 (CLOSED)     — pure top-down; NexaFlow's first full year
+//   FY 2024-25 (REVIEW)     — bidirectional introduced; bottom-up proposals
+//                              got linked mid-cycle, now in review phase
+//   FY 2025-26 (GOAL_SETTING)— live state:
+//       • Top-down: CEO approved → VPs submitted → L3 draft
+//       • Bottom-up: Head Platform, Head Onboarding, Head Support, Senior BE
+//                    have self-proposed OKRs (status='proposed', no parentId)
+//                    awaiting VP linkage before cycle can go 'active' (V13)
+//
+// Key roles for the demo:
+//   NX-001  CEO              — sets company OKRs (top-down origin)
+//   NX-002  VP Revenue       — pure top-down track; quota allocation
+//   NX-003  VP Product       — top-down track + must link bottom-up proposals
+//   NX-004  VP CX            — top-down track + must link bottom-up proposals
+//   NX-008  Head Platform    — BIDIRECTIONAL: top-down KR + self-proposed OKR
+//   NX-009  Head PM          — BIDIRECTIONAL: top-down KR + self-proposed OKR
+//   NX-010  Head Onboarding  — BIDIRECTIONAL: top-down KR + self-proposed OKR
+//   NX-011  Head Support     — BOTTOM-UP only in FY25-26: self-proposed OKR
+//   NX-014  Sr BE Engineer   — BOTTOM-UP: self-proposed technical OKR
+
+function seedNexaFlowTargets(db) {
+  const orgId = getOrg(db, 'NexaFlow Technologies');
+  if (!orgId) { console.log('NexaFlow Technologies not found — skipping targets'); return; }
+
+  const existing = db.exec(`SELECT COUNT(*) FROM targets WHERE org_id = ?`, [orgId]);
+  if (existing[0].values[0][0] > 0) {
+    console.log('NexaFlow targets already seeded — skipping');
+    return;
+  }
+
+  const e = getEmpMap(db, orgId);
+  const CEO     = e['NX-001'];
+  const vpRev   = e['NX-002'], vpProd = e['NX-003'], vpCX = e['NX-004'];
+  const hEntSal = e['NX-006'], hSMB   = e['NX-007'];
+  const hPlat   = e['NX-008'], hPM    = e['NX-009'];
+  const hOnboard= e['NX-010'], hSup   = e['NX-011'];
+  const smBE    = e['NX-014'], smCSM  = e['NX-016'];
+
+  console.log('Seeding NexaFlow targets (3 cycles, bidirectional showcase)...');
+
+  // ── Cycles ─────────────────────────────────────────────────────────────────
+  const cy2324 = upsertCycle(db, orgId, {
+    name: 'FY 2023-24 Annual', start: '2023-04-01', end: '2024-03-31',
+    gsOpen: '2023-04-01', gsClose: '2023-04-30',
+    apvOpen: '2023-05-01', apvClose: '2023-05-15',
+    rvOpen: '2024-02-01', rvClose: '2024-03-15',
+    calOpen: '2024-03-16', calClose: '2024-03-31',
+    cascade: 'top_down', status: 'closed',
+  }, CEO);
+
+  const cy2425 = upsertCycle(db, orgId, {
+    name: 'FY 2024-25 Annual', start: '2024-04-01', end: '2025-03-31',
+    gsOpen: '2024-04-01', gsClose: '2024-05-15',
+    apvOpen: '2024-05-16', apvClose: '2024-05-31',
+    rvOpen: '2025-02-01', rvClose: '2025-03-15',
+    calOpen: '2025-03-16', calClose: '2025-03-31',
+    cascade: 'bidirectional', status: 'review',
+  }, CEO);
+
+  const cy2526Res = db.exec(`SELECT id FROM review_cycles WHERE org_id = ? AND name = 'FY 2025-26 Annual'`, [orgId]);
+  const cy2526 = cy2526Res[0].values[0][0];
+
+  // ══════════════════════════════════════════════════════════════════════════
+  //  FY 2023-24  (CLOSED — pure top-down; NexaFlow year 1)
+  // ══════════════════════════════════════════════════════════════════════════
+
+  // ── CEO ───────────────────────────────────────────────────────────────────
+  const ceoObj_2324 = insertTarget(db, {
+    orgId, cycleId: cy2324, empId: CEO, level: 1,
+    type: 'okr_objective', dir: 'top_down',
+    title: 'Establish NexaFlow as a ₹25 Cr ARR SaaS Leader in India',
+    desc: 'Company-wide strategic objective — Year 1 foundation building.',
+    weight: 70, status: 'locked',
+    submittedAt: '2023-04-05', approvedAt: '2023-04-07', approvedBy: CEO,
+    selfRating: 3.9, selfComment: 'Strong ARR growth; NPS exceeded target.',
+    selfRatedAt: '2024-02-05',
+    managerRating: 4.0, managerComment: 'Exceptional first full year.', managerRatedAt: '2024-02-20',
+    finalRating: 4.0,
+  });
+  const ceoKR_arr_2324 = insertTarget(db, {
+    orgId, cycleId: cy2324, empId: CEO, parentId: ceoObj_2324, level: 1,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'New Annual Recurring Revenue (ARR)', unit: 'INR Cr',
+    companyTarget: 8, planned: 8, stretch: 10, actual: 7.4,
+    weight: 40, status: 'locked',
+    submittedAt: '2023-04-05', approvedAt: '2023-04-07', approvedBy: CEO,
+    selfRating: 3.7, selfComment: '₹7.4 Cr vs ₹8 Cr target — 92.5%.', selfRatedAt: '2024-02-05',
+    managerRating: 3.8, managerRatedAt: '2024-02-20', finalRating: 3.8,
+  });
+  const ceoKR_nps_2324 = insertTarget(db, {
+    orgId, cycleId: cy2324, empId: CEO, parentId: ceoObj_2324, level: 1,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Customer Net Promoter Score (NPS)', unit: 'score',
+    companyTarget: 65, planned: 65, stretch: 72, actual: 69,
+    weight: 15, status: 'locked',
+    submittedAt: '2023-04-05', approvedAt: '2023-04-07', approvedBy: CEO,
+    selfRating: 4.2, selfComment: 'Beat NPS target — CX initiatives worked.', selfRatedAt: '2024-02-05',
+    managerRating: 4.2, managerRatedAt: '2024-02-20', finalRating: 4.2,
+  });
+  const ceoKR_uptime_2324 = insertTarget(db, {
+    orgId, cycleId: cy2324, empId: CEO, parentId: ceoObj_2324, level: 1,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Platform Uptime (SLA)', unit: '%',
+    companyTarget: 99.8, planned: 99.8, stretch: 99.9, actual: 99.83,
+    weight: 15, status: 'locked',
+    submittedAt: '2023-04-05', approvedAt: '2023-04-07', approvedBy: CEO,
+    selfRating: 4.1, selfRatedAt: '2024-02-05',
+    managerRating: 4.1, managerRatedAt: '2024-02-20', finalRating: 4.1,
+  });
+  const ceoObj2_2324 = insertTarget(db, {
+    orgId, cycleId: cy2324, empId: CEO, level: 1,
+    type: 'okr_objective', dir: 'top_down',
+    title: 'Build a High-Performance Team — eNPS 55+ and Attrition <18%',
+    weight: 30, status: 'locked',
+    submittedAt: '2023-04-05', approvedAt: '2023-04-07', approvedBy: CEO,
+    selfRating: 4.0, selfRatedAt: '2024-02-05',
+    managerRating: 4.0, managerRatedAt: '2024-02-20', finalRating: 4.0,
+  });
+  const ceoKR_enps_2324 = insertTarget(db, {
+    orgId, cycleId: cy2324, empId: CEO, parentId: ceoObj2_2324, level: 1,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Employee eNPS', unit: 'score',
+    companyTarget: 55, planned: 55, stretch: 62, actual: 58,
+    weight: 20, status: 'locked',
+    submittedAt: '2023-04-05', approvedAt: '2023-04-07', approvedBy: CEO,
+    selfRating: 4.1, selfRatedAt: '2024-02-05',
+    managerRating: 4.1, managerRatedAt: '2024-02-20', finalRating: 4.1,
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2324, empId: CEO, parentId: ceoObj2_2324, level: 1,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Annual Attrition Rate', unit: '%',
+    companyTarget: 18, planned: 18, stretch: 14, actual: 15.2,
+    weight: 10, status: 'locked', measure: 'lower_better',
+    submittedAt: '2023-04-05', approvedAt: '2023-04-07', approvedBy: CEO,
+    selfRating: 3.9, selfRatedAt: '2024-02-05',
+    managerRating: 3.9, managerRatedAt: '2024-02-20', finalRating: 3.9,
+  });
+  ['Strategic Thinking & Vision', 'Leadership & Coaching', 'Customer Obsession'].forEach((comp, i) => {
+    const r = [4.4, 4.2, 4.3][i];
+    insertTarget(db, {
+      orgId, cycleId: cy2324, empId: CEO, level: 1,
+      type: 'competency', title: comp, weight: [40, 35, 25][i], status: 'locked',
+      submittedAt: '2023-04-05', approvedAt: '2023-04-07', approvedBy: CEO,
+      selfRating: r, selfRatedAt: '2024-02-05',
+      managerRating: r, managerRatedAt: '2024-02-20', finalRating: r,
+    });
+  });
+
+  // ── VP Revenue (top-down, cascaded from CEO) ──────────────────────────────
+  const vpRevObj_2324 = insertTarget(db, {
+    orgId, cycleId: cy2324, empId: vpRev, parentId: ceoObj_2324, level: 2,
+    type: 'okr_objective', dir: 'top_down',
+    title: 'Close ₹6 Cr New ARR through Enterprise and SMB Channels',
+    weight: 70, status: 'locked',
+    submittedAt: '2023-04-10', approvedAt: '2023-04-14', approvedBy: CEO,
+    selfRating: 3.7, selfComment: '₹5.5 Cr — 92%. Lost 2 late-stage deals.', selfRatedAt: '2024-02-06',
+    managerRating: 3.8, managerComment: 'Solid growth year for a new team.', managerRatedAt: '2024-02-22',
+    finalRating: 3.8,
+  });
+  const vpRevKR_arr_2324 = insertTarget(db, {
+    orgId, cycleId: cy2324, empId: vpRev, parentId: ceoKR_arr_2324, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'New ARR — Sales Contribution', unit: 'INR Cr',
+    companyTarget: 8, planned: 6, stretch: 7, actual: 5.5,
+    weight: 40, status: 'locked',
+    submittedAt: '2023-04-10', approvedAt: '2023-04-14', approvedBy: CEO,
+    selfRating: 3.6, selfRatedAt: '2024-02-06',
+    managerRating: 3.7, managerRatedAt: '2024-02-22', finalRating: 3.7,
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2324, empId: vpRev, parentId: vpRevObj_2324, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Sales Win Rate', unit: '%',
+    planned: 28, stretch: 35, actual: 26,
+    weight: 20, status: 'locked',
+    submittedAt: '2023-04-10', approvedAt: '2023-04-14', approvedBy: CEO,
+    selfRating: 3.5, selfRatedAt: '2024-02-06',
+    managerRating: 3.6, managerRatedAt: '2024-02-22', finalRating: 3.6,
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2324, empId: vpRev, parentId: vpRevObj_2324, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'New Logos (Customers Won)', unit: 'count',
+    planned: 38, stretch: 48, actual: 35,
+    weight: 10, status: 'locked',
+    submittedAt: '2023-04-10', approvedAt: '2023-04-14', approvedBy: CEO,
+    selfRating: 3.7, selfRatedAt: '2024-02-06',
+    managerRating: 3.7, managerRatedAt: '2024-02-22', finalRating: 3.7,
+  });
+  const vpRevObj2_2324 = insertTarget(db, {
+    orgId, cycleId: cy2324, empId: vpRev, parentId: ceoObj2_2324, level: 2,
+    type: 'okr_objective', dir: 'top_down',
+    title: 'Build a Scalable, Motivated Sales Team',
+    weight: 30, status: 'locked',
+    submittedAt: '2023-04-10', approvedAt: '2023-04-14', approvedBy: CEO,
+    selfRating: 4.0, selfRatedAt: '2024-02-06',
+    managerRating: 4.0, managerRatedAt: '2024-02-22', finalRating: 4.0,
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2324, empId: vpRev, parentId: ceoKR_enps_2324, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Sales Team eNPS', unit: 'score',
+    companyTarget: 55, planned: 55, stretch: 62, actual: 56,
+    weight: 20, status: 'locked',
+    submittedAt: '2023-04-10', approvedAt: '2023-04-14', approvedBy: CEO,
+    selfRating: 4.0, selfRatedAt: '2024-02-06',
+    managerRating: 4.0, managerRatedAt: '2024-02-22', finalRating: 4.0,
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2324, empId: vpRev, parentId: vpRevObj2_2324, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Sales Rep Ramp to Quota (%)', unit: '%',
+    planned: 60, stretch: 75, actual: 65,
+    weight: 10, status: 'locked',
+    submittedAt: '2023-04-10', approvedAt: '2023-04-14', approvedBy: CEO,
+    selfRating: 4.1, selfRatedAt: '2024-02-06',
+    managerRating: 4.0, managerRatedAt: '2024-02-22', finalRating: 4.0,
+  });
+  ['Customer Obsession', 'Leadership & Coaching', 'Communication & Influence'].forEach((comp, i) => {
+    const r = [4.1, 4.0, 4.3][i];
+    insertTarget(db, {
+      orgId, cycleId: cy2324, empId: vpRev, level: 2,
+      type: 'competency', title: comp, weight: [40, 35, 25][i], status: 'locked',
+      submittedAt: '2023-04-10', approvedAt: '2023-04-14', approvedBy: CEO,
+      selfRating: r, selfRatedAt: '2024-02-06',
+      managerRating: r, managerRatedAt: '2024-02-22', finalRating: r,
+    });
+  });
+
+  // ── VP Product (top-down) ─────────────────────────────────────────────────
+  const vpProdObj_2324 = insertTarget(db, {
+    orgId, cycleId: cy2324, empId: vpProd, parentId: ceoObj_2324, level: 2,
+    type: 'okr_objective', dir: 'top_down',
+    title: 'Deliver 99.85% Platform Uptime and 12 Major Feature Releases',
+    weight: 70, status: 'locked',
+    submittedAt: '2023-04-10', approvedAt: '2023-04-14', approvedBy: CEO,
+    selfRating: 4.2, selfComment: 'Uptime exceeded, shipped 13 features.', selfRatedAt: '2024-02-06',
+    managerRating: 4.3, managerComment: 'Best engineering year yet.', managerRatedAt: '2024-02-22',
+    finalRating: 4.3,
+  });
+  const vpProdKR_up_2324 = insertTarget(db, {
+    orgId, cycleId: cy2324, empId: vpProd, parentId: ceoKR_uptime_2324, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Platform Uptime (SLA)', unit: '%',
+    companyTarget: 99.8, planned: 99.82, stretch: 99.9, actual: 99.83,
+    weight: 30, status: 'locked',
+    submittedAt: '2023-04-10', approvedAt: '2023-04-14', approvedBy: CEO,
+    selfRating: 4.1, selfRatedAt: '2024-02-06',
+    managerRating: 4.2, managerRatedAt: '2024-02-22', finalRating: 4.2,
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2324, empId: vpProd, parentId: vpProdObj_2324, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Feature Releases (Major)', unit: 'count',
+    planned: 12, stretch: 15, actual: 13,
+    weight: 25, status: 'locked',
+    submittedAt: '2023-04-10', approvedAt: '2023-04-14', approvedBy: CEO,
+    selfRating: 4.3, selfRatedAt: '2024-02-06',
+    managerRating: 4.4, managerRatedAt: '2024-02-22', finalRating: 4.4,
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2324, empId: vpProd, parentId: vpProdObj_2324, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'P0/P1 Bugs in Production', unit: 'count',
+    planned: 5, stretch: 2, actual: 3, measure: 'lower_better',
+    weight: 15, status: 'locked',
+    submittedAt: '2023-04-10', approvedAt: '2023-04-14', approvedBy: CEO,
+    selfRating: 4.2, selfRatedAt: '2024-02-06',
+    managerRating: 4.2, managerRatedAt: '2024-02-22', finalRating: 4.2,
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2324, empId: vpProd, parentId: ceoObj2_2324, level: 2,
+    type: 'okr_objective', dir: 'top_down',
+    title: 'Foster Engineering Excellence Culture',
+    weight: 30, status: 'locked',
+    submittedAt: '2023-04-10', approvedAt: '2023-04-14', approvedBy: CEO,
+    selfRating: 4.1, selfRatedAt: '2024-02-06',
+    managerRating: 4.1, managerRatedAt: '2024-02-22', finalRating: 4.1,
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2324, empId: vpProd, parentId: ceoKR_enps_2324, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Engineering Team eNPS', unit: 'score',
+    companyTarget: 55, planned: 55, stretch: 62, actual: 60,
+    weight: 20, status: 'locked',
+    submittedAt: '2023-04-10', approvedAt: '2023-04-14', approvedBy: CEO,
+    selfRating: 4.2, selfRatedAt: '2024-02-06',
+    managerRating: 4.2, managerRatedAt: '2024-02-22', finalRating: 4.2,
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2324, empId: vpProd, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Sprint Velocity', unit: 'points',
+    planned: 32, stretch: 38, actual: 35,
+    weight: 10, status: 'locked',
+    submittedAt: '2023-04-10', approvedAt: '2023-04-14', approvedBy: CEO,
+    selfRating: 4.1, selfRatedAt: '2024-02-06',
+    managerRating: 4.1, managerRatedAt: '2024-02-22', finalRating: 4.1,
+  });
+  ['Technical Excellence', 'Leadership & Coaching', 'Ownership & Accountability'].forEach((comp, i) => {
+    const r = [4.5, 4.2, 4.4][i];
+    insertTarget(db, {
+      orgId, cycleId: cy2324, empId: vpProd, level: 2,
+      type: 'competency', title: comp, weight: [40, 35, 25][i], status: 'locked',
+      submittedAt: '2023-04-10', approvedAt: '2023-04-14', approvedBy: CEO,
+      selfRating: r, selfRatedAt: '2024-02-06',
+      managerRating: r, managerRatedAt: '2024-02-22', finalRating: r,
+    });
+  });
+
+  // ── VP Customer Experience (top-down) ─────────────────────────────────────
+  const vpCXObj_2324 = insertTarget(db, {
+    orgId, cycleId: cy2324, empId: vpCX, parentId: ceoObj_2324, level: 2,
+    type: 'okr_objective', dir: 'top_down',
+    title: 'Delight Customers — NPS 65+ and Time-to-Value Under 40 Days',
+    weight: 70, status: 'locked',
+    submittedAt: '2023-04-10', approvedAt: '2023-04-14', approvedBy: CEO,
+    selfRating: 4.1, selfComment: 'NPS 69 — exceeded target. TTV improved to 36 days.',
+    selfRatedAt: '2024-02-06',
+    managerRating: 4.2, managerComment: 'CX team was the standout team this year.', managerRatedAt: '2024-02-22',
+    finalRating: 4.2,
+  });
+  const vpCXKR_nps_2324 = insertTarget(db, {
+    orgId, cycleId: cy2324, empId: vpCX, parentId: ceoKR_nps_2324, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Customer NPS', unit: 'score',
+    companyTarget: 65, planned: 65, stretch: 72, actual: 69,
+    weight: 35, status: 'locked',
+    submittedAt: '2023-04-10', approvedAt: '2023-04-14', approvedBy: CEO,
+    selfRating: 4.2, selfRatedAt: '2024-02-06',
+    managerRating: 4.3, managerRatedAt: '2024-02-22', finalRating: 4.3,
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2324, empId: vpCX, parentId: vpCXObj_2324, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Time to Value (New Customers)', unit: 'days',
+    planned: 40, stretch: 28, actual: 36, measure: 'lower_better',
+    weight: 20, status: 'locked',
+    submittedAt: '2023-04-10', approvedAt: '2023-04-14', approvedBy: CEO,
+    selfRating: 4.0, selfRatedAt: '2024-02-06',
+    managerRating: 4.0, managerRatedAt: '2024-02-22', finalRating: 4.0,
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2324, empId: vpCX, parentId: vpCXObj_2324, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Customer Churn Rate', unit: '%',
+    planned: 8, stretch: 5, actual: 6.2, measure: 'lower_better',
+    weight: 15, status: 'locked',
+    submittedAt: '2023-04-10', approvedAt: '2023-04-14', approvedBy: CEO,
+    selfRating: 4.2, selfRatedAt: '2024-02-06',
+    managerRating: 4.2, managerRatedAt: '2024-02-22', finalRating: 4.2,
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2324, empId: vpCX, parentId: ceoObj2_2324, level: 2,
+    type: 'okr_objective', dir: 'top_down',
+    title: 'Build a World-Class CX Team',
+    weight: 30, status: 'locked',
+    submittedAt: '2023-04-10', approvedAt: '2023-04-14', approvedBy: CEO,
+    selfRating: 4.0, selfRatedAt: '2024-02-06',
+    managerRating: 4.0, managerRatedAt: '2024-02-22', finalRating: 4.0,
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2324, empId: vpCX, parentId: ceoKR_enps_2324, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'CX Team eNPS', unit: 'score',
+    companyTarget: 55, planned: 55, stretch: 62, actual: 62,
+    weight: 20, status: 'locked',
+    submittedAt: '2023-04-10', approvedAt: '2023-04-14', approvedBy: CEO,
+    selfRating: 4.3, selfRatedAt: '2024-02-06',
+    managerRating: 4.3, managerRatedAt: '2024-02-22', finalRating: 4.3,
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2324, empId: vpCX, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Tier-1 Ticket SLA Compliance', unit: '%',
+    planned: 92, stretch: 97, actual: 94,
+    weight: 10, status: 'locked',
+    submittedAt: '2023-04-10', approvedAt: '2023-04-14', approvedBy: CEO,
+    selfRating: 4.1, selfRatedAt: '2024-02-06',
+    managerRating: 4.1, managerRatedAt: '2024-02-22', finalRating: 4.1,
+  });
+  ['Customer Obsession', 'Leadership & Coaching', 'Communication & Influence'].forEach((comp, i) => {
+    const r = [4.4, 4.1, 4.3][i];
+    insertTarget(db, {
+      orgId, cycleId: cy2324, empId: vpCX, level: 2,
+      type: 'competency', title: comp, weight: [40, 35, 25][i], status: 'locked',
+      submittedAt: '2023-04-10', approvedAt: '2023-04-14', approvedBy: CEO,
+      selfRating: r, selfRatedAt: '2024-02-06',
+      managerRating: r, managerRatedAt: '2024-02-22', finalRating: r,
+    });
+  });
+
+  // FY23-24 Performance Summaries
+  [
+    [CEO,    3.96, 4.30, 4.06, 'Exceeds'],
+    [vpRev,  3.72, 4.13, 3.84, 'Exceeds'],
+    [vpProd, 4.20, 4.37, 4.25, 'Exceeds'],
+    [vpCX,   4.14, 4.27, 4.18, 'Exceeds'],
+  ].forEach(([empId, gs, cs, fs, band]) => {
+    db.run(`
+      INSERT OR IGNORE INTO performance_summary
+        (cycle_id, employee_id, goal_score, competency_score, final_score, performance_band, is_pip_triggered, calibrated, computed_at)
+      VALUES (?,?,?,?,?,?,0,1,?)`,
+      [cy2324, empId, gs, cs, fs, band, '2024-03-28']
+    );
+  });
+
+  // ══════════════════════════════════════════════════════════════════════════
+  //  FY 2024-25  (REVIEW — bidirectional introduced for first time)
+  //
+  //  Top-down track: CEO → VPs → Heads (cascade direction = top_down)
+  //  Bottom-up track: Head Platform (NX-008) and Head Onboarding (NX-010)
+  //    proposed their OWN OKRs from Day 1. VP linked them to company OKRs
+  //    mid-cycle. Now both tracks are in 'active' status (cycle in review).
+  //
+  //  This shows the RESOLVED state of a bidirectional cycle —
+  //  FY25-26 will show the UNRESOLVED/in-progress state.
+  // ══════════════════════════════════════════════════════════════════════════
+
+  // ── CEO FY24-25 ───────────────────────────────────────────────────────────
+  const ceoObj_2425 = insertTarget(db, {
+    orgId, cycleId: cy2425, empId: CEO, level: 1,
+    type: 'okr_objective', dir: 'top_down',
+    title: 'Scale NexaFlow to ₹45 Cr ARR — The Breakout Year',
+    desc: 'Cross ₹45 Cr ARR, achieve NPS 80+, and establish CI/CD gold standard.',
+    weight: 70, status: 'active',
+    submittedAt: '2024-04-05', approvedAt: '2024-04-08', approvedBy: CEO,
+    selfRating: 4.1, selfComment: 'Strong year. ARR at ₹19.8 Cr (94%), NPS hit 82.',
+    selfRatedAt: '2025-02-05',
+  });
+  const ceoKR_arr_2425 = insertTarget(db, {
+    orgId, cycleId: cy2425, empId: CEO, parentId: ceoObj_2425, level: 1,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'New Annual Recurring Revenue (ARR)', unit: 'INR Cr',
+    companyTarget: 21, planned: 21, stretch: 25, actual: 19.8,
+    weight: 40, status: 'active',
+    submittedAt: '2024-04-05', approvedAt: '2024-04-08', approvedBy: CEO,
+    selfRating: 4.0, selfComment: '₹19.8 Cr — 94%. Near-miss on stretch.', selfRatedAt: '2025-02-05',
+  });
+  const ceoKR_nps_2425 = insertTarget(db, {
+    orgId, cycleId: cy2425, empId: CEO, parentId: ceoObj_2425, level: 1,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Customer NPS', unit: 'score',
+    companyTarget: 78, planned: 78, stretch: 84, actual: 82,
+    weight: 15, status: 'active',
+    submittedAt: '2024-04-05', approvedAt: '2024-04-08', approvedBy: CEO,
+    selfRating: 4.5, selfComment: 'Hit 82 — best NPS ever!', selfRatedAt: '2025-02-05',
+  });
+  const ceoKR_uptime_2425 = insertTarget(db, {
+    orgId, cycleId: cy2425, empId: CEO, parentId: ceoObj_2425, level: 1,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Platform Uptime (SLA)', unit: '%',
+    companyTarget: 99.9, planned: 99.9, stretch: 99.95, actual: 99.91,
+    weight: 15, status: 'active',
+    submittedAt: '2024-04-05', approvedAt: '2024-04-08', approvedBy: CEO,
+    selfRating: 4.2, selfRatedAt: '2025-02-05',
+  });
+  const ceoObj2_2425 = insertTarget(db, {
+    orgId, cycleId: cy2425, empId: CEO, level: 1,
+    type: 'okr_objective', dir: 'top_down',
+    title: 'Build NexaFlow as the Best Workplace for Engineers in India',
+    weight: 30, status: 'active',
+    submittedAt: '2024-04-05', approvedAt: '2024-04-08', approvedBy: CEO,
+    selfRating: 4.0, selfRatedAt: '2025-02-05',
+  });
+  const ceoKR_enps_2425 = insertTarget(db, {
+    orgId, cycleId: cy2425, empId: CEO, parentId: ceoObj2_2425, level: 1,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Employee eNPS', unit: 'score',
+    companyTarget: 65, planned: 65, stretch: 72, actual: 67,
+    weight: 20, status: 'active',
+    submittedAt: '2024-04-05', approvedAt: '2024-04-08', approvedBy: CEO,
+    selfRating: 4.1, selfRatedAt: '2025-02-05',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2425, empId: CEO, parentId: ceoObj2_2425, level: 1,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Annual Attrition Rate', unit: '%',
+    companyTarget: 14, planned: 14, stretch: 11, actual: 12.4,
+    weight: 10, status: 'active', measure: 'lower_better',
+    submittedAt: '2024-04-05', approvedAt: '2024-04-08', approvedBy: CEO,
+    selfRating: 4.3, selfRatedAt: '2025-02-05',
+  });
+  ['Strategic Thinking & Vision', 'Leadership & Coaching', 'Customer Obsession'].forEach((comp, i) => {
+    insertTarget(db, {
+      orgId, cycleId: cy2425, empId: CEO, level: 1,
+      type: 'competency', title: comp, weight: [40, 35, 25][i], status: 'active',
+      submittedAt: '2024-04-05', approvedAt: '2024-04-08', approvedBy: CEO,
+      selfRating: [4.5, 4.3, 4.4][i], selfRatedAt: '2025-02-05',
+    });
+  });
+
+  // ── VP Revenue FY24-25 (top-down) ─────────────────────────────────────────
+  const vpRevObj_2425 = insertTarget(db, {
+    orgId, cycleId: cy2425, empId: vpRev, parentId: ceoObj_2425, level: 2,
+    type: 'okr_objective', dir: 'top_down',
+    title: 'Drive ₹16 Cr New ARR through Scaled Enterprise & SMB Playbooks',
+    weight: 70, status: 'active',
+    submittedAt: '2024-04-10', approvedAt: '2024-04-14', approvedBy: CEO,
+    selfRating: 4.0, selfRatedAt: '2025-02-06',
+  });
+  const vpRevKR_arr_2425 = insertTarget(db, {
+    orgId, cycleId: cy2425, empId: vpRev, parentId: ceoKR_arr_2425, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'New ARR — Sales Contribution', unit: 'INR Cr',
+    companyTarget: 21, planned: 16, stretch: 19, actual: 15.2,
+    weight: 40, status: 'active',
+    submittedAt: '2024-04-10', approvedAt: '2024-04-14', approvedBy: CEO,
+    selfRating: 4.0, selfComment: '₹15.2 Cr — 95%. Near-miss on stretch.', selfRatedAt: '2025-02-06',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2425, empId: vpRev, parentId: vpRevObj_2425, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Sales Win Rate', unit: '%',
+    planned: 32, stretch: 40, actual: 35,
+    weight: 20, status: 'active',
+    submittedAt: '2024-04-10', approvedAt: '2024-04-14', approvedBy: CEO,
+    selfRating: 4.1, selfRatedAt: '2025-02-06',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2425, empId: vpRev, parentId: vpRevObj_2425, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'New Logos Won', unit: 'count',
+    planned: 55, stretch: 68, actual: 52,
+    weight: 10, status: 'active',
+    submittedAt: '2024-04-10', approvedAt: '2024-04-14', approvedBy: CEO,
+    selfRating: 3.9, selfRatedAt: '2025-02-06',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2425, empId: vpRev, parentId: ceoObj2_2425, level: 2,
+    type: 'okr_objective', dir: 'top_down',
+    title: 'Build a Sales Culture of Learning & High Accountability',
+    weight: 30, status: 'active',
+    submittedAt: '2024-04-10', approvedAt: '2024-04-14', approvedBy: CEO,
+    selfRating: 4.1, selfRatedAt: '2025-02-06',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2425, empId: vpRev, parentId: ceoKR_enps_2425, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Sales Team eNPS', unit: 'score',
+    companyTarget: 65, planned: 65, stretch: 72, actual: 66,
+    weight: 20, status: 'active',
+    submittedAt: '2024-04-10', approvedAt: '2024-04-14', approvedBy: CEO,
+    selfRating: 4.0, selfRatedAt: '2025-02-06',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2425, empId: vpRev, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Sales Rep Ramp to Quota (%)', unit: '%',
+    planned: 70, stretch: 85, actual: 74,
+    weight: 10, status: 'active',
+    submittedAt: '2024-04-10', approvedAt: '2024-04-14', approvedBy: CEO,
+    selfRating: 4.1, selfRatedAt: '2025-02-06',
+  });
+
+  // ── VP Product FY24-25 (top-down + manages bottom-up proposals) ───────────
+  const vpProdObj_2425 = insertTarget(db, {
+    orgId, cycleId: cy2425, empId: vpProd, parentId: ceoObj_2425, level: 2,
+    type: 'okr_objective', dir: 'top_down',
+    title: 'Achieve 99.9% Uptime, 20+ Feature Releases, and Sub-8min CI/CD',
+    weight: 70, status: 'active',
+    submittedAt: '2024-04-10', approvedAt: '2024-04-14', approvedBy: CEO,
+    selfRating: 4.3, selfRatedAt: '2025-02-06',
+  });
+  const vpProdKR_up_2425 = insertTarget(db, {
+    orgId, cycleId: cy2425, empId: vpProd, parentId: ceoKR_uptime_2425, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Platform Uptime (SLA)', unit: '%',
+    companyTarget: 99.9, planned: 99.9, stretch: 99.95, actual: 99.91,
+    weight: 30, status: 'active',
+    submittedAt: '2024-04-10', approvedAt: '2024-04-14', approvedBy: CEO,
+    selfRating: 4.2, selfRatedAt: '2025-02-06',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2425, empId: vpProd, parentId: vpProdObj_2425, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Feature Releases (Major)', unit: 'count',
+    planned: 20, stretch: 25, actual: 22,
+    weight: 25, status: 'active',
+    submittedAt: '2024-04-10', approvedAt: '2024-04-14', approvedBy: CEO,
+    selfRating: 4.3, selfRatedAt: '2025-02-06',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2425, empId: vpProd, parentId: vpProdObj_2425, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'CI/CD Build Pipeline Duration', unit: 'minutes',
+    planned: 8, stretch: 5, actual: 7.2, measure: 'lower_better',
+    weight: 15, status: 'active',
+    submittedAt: '2024-04-10', approvedAt: '2024-04-14', approvedBy: CEO,
+    selfRating: 4.1, selfComment: '7.2 min avg — close to target. New infra being provisioned.', selfRatedAt: '2025-02-06',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2425, empId: vpProd, parentId: ceoObj2_2425, level: 2,
+    type: 'okr_objective', dir: 'top_down',
+    title: 'Build a Culture of Engineering Excellence and Developer Joy',
+    weight: 30, status: 'active',
+    submittedAt: '2024-04-10', approvedAt: '2024-04-14', approvedBy: CEO,
+    selfRating: 4.2, selfRatedAt: '2025-02-06',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2425, empId: vpProd, parentId: ceoKR_enps_2425, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Engineering Team eNPS', unit: 'score',
+    companyTarget: 65, planned: 65, stretch: 72, actual: 70,
+    weight: 20, status: 'active',
+    submittedAt: '2024-04-10', approvedAt: '2024-04-14', approvedBy: CEO,
+    selfRating: 4.4, selfRatedAt: '2025-02-06',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2425, empId: vpProd, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Sprint Velocity', unit: 'points',
+    planned: 38, stretch: 45, actual: 41,
+    weight: 10, status: 'active',
+    submittedAt: '2024-04-10', approvedAt: '2024-04-14', approvedBy: CEO,
+    selfRating: 4.2, selfRatedAt: '2025-02-06',
+  });
+
+  // ── VP CX FY24-25 (top-down + manages bottom-up proposals) ───────────────
+  const vpCXObj_2425 = insertTarget(db, {
+    orgId, cycleId: cy2425, empId: vpCX, parentId: ceoObj_2425, level: 2,
+    type: 'okr_objective', dir: 'top_down',
+    title: 'Create Customer Advocates — NPS 78+ and Cut TTV to 28 Days',
+    weight: 70, status: 'active',
+    submittedAt: '2024-04-10', approvedAt: '2024-04-14', approvedBy: CEO,
+    selfRating: 4.3, selfComment: 'NPS 82 and TTV 26 days — exceeded both.', selfRatedAt: '2025-02-06',
+  });
+  const vpCXKR_nps_2425 = insertTarget(db, {
+    orgId, cycleId: cy2425, empId: vpCX, parentId: ceoKR_nps_2425, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Customer NPS', unit: 'score',
+    companyTarget: 78, planned: 78, stretch: 84, actual: 82,
+    weight: 35, status: 'active',
+    submittedAt: '2024-04-10', approvedAt: '2024-04-14', approvedBy: CEO,
+    selfRating: 4.5, selfRatedAt: '2025-02-06',
+  });
+  const vpCXKR_ttv_2425 = insertTarget(db, {
+    orgId, cycleId: cy2425, empId: vpCX, parentId: vpCXObj_2425, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Time to Value (New Customers)', unit: 'days',
+    planned: 28, stretch: 20, actual: 26, measure: 'lower_better',
+    weight: 20, status: 'active',
+    submittedAt: '2024-04-10', approvedAt: '2024-04-14', approvedBy: CEO,
+    selfRating: 4.3, selfRatedAt: '2025-02-06',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2425, empId: vpCX, parentId: vpCXObj_2425, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Customer Churn Rate', unit: '%',
+    planned: 5, stretch: 3, actual: 4.1, measure: 'lower_better',
+    weight: 15, status: 'active',
+    submittedAt: '2024-04-10', approvedAt: '2024-04-14', approvedBy: CEO,
+    selfRating: 4.2, selfRatedAt: '2025-02-06',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2425, empId: vpCX, parentId: ceoObj2_2425, level: 2,
+    type: 'okr_objective', dir: 'top_down',
+    title: 'Build a CX Team That Owns Customer Outcomes End-to-End',
+    weight: 30, status: 'active',
+    submittedAt: '2024-04-10', approvedAt: '2024-04-14', approvedBy: CEO,
+    selfRating: 4.2, selfRatedAt: '2025-02-06',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2425, empId: vpCX, parentId: ceoKR_enps_2425, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'CX Team eNPS', unit: 'score',
+    companyTarget: 65, planned: 65, stretch: 72, actual: 72,
+    weight: 20, status: 'active',
+    submittedAt: '2024-04-10', approvedAt: '2024-04-14', approvedBy: CEO,
+    selfRating: 4.5, selfRatedAt: '2025-02-06',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2425, empId: vpCX, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Tier-1 Ticket SLA Compliance', unit: '%',
+    planned: 96, stretch: 99, actual: 97,
+    weight: 10, status: 'active',
+    submittedAt: '2024-04-10', approvedAt: '2024-04-14', approvedBy: CEO,
+    selfRating: 4.2, selfRatedAt: '2025-02-06',
+  });
+
+  // ── Head Platform Engineering FY24-25 — BIDIRECTIONAL ────────────────────
+  // TOP-DOWN track: VP Product cascaded a KR to Divya
+  const hPlatKR_td_2425 = insertTarget(db, {
+    orgId, cycleId: cy2425, empId: hPlat, parentId: vpProdKR_up_2425, level: 3,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Platform SLA — Infrastructure Contribution', unit: '%',
+    companyTarget: 99.9, planned: 99.92, stretch: 99.97, actual: 99.93,
+    weight: 40, status: 'active',
+    submittedAt: '2024-04-18', approvedAt: '2024-04-22', approvedBy: vpProd,
+    selfRating: 4.3, selfComment: 'Maintained infra above target all year.', selfRatedAt: '2025-02-07',
+  });
+  // BOTTOM-UP track: Divya proposed her own OKR on CI/CD from Day 1
+  // VP Product reviewed and LINKED it to the product objective mid-cycle
+  const hPlatObj_bu_2425 = insertTarget(db, {
+    orgId, cycleId: cy2425, empId: hPlat, parentId: vpProdObj_2425, level: 3,
+    type: 'okr_objective', dir: 'bottom_up',
+    title: 'Automate CI/CD — Zero Manual Deployments and <8min Build Time',
+    desc: 'Self-proposed by Divya Krishnan on Apr 1. Linked by VP Product on Apr 20 after team alignment session.',
+    weight: 40, status: 'active',
+    submittedAt: '2024-04-01', approvedAt: '2024-04-22', approvedBy: vpProd,
+    selfRating: 4.2, selfComment: 'CI/CD pipeline fully automated. Build time 7.2 min vs 8 min target.', selfRatedAt: '2025-02-07',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2425, empId: hPlat, parentId: hPlatObj_bu_2425, level: 3,
+    type: 'okr_kr', dir: 'bottom_up',
+    title: 'CI/CD Build Pipeline Duration', unit: 'minutes',
+    planned: 8, stretch: 5, actual: 7.2, measure: 'lower_better',
+    weight: 25, status: 'active',
+    submittedAt: '2024-04-01', approvedAt: '2024-04-22', approvedBy: vpProd,
+    selfRating: 4.1, selfRatedAt: '2025-02-07',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2425, empId: hPlat, parentId: hPlatObj_bu_2425, level: 3,
+    type: 'okr_kr', dir: 'bottom_up',
+    title: 'Manual Deployment Steps Eliminated', unit: '%',
+    planned: 90, stretch: 100, actual: 94,
+    weight: 15, status: 'active',
+    submittedAt: '2024-04-01', approvedAt: '2024-04-22', approvedBy: vpProd,
+    selfRating: 4.3, selfRatedAt: '2025-02-07',
+  });
+  // Competencies (both tracks share the same competency bucket)
+  ['Technical Excellence', 'Ownership & Accountability', 'Collaboration & Teamwork'].forEach((comp, i) => {
+    insertTarget(db, {
+      orgId, cycleId: cy2425, empId: hPlat, level: 3,
+      type: 'competency', title: comp, weight: [40, 35, 25][i], status: 'active',
+      submittedAt: '2024-04-01', approvedAt: '2024-04-22', approvedBy: vpProd,
+      selfRating: [4.5, 4.3, 4.2][i], selfRatedAt: '2025-02-07',
+    });
+  });
+
+  // ── Head Customer Onboarding FY24-25 — BIDIRECTIONAL ─────────────────────
+  // TOP-DOWN track: VP CX assigned a TTV KR to Sunita
+  const hOnboardKR_td_2425 = insertTarget(db, {
+    orgId, cycleId: cy2425, empId: hOnboard, parentId: vpCXKR_ttv_2425, level: 3,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Average Onboarding Duration', unit: 'days',
+    planned: 28, stretch: 20, actual: 26, measure: 'lower_better',
+    weight: 35, status: 'active',
+    submittedAt: '2024-04-18', approvedAt: '2024-04-22', approvedBy: vpCX,
+    selfRating: 4.2, selfComment: '26 days avg — 2 days below planned target.', selfRatedAt: '2025-02-07',
+  });
+  // BOTTOM-UP track: Sunita proposed a richer onboarding OKR from Day 1
+  const hOnboardObj_bu_2425 = insertTarget(db, {
+    orgId, cycleId: cy2425, empId: hOnboard, parentId: vpCXObj_2425, level: 3,
+    type: 'okr_objective', dir: 'bottom_up',
+    title: 'Redesign Onboarding Playbook — 90-Day Activation Rate 92%+',
+    desc: 'Sunita proposed this based on Q4 FY23-24 churn analysis showing most churn at day 60.',
+    weight: 40, status: 'active',
+    submittedAt: '2024-04-01', approvedAt: '2024-04-22', approvedBy: vpCX,
+    selfRating: 4.4, selfComment: '93% activation rate — exceeded target. New playbook is working.', selfRatedAt: '2025-02-07',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2425, empId: hOnboard, parentId: hOnboardObj_bu_2425, level: 3,
+    type: 'okr_kr', dir: 'bottom_up',
+    title: '90-Day Customer Activation Rate', unit: '%',
+    planned: 92, stretch: 96, actual: 93,
+    weight: 25, status: 'active',
+    submittedAt: '2024-04-01', approvedAt: '2024-04-22', approvedBy: vpCX,
+    selfRating: 4.3, selfRatedAt: '2025-02-07',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2425, empId: hOnboard, parentId: hOnboardObj_bu_2425, level: 3,
+    type: 'okr_kr', dir: 'bottom_up',
+    title: 'Onboarding NPS (7-day survey)', unit: 'score',
+    planned: 80, stretch: 88, actual: 84,
+    weight: 15, status: 'active',
+    submittedAt: '2024-04-01', approvedAt: '2024-04-22', approvedBy: vpCX,
+    selfRating: 4.3, selfRatedAt: '2025-02-07',
+  });
+  ['Customer Obsession', 'Ownership & Accountability', 'Communication & Influence'].forEach((comp, i) => {
+    insertTarget(db, {
+      orgId, cycleId: cy2425, empId: hOnboard, level: 3,
+      type: 'competency', title: comp, weight: [40, 35, 25][i], status: 'active',
+      submittedAt: '2024-04-01', approvedAt: '2024-04-22', approvedBy: vpCX,
+      selfRating: [4.4, 4.3, 4.2][i], selfRatedAt: '2025-02-07',
+    });
+  });
+
+  // FY24-25 Check-ins — VP Revenue ARR (monthly)
+  const vpRevArrT_2425 = vpRevKR_arr_2425;
+  [
+    ['Apr 2024', 0.8, 5.0,  'Pipeline heavy but deals not closed. Ramp-up month.'],
+    ['May 2024', 2.2, 13.8, '2 enterprise deals signed. SMB momentum building.'],
+    ['Jun 2024', 3.8, 23.8, 'Q1 close: ₹1.6 Cr added. On track.'],
+    ['Jul 2024', 5.8, 36.3, 'Best month. 3 enterprise logos. Strong Q2 start.'],
+    ['Aug 2024', 7.4, 46.3, 'Steady growth. Partnership channel contributing.'],
+    ['Sep 2024', 9.2, 57.5, 'Q2 close: ₹9.2 Cr. VP review: solid.'],
+    ['Oct 2024', 11.1, 69.4, '2 new enterprise deals. Q3 pipeline robust.'],
+    ['Nov 2024', 12.8, 80,  'On track. Year-end deals in final stage.'],
+    ['Dec 2024', 13.7, 85.6,'Holiday dip. 1 large deal pushed to Jan.'],
+    ['Jan 2025', 14.6, 91.3,'Pushed deal closed. Momentum back.'],
+    ['Feb 2025', 15.0, 93.8,'Negotiations ongoing. Q4 push begins.'],
+    ['Mar 2025', 15.2, 95,  'Year-end: ₹15.2 Cr — 95% of target. Best year.'],
+  ].forEach(([label, actual, pct, notes]) => insertCheckin(db, {
+    targetId: vpRevArrT_2425, empId: vpRev, cycleId: cy2425,
+    periodType: 'monthly', label, actual, pct, notes,
+    ackedBy: CEO, ackedAt: label === 'Mar 2025' ? '2025-04-07' : null,
+  }));
+
+  // FY24-25 Check-ins — Head Platform CI/CD build time (quarterly)
+  [
+    ['Q1 Apr–Jun 2024', 13.5, 0,   'Baseline: avg 13.5 min. CI/CD audit complete. Roadmap finalized.'],
+    ['Q2 Jul–Sep 2024', 10.2, 40.1,'Parallelized test suite. 3.3 min cut. Good progress.'],
+    ['Q3 Oct–Dec 2024', 8.4,  62.2,'Cache layer added. Near target. Team ramping new infra.'],
+    ['Q4 Jan–Mar 2025', 7.2,  81.3,'7.2 min — slightly above 5 min stretch. Core optimizations done.'],
+  ].forEach(([label, actual, pct, notes]) => {
+    const cicdTarget = db.exec(
+      `SELECT id FROM targets WHERE employee_id = ? AND cycle_id = ? AND title LIKE '%CI/CD Build Pipeline Duration%' LIMIT 1`,
+      [hPlat, cy2425]
+    );
+    if (cicdTarget.length && cicdTarget[0].values.length) {
+      insertCheckin(db, {
+        targetId: cicdTarget[0].values[0][0], empId: hPlat, cycleId: cy2425,
+        periodType: 'quarterly', label, actual, pct, notes,
+        ackedBy: vpProd, ackedAt: null,
+      });
+    }
+  });
+
+  // ══════════════════════════════════════════════════════════════════════════
+  //  FY 2025-26  (GOAL_SETTING — live bidirectional state)
+  //
+  //  TOP-DOWN: CEO approved → VPs submitted → Heads draft (waiting approval)
+  //  BOTTOM-UP: 4 roles have self-proposed OKRs (status='proposed', no parentId)
+  //    — VP Product and VP CX must LINK these before cycle can go 'active' (V13)
+  //
+  //  Unlinked proposals blocking cycle advancement:
+  //    • Head Platform (NX-008): "Achieve Sub-5min CI/CD and 99.99% Self-Healing Infra"
+  //    • Head PM (NX-009): "Ship 3 Customer-Requested Feature Clusters Before Q3"
+  //    • Head Onboarding (NX-010): "Cut Time-to-Value from 26 to 21 Days"
+  //    • Head Support (NX-011): "Achieve 99% SLA Compliance on All Tier-1 Tickets"
+  //    • Sr BE (NX-014): "Zero P0 Bugs — 100% Coverage on Critical Paths"
+  // ══════════════════════════════════════════════════════════════════════════
+
+  // ── CEO FY25-26 (approved) ────────────────────────────────────────────────
+  const ceoObj_2526 = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: CEO, level: 1,
+    type: 'okr_objective', dir: 'top_down',
+    title: 'Scale NexaFlow to ₹60 Cr ARR — The Category Leadership Year',
+    desc: 'Cross ₹60 Cr ARR, achieve NPS 90, and establish NexaFlow as undisputed #1 in our segment.',
+    weight: 70, status: 'approved',
+    submittedAt: '2025-04-04', approvedAt: '2025-04-07', approvedBy: CEO,
+  });
+  const ceoKR_arr_2526 = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: CEO, parentId: ceoObj_2526, level: 1,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'New Annual Recurring Revenue (ARR)', unit: 'INR Cr',
+    companyTarget: 30, planned: 30, stretch: 36,
+    weight: 40, status: 'approved',
+    submittedAt: '2025-04-04', approvedAt: '2025-04-07', approvedBy: CEO,
+  });
+  const ceoKR_nps_2526 = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: CEO, parentId: ceoObj_2526, level: 1,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Customer Net Promoter Score (NPS)', unit: 'score',
+    companyTarget: 88, planned: 88, stretch: 94,
+    weight: 15, status: 'approved',
+    submittedAt: '2025-04-04', approvedAt: '2025-04-07', approvedBy: CEO,
+  });
+  const ceoKR_uptime_2526 = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: CEO, parentId: ceoObj_2526, level: 1,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Platform Uptime (SLA)', unit: '%',
+    companyTarget: 99.95, planned: 99.95, stretch: 99.99,
+    weight: 15, status: 'approved',
+    submittedAt: '2025-04-04', approvedAt: '2025-04-07', approvedBy: CEO,
+  });
+  const ceoObj2_2526 = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: CEO, level: 1,
+    type: 'okr_objective', dir: 'top_down',
+    title: 'Make NexaFlow the Employer of Choice for Top Tech Talent in India',
+    weight: 30, status: 'approved',
+    submittedAt: '2025-04-04', approvedAt: '2025-04-07', approvedBy: CEO,
+  });
+  const ceoKR_enps_2526 = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: CEO, parentId: ceoObj2_2526, level: 1,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Employee eNPS', unit: 'score',
+    companyTarget: 75, planned: 75, stretch: 82,
+    weight: 20, status: 'approved',
+    submittedAt: '2025-04-04', approvedAt: '2025-04-07', approvedBy: CEO,
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: CEO, parentId: ceoObj2_2526, level: 1,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Annual Attrition Rate', unit: '%',
+    companyTarget: 10, planned: 10, stretch: 8,
+    weight: 10, status: 'approved', measure: 'lower_better',
+    submittedAt: '2025-04-04', approvedAt: '2025-04-07', approvedBy: CEO,
+  });
+  ['Strategic Thinking & Vision', 'Leadership & Coaching', 'Customer Obsession'].forEach((comp, i) => {
+    insertTarget(db, {
+      orgId, cycleId: cy2526, empId: CEO, level: 1,
+      type: 'competency', title: comp, weight: [40, 35, 25][i], status: 'approved',
+      submittedAt: '2025-04-04', approvedAt: '2025-04-07', approvedBy: CEO,
+    });
+  });
+
+  // ── VP Revenue FY25-26 (submitted — awaiting CEO approval) ────────────────
+  // Pure top-down: Sales runs on quota allocation, no bottom-up here.
+  const vpRevObj_2526 = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: vpRev, parentId: ceoObj_2526, level: 2,
+    type: 'okr_objective', dir: 'top_down',
+    title: 'Drive ₹24 Cr New ARR — Enterprise Dominance and SMB at Scale',
+    weight: 70, status: 'submitted', submittedAt: '2025-04-11',
+  });
+  const vpRevKR_arr_2526 = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: vpRev, parentId: ceoKR_arr_2526, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'New ARR — Sales Contribution', unit: 'INR Cr',
+    companyTarget: 30, planned: 24, stretch: 29,
+    weight: 40, status: 'submitted', submittedAt: '2025-04-11',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: vpRev, parentId: vpRevObj_2526, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Sales Win Rate', unit: '%',
+    planned: 36, stretch: 44,
+    weight: 20, status: 'submitted', submittedAt: '2025-04-11',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: vpRev, parentId: vpRevObj_2526, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'New Logos Won', unit: 'count',
+    planned: 75, stretch: 92,
+    weight: 10, status: 'submitted', submittedAt: '2025-04-11',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: vpRev, parentId: ceoObj2_2526, level: 2,
+    type: 'okr_objective', dir: 'top_down',
+    title: 'Double the Sales Team and Hit 80% Ramp Efficiency',
+    weight: 30, status: 'submitted', submittedAt: '2025-04-11',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: vpRev, parentId: ceoKR_enps_2526, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Sales Team eNPS', unit: 'score',
+    companyTarget: 75, planned: 75, stretch: 82,
+    weight: 20, status: 'submitted', submittedAt: '2025-04-11',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: vpRev, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Sales Rep Ramp to Quota (%)', unit: '%',
+    planned: 80, stretch: 90,
+    weight: 10, status: 'submitted', submittedAt: '2025-04-11',
+  });
+
+  // ── VP Product FY25-26 (submitted) ────────────────────────────────────────
+  const vpProdObj_2526 = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: vpProd, parentId: ceoObj_2526, level: 2,
+    type: 'okr_objective', dir: 'top_down',
+    title: 'Deliver 99.95% Uptime, 25 Feature Releases, and Full CI/CD Automation',
+    weight: 70, status: 'submitted', submittedAt: '2025-04-11',
+  });
+  const vpProdKR_up_2526 = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: vpProd, parentId: ceoKR_uptime_2526, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Platform Uptime (SLA)', unit: '%',
+    companyTarget: 99.95, planned: 99.95, stretch: 99.99,
+    weight: 30, status: 'submitted', submittedAt: '2025-04-11',
+  });
+  const vpProdKR_feat_2526 = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: vpProd, parentId: vpProdObj_2526, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Feature Releases (Major)', unit: 'count',
+    planned: 25, stretch: 30,
+    weight: 25, status: 'submitted', submittedAt: '2025-04-11',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: vpProd, parentId: vpProdObj_2526, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'CI/CD Build Pipeline Duration', unit: 'minutes',
+    planned: 5, stretch: 3, measure: 'lower_better',
+    weight: 15, status: 'submitted', submittedAt: '2025-04-11',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: vpProd, parentId: ceoObj2_2526, level: 2,
+    type: 'okr_objective', dir: 'top_down',
+    title: 'Build the Most Talented and Engaged Engineering Team',
+    weight: 30, status: 'submitted', submittedAt: '2025-04-11',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: vpProd, parentId: ceoKR_enps_2526, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Engineering Team eNPS', unit: 'score',
+    companyTarget: 75, planned: 75, stretch: 82,
+    weight: 20, status: 'submitted', submittedAt: '2025-04-11',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: vpProd, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Sprint Velocity', unit: 'points',
+    planned: 44, stretch: 52,
+    weight: 10, status: 'submitted', submittedAt: '2025-04-11',
+  });
+
+  // ── VP Customer Experience FY25-26 (submitted) ────────────────────────────
+  const vpCXObj_2526 = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: vpCX, parentId: ceoObj_2526, level: 2,
+    type: 'okr_objective', dir: 'top_down',
+    title: 'Create Raving Fans — NPS 88+ and Zero Churn in Top 20 Accounts',
+    weight: 70, status: 'submitted', submittedAt: '2025-04-11',
+  });
+  const vpCXKR_nps_2526 = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: vpCX, parentId: ceoKR_nps_2526, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Customer NPS', unit: 'score',
+    companyTarget: 88, planned: 88, stretch: 94,
+    weight: 35, status: 'submitted', submittedAt: '2025-04-11',
+  });
+  const vpCXKR_ttv_2526 = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: vpCX, parentId: vpCXObj_2526, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Time to Value (New Customers)', unit: 'days',
+    planned: 21, stretch: 14, measure: 'lower_better',
+    weight: 20, status: 'submitted', submittedAt: '2025-04-11',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: vpCX, parentId: vpCXObj_2526, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Customer Churn Rate', unit: '%',
+    planned: 3, stretch: 1.5, measure: 'lower_better',
+    weight: 15, status: 'submitted', submittedAt: '2025-04-11',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: vpCX, parentId: ceoObj2_2526, level: 2,
+    type: 'okr_objective', dir: 'top_down',
+    title: 'Build a CX Team Where Every Member Owns Customer Outcomes',
+    weight: 30, status: 'submitted', submittedAt: '2025-04-11',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: vpCX, parentId: ceoKR_enps_2526, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'CX Team eNPS', unit: 'score',
+    companyTarget: 75, planned: 75, stretch: 82,
+    weight: 20, status: 'submitted', submittedAt: '2025-04-11',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: vpCX, level: 2,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Tier-1 Ticket SLA Compliance', unit: '%',
+    planned: 99, stretch: 100,
+    weight: 10, status: 'submitted', submittedAt: '2025-04-11',
+  });
+
+  // ── Head Enterprise Sales FY25-26 (draft — waiting VP Revenue approval) ──
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: hEntSal, parentId: vpRevObj_2526, level: 3,
+    type: 'okr_objective', dir: 'top_down',
+    title: 'Own the ₹14 Cr Enterprise ARR — 7 New Logos and 4 Expansions',
+    weight: 70, status: 'draft',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: hEntSal, parentId: vpRevKR_arr_2526, level: 3,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Enterprise ARR Won', unit: 'INR Cr',
+    companyTarget: 30, planned: 14, stretch: 17,
+    weight: 40, status: 'draft',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: hEntSal, level: 3,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Enterprise New Logos', unit: 'count',
+    planned: 7, stretch: 10,
+    weight: 20, status: 'draft',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: hEntSal, level: 3,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Avg Enterprise Deal Size', unit: 'INR Lakh',
+    planned: 40, stretch: 52,
+    weight: 10, status: 'draft',
+  });
+
+  // ── Head SMB FY25-26 (draft) ──────────────────────────────────────────────
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: hSMB, parentId: vpRevObj_2526, level: 3,
+    type: 'okr_objective', dir: 'top_down',
+    title: 'Build SMB Engine — 100 New Logos per Quarter at <30 Day Sales Cycle',
+    weight: 70, status: 'draft',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: hSMB, parentId: vpRevKR_arr_2526, level: 3,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'SMB ARR Won', unit: 'INR Cr',
+    companyTarget: 30, planned: 10, stretch: 12,
+    weight: 40, status: 'draft',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: hSMB, level: 3,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'SMB New Logos per Quarter', unit: 'count',
+    planned: 100, stretch: 125,
+    weight: 30, status: 'draft',
+  });
+
+  // ── Head Platform Engineering FY25-26 — BIDIRECTIONAL ────────────────────
+  // TOP-DOWN track: VP Product cascaded a KR to Divya (draft, waiting VP approval)
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: hPlat, parentId: vpProdKR_up_2526, level: 3,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Platform SLA — Infrastructure Contribution', unit: '%',
+    companyTarget: 99.95, planned: 99.97, stretch: 99.999,
+    weight: 40, status: 'draft',
+  });
+  // BOTTOM-UP track: Divya self-proposed a CI/CD OKR from Day 1.
+  // VP Product has NOT yet linked it — parentId is null (unlinked).
+  // This blocks cycle advancement to 'active' (V13).
+  const hPlatObj_bu_2526 = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: hPlat, parentId: null, level: 3,
+    type: 'okr_objective', dir: 'bottom_up',
+    title: 'Achieve Sub-5min CI/CD and 99.99% Self-Healing Infrastructure',
+    desc: 'Divya proposed this on Apr 1 based on FY24-25 success. VP Product needs to link this to a company OKR before cycle can go active.',
+    weight: 40, status: 'proposed',
+    submittedAt: '2025-04-01',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: hPlat, parentId: hPlatObj_bu_2526, level: 3,
+    type: 'okr_kr', dir: 'bottom_up',
+    title: 'CI/CD Build Pipeline Duration', unit: 'minutes',
+    planned: 5, stretch: 3, measure: 'lower_better',
+    weight: 25, status: 'proposed', submittedAt: '2025-04-01',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: hPlat, parentId: hPlatObj_bu_2526, level: 3,
+    type: 'okr_kr', dir: 'bottom_up',
+    title: 'Infrastructure Self-Healing Recovery Time (MTTR)', unit: 'minutes',
+    planned: 5, stretch: 2, measure: 'lower_better',
+    weight: 15, status: 'proposed', submittedAt: '2025-04-01',
+  });
+
+  // ── Head Product Management FY25-26 — BIDIRECTIONAL ──────────────────────
+  // TOP-DOWN: VP Product cascaded feature velocity KR
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: hPM, parentId: vpProdKR_feat_2526, level: 3,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Feature Releases (PM-owned tracks)', unit: 'count',
+    planned: 18, stretch: 22,
+    weight: 50, status: 'draft',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: hPM, parentId: vpProdObj_2526, level: 3,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Feature Adoption Rate (30-day cohort)', unit: '%',
+    planned: 55, stretch: 68,
+    weight: 20, status: 'draft',
+  });
+  // BOTTOM-UP: Aditya proposed a customer-centric product OKR (unlinked)
+  const hPMObj_bu_2526 = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: hPM, parentId: null, level: 3,
+    type: 'okr_objective', dir: 'bottom_up',
+    title: 'Ship 3 Customer-Requested Feature Clusters Before Q3',
+    desc: 'Aditya proposed based on Q1 NPS verbatim analysis — top 3 feature requests from > 40% of customers.',
+    weight: 30, status: 'proposed', submittedAt: '2025-04-01',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: hPM, parentId: hPMObj_bu_2526, level: 3,
+    type: 'okr_kr', dir: 'bottom_up',
+    title: 'Customer-Requested Feature Clusters Shipped by Q3', unit: 'count',
+    planned: 3, stretch: 4,
+    weight: 20, status: 'proposed', submittedAt: '2025-04-01',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: hPM, parentId: hPMObj_bu_2526, level: 3,
+    type: 'okr_kr', dir: 'bottom_up',
+    title: 'Product NPS Delta (post-release survey)', unit: 'points',
+    planned: 8, stretch: 15, measure: 'higher_better',
+    weight: 10, status: 'proposed', submittedAt: '2025-04-01',
+  });
+
+  // ── Head Customer Onboarding FY25-26 — BIDIRECTIONAL ─────────────────────
+  // TOP-DOWN: VP CX cascaded TTV KR to Sunita
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: hOnboard, parentId: vpCXKR_ttv_2526, level: 3,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Average Onboarding Duration', unit: 'days',
+    planned: 21, stretch: 14, measure: 'lower_better',
+    weight: 35, status: 'draft',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: hOnboard, parentId: vpCXObj_2526, level: 3,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Onboarding NPS (7-day survey)', unit: 'score',
+    planned: 88, stretch: 94,
+    weight: 25, status: 'draft',
+  });
+  // BOTTOM-UP: Sunita proposed a deeper onboarding transformation OKR (unlinked)
+  const hOnboardObj_bu_2526 = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: hOnboard, parentId: null, level: 3,
+    type: 'okr_objective', dir: 'bottom_up',
+    title: 'Redesign Onboarding to Achieve 95% Activation Rate in 21 Days',
+    desc: 'Sunita self-proposed this. FY24-25 data shows 7% activation failure occurs between days 22-30 — new playbook targets this gap.',
+    weight: 40, status: 'proposed', submittedAt: '2025-04-01',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: hOnboard, parentId: hOnboardObj_bu_2526, level: 3,
+    type: 'okr_kr', dir: 'bottom_up',
+    title: '90-Day Customer Activation Rate', unit: '%',
+    planned: 95, stretch: 98,
+    weight: 25, status: 'proposed', submittedAt: '2025-04-01',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: hOnboard, parentId: hOnboardObj_bu_2526, level: 3,
+    type: 'okr_kr', dir: 'bottom_up',
+    title: 'Day-30 Product Engagement Score (DAU/MAU ratio)', unit: '%',
+    planned: 48, stretch: 60,
+    weight: 15, status: 'proposed', submittedAt: '2025-04-01',
+  });
+
+  // ── Head Customer Support FY25-26 — PURE BOTTOM-UP (new this cycle) ──────
+  // Ganesh proposed his entire OKR set from Day 1 — no top-down assignments yet.
+  // VP CX is expected to link these to the company CX objective.
+  const hSupObj_bu_2526 = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: hSup, parentId: null, level: 3,
+    type: 'okr_objective', dir: 'bottom_up',
+    title: 'Achieve 99% SLA Compliance and <1hr First Response on All Tier-1 Tickets',
+    desc: 'Ganesh self-proposed. Support team improved SLA from 94% to 97% in FY24-25 — targeting best-in-class this year.',
+    weight: 70, status: 'proposed', submittedAt: '2025-04-01',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: hSup, parentId: hSupObj_bu_2526, level: 3,
+    type: 'okr_kr', dir: 'bottom_up',
+    title: 'Tier-1 Ticket SLA Compliance', unit: '%',
+    planned: 99, stretch: 100,
+    weight: 40, status: 'proposed', submittedAt: '2025-04-01',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: hSup, parentId: hSupObj_bu_2526, level: 3,
+    type: 'okr_kr', dir: 'bottom_up',
+    title: 'Average First Response Time (Tier-1)', unit: 'hours',
+    planned: 1, stretch: 0.5, measure: 'lower_better',
+    weight: 20, status: 'proposed', submittedAt: '2025-04-01',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: hSup, parentId: hSupObj_bu_2526, level: 3,
+    type: 'okr_kr', dir: 'bottom_up',
+    title: 'Customer Satisfaction Score (CSAT) — Support', unit: 'score',
+    planned: 4.7, stretch: 4.9,
+    weight: 10, status: 'proposed', submittedAt: '2025-04-01',
+  });
+  const hSupObj2_bu_2526 = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: hSup, parentId: null, level: 3,
+    type: 'okr_objective', dir: 'bottom_up',
+    title: 'Build a Knowledge-First Support Team — Reduce Repeat Tickets by 40%',
+    desc: 'Ganesh identified that 38% of tickets are repeats for the same issue — proposes a self-serve knowledge base initiative.',
+    weight: 30, status: 'proposed', submittedAt: '2025-04-01',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: hSup, parentId: hSupObj2_bu_2526, level: 3,
+    type: 'okr_kr', dir: 'bottom_up',
+    title: 'Repeat Ticket Rate Reduction', unit: '%',
+    planned: 40, stretch: 55, measure: 'higher_better',
+    weight: 20, status: 'proposed', submittedAt: '2025-04-01',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: hSup, parentId: hSupObj2_bu_2526, level: 3,
+    type: 'okr_kr', dir: 'bottom_up',
+    title: 'Knowledge Base Articles Published', unit: 'count',
+    planned: 120, stretch: 200,
+    weight: 10, status: 'proposed', submittedAt: '2025-04-01',
+  });
+
+  // ── Senior Backend Engineer FY25-26 (NX-014) — BOTTOM-UP technical OKR ──
+  // Sneha proposed a quality-focused OKR from Day 1.
+  // VP Product / Head Platform must link this to company objectives.
+  const smBEObj_bu_2526 = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: smBE, parentId: null, level: 4,
+    type: 'okr_objective', dir: 'bottom_up',
+    title: 'Zero P0 Bugs and 100% Coverage on All Critical API Paths',
+    desc: 'Sneha self-proposed after the FY24-25 Aug 2024 incident showed 2 P0 bugs slipped through. This is her personal quality commitment.',
+    weight: 60, status: 'proposed', submittedAt: '2025-04-01',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: smBE, parentId: smBEObj_bu_2526, level: 4,
+    type: 'okr_kr', dir: 'bottom_up',
+    title: 'P0/P1 Bugs in Production', unit: 'count',
+    planned: 0, stretch: 0, measure: 'lower_better',
+    weight: 35, status: 'proposed', submittedAt: '2025-04-01',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: smBE, parentId: smBEObj_bu_2526, level: 4,
+    type: 'okr_kr', dir: 'bottom_up',
+    title: 'Critical API Path Test Coverage', unit: '%',
+    planned: 100, stretch: 100,
+    weight: 25, status: 'proposed', submittedAt: '2025-04-01',
+  });
+  // TOP-DOWN: Head Platform also assigned a velocity KR (draft)
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: smBE, parentId: hPlatObj_bu_2526, level: 4,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Backend Sprint Velocity', unit: 'points',
+    planned: 46, stretch: 55,
+    weight: 40, status: 'draft',
+  });
+
+  // Senior CSM FY25-26 (NX-016) — draft top-down
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: smCSM, parentId: vpCXKR_ttv_2526, level: 4,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Portfolio Avg Onboarding Duration', unit: 'days',
+    planned: 21, stretch: 14, measure: 'lower_better',
+    weight: 40, status: 'draft',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: smCSM, parentId: vpCXObj_2526, level: 4,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Customer Portfolio NPS', unit: 'score',
+    planned: 88, stretch: 94,
+    weight: 35, status: 'draft',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: smCSM, level: 4,
+    type: 'okr_kr', dir: 'top_down',
+    title: 'Accounts at Risk (Churn Signal)', unit: 'count',
+    planned: 2, stretch: 0, measure: 'lower_better',
+    weight: 25, status: 'draft',
+  });
+
+  console.log('NexaFlow targets seeded: 3 cycles, L1→L4 bidirectional showcase, top-down + bottom-up tracks.');
+}
+
 // ─── Main entry point ────────────────────────────────────────────────────────
 
 async function seedTargets() {
   const db = getDb();
   seedTechCorpTargets(db);
   seedManufacturingTargets(db);
+  seedNexaFlowTargets(db);
   saveDb();
   console.log('Demo targets seed complete.');
 }
