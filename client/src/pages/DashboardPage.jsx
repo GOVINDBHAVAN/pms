@@ -3,14 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import AppLayout from '../components/layout/AppLayout';
 import { useAuthStore } from '../store/authStore';
 import { getPendingCheckins, getRollup } from '../api/checkinsApi';
-
-const FRAMEWORK_ICONS = {
-  okr_kr:     '🔑',
-  kpi:        '📊',
-  goal:       '✅',
-  competency: '⭐',
-  bsc_metric: '📐',
-};
+import { FRAMEWORK_TYPE_META } from '../utils/constants';
 
 function fmt(n) {
   if (n == null) return '—';
@@ -45,7 +38,7 @@ function CheckinBanner({ pending, cycle, onViewAll }) {
       <div className="mt-3 space-y-1">
         {pending.slice(0, 4).map(t => (
           <div key={t.id} className="flex items-center gap-2 text-xs text-amber-800">
-            <span>{FRAMEWORK_ICONS[t.framework_type] || '📋'}</span>
+            <span>{FRAMEWORK_TYPE_META[t.framework_type]?.icon || '📋'}</span>
             <span className="truncate">{t.title}</span>
             {t.planned_target != null && (
               <span className="ml-auto text-amber-600 font-medium flex-shrink-0">
@@ -259,7 +252,7 @@ export default function DashboardPage() {
                       key={t.id}
                       className="flex items-center gap-3 py-2 border-b border-slate-50 last:border-0"
                     >
-                      <span className="text-base flex-shrink-0">{FRAMEWORK_ICONS[t.framework_type] || '📋'}</span>
+                      <span className="text-base flex-shrink-0">{FRAMEWORK_TYPE_META[t.framework_type]?.icon || '📋'}</span>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm text-slate-700 truncate">{t.title}</p>
                         {t.planned_target != null && (

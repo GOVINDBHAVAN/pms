@@ -167,7 +167,7 @@ router.get('/manager-view', requireAuth, (req, res) => {
 
     // Get direct reportees
     const reportees = rowsToObjects(db.exec(
-      `SELECT e.id, e.name, e.email, g.label AS grade, d.name AS dept
+      `SELECT e.id, e.name, e.email, g.code AS grade_code, g.label AS grade, d.name AS dept
        FROM employees e
        LEFT JOIN grades g ON g.id = e.grade_id
        LEFT JOIN departments d ON d.id = e.dept_id

@@ -10,18 +10,9 @@ import {
 } from '../api/targetsApi';
 import { getCycles } from '../api/cyclesApi';
 import { getOrgSettings } from '../api/orgApi';
+import { FRAMEWORK_TYPE_META as FW_META, FRAMEWORK_TYPE_ORDER } from '../utils/constants';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-
-const FW_META = {
-  okr_objective: { label: 'OKR Objective',  color: 'bg-violet-100 text-violet-700', group: 'OKR' },
-  okr_kr:        { label: 'Key Result',      color: 'bg-purple-100 text-purple-700', group: 'OKR' },
-  kra:           { label: 'KRA',             color: 'bg-blue-100 text-blue-700',     group: 'KRA/KPI' },
-  kpi:           { label: 'KPI',             color: 'bg-cyan-100 text-cyan-700',     group: 'KRA/KPI' },
-  goal:          { label: 'Goal',            color: 'bg-emerald-100 text-emerald-700', group: 'Goals' },
-  competency:    { label: 'Competency',      color: 'bg-amber-100 text-amber-700',   group: 'Competency' },
-  bsc_metric:    { label: 'BSC Metric',      color: 'bg-slate-100 text-slate-700',   group: 'BSC' },
-};
 
 const STATUS_META = {
   draft:     { label: 'Draft',     color: 'bg-slate-100 text-slate-500',    icon: '○' },
@@ -640,153 +631,247 @@ function TeamCoverageWidget({ myApprovedTargets, allReportees, currentEmployeeId
         )}
       </div>
 
-      <div className="divide-y divide-slate-100">
-        {coverageItems.map(({ managerTarget, contributions, teamTotal, gap, pct }) => {
-          const meta = FW_META[managerTarget.framework_type];
-          const isHigherBetter = (managerTarget.measurement_type || 'higher_better') === 'higher_better';
-          const unit = managerTarget.unit || '';
-          const managerPlan = parseFloat(managerTarget.planned_target);
-          const isShort = gap > 0;
-          const isOver = gap < 0;
+      {/* Group items by framework type */}
+      {(() => {
+        const groups = {};
+        for (const item of coverageItems) {
+          const t = item.managerTarget.framework_type;
+          if (!groups[t]) groups[t] = [];
+          groups[t].push(item);
+        }
+        const sortedTypes = Object.keys(groups).sort(
+          (a, b) => (FRAMEWORK_TYPE_ORDER.indexOf(a) + 1 || 99) - (FRAMEWORK_TYPE_ORDER.indexOf(b) + 1 || 99)
+        );
+
+        return sortedTypes.map((type, groupIdx) => {
+          const items = groups[type];
+          const groupMeta = FW_META[type] || { label: type, color: 'bg-slate-100 text-slate-600' };
+          const shortCount = items.filter(i => i.gap > 0).length;
+          const overCount  = items.filter(i => i.gap < 0).length;
 
           return (
-            <div key={managerTarget.id} className="p-4 space-y-3">
+            <div key={type} className={groupIdx > 0 ? 'border-t-2 border-slate-200' : ''}>
 
-              {/* Target header row */}
-              <div className="flex items-start justify-between gap-3">
-                <div className="space-y-1.5 flex-1 min-w-0">
-                  {/* Badges: framework type + measurement direction */}
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    {meta && (
-                      <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold ${meta.color}`}>
-                        {meta.label}
-                      </span>
-                    )}
-                    <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold ${
-                      isHigherBetter ? 'bg-green-50 text-green-700' : 'bg-orange-50 text-orange-700'
-                    }`}>
-                      {isHigherBetter ? '↑ Higher is better' : '↓ Lower is better'}
+              {/* ── Group header ── */}
+              <div className="flex items-center gap-2 px-4 py-2.5 bg-slate-50 border-b border-slate-100">
+                <span className={`inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold ${groupMeta.color}`}>
+                  {groupMeta.label}
+                </span>
+                <span className="text-xs text-slate-400">
+                  {items.length} target{items.length !== 1 ? 's' : ''}
+                </span>
+                <div className="ml-auto flex items-center gap-1.5">
+                  {shortCount > 0 && (
+                    <span className="text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded">
+                      ⚠ {shortCount} short
                     </span>
-                    {unit && (
-                      <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-600">
-                        unit: {unit}
-                      </span>
-                    )}
-                  </div>
-                  {/* Title */}
-                  <p className="text-sm font-semibold text-slate-800 leading-snug">
-                    {managerTarget.title.replace(/— L[0-9]\.[0-9] Team.*$/, '').trim()}
-                  </p>
-                </div>
-
-                {/* Target values (right side) */}
-                <div className="text-right flex-shrink-0 space-y-0.5">
-                  {managerTarget.company_target != null && (
-                    <p className="text-[10px] text-slate-400">
-                      Company: <span className="font-semibold text-slate-600">
-                        {Number(managerTarget.company_target).toLocaleString('en-IN')}{unit ? ` ${unit}` : ''}
-                      </span>
-                    </p>
                   )}
-                  <p className="text-xs text-slate-500">
-                    Your target:{' '}
-                    <strong className="text-slate-800">
-                      {Number(managerPlan).toLocaleString('en-IN')}{unit ? ` ${unit}` : ''}
-                    </strong>
-                  </p>
+                  {overCount > 0 && (
+                    <span className="text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded">
+                      ↑ {overCount} over
+                    </span>
+                  )}
+                  {shortCount === 0 && overCount === 0 && (
+                    <span className="text-[10px] font-semibold text-emerald-600">✓ All covered</span>
+                  )}
                 </div>
               </div>
 
-              {/* Progress bar */}
-              <div>
-                <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+              {/* ── Items ── */}
+              {items.map(({ managerTarget, contributions, teamTotal, gap, pct }, idx) => {
+                const isHigherBetter = (managerTarget.measurement_type || 'higher_better') === 'higher_better';
+                const unit = managerTarget.unit || '';
+                const managerPlan = parseFloat(managerTarget.planned_target);
+                const isShort = gap > 0;
+                const isOver  = gap < 0;
+
+                return (
                   <div
-                    className={`h-full rounded-full transition-all ${
-                      pct >= 100 ? 'bg-emerald-500' : pct >= 70 ? 'bg-blue-500' : 'bg-amber-500'
-                    }`}
-                    style={{ width: `${Math.min(pct, 100)}%` }}
-                  />
-                </div>
-                <div className="flex items-center justify-between mt-1">
-                  <span className="text-xs text-slate-500">
-                    Team total: <strong>{Number(teamTotal).toLocaleString('en-IN')}{unit ? ` ${unit}` : ''}</strong>
-                  </span>
-                  <span className={`text-xs font-bold ${
-                    pct >= 100 ? 'text-emerald-600' : pct >= 70 ? 'text-blue-600' : 'text-amber-600'
-                  }`}>
-                    {pct}% covered
-                  </span>
-                </div>
-              </div>
-
-              {/* Per-person breakdown with share bars */}
-              <div className="border border-slate-100 rounded-lg overflow-hidden">
-                <div className="bg-slate-50 px-3 py-1.5">
-                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
-                    Per-person breakdown
-                  </span>
-                </div>
-                {contributions.map(c => {
-                  const sharePct = managerPlan > 0 ? Math.round((c.sum / managerPlan) * 100) : 0;
-                  return (
-                    <div key={c.id} className={`px-3 py-2.5 border-t border-slate-100 ${c.isCurrent ? 'bg-blue-50' : 'bg-white'}`}>
-                      <div className="flex items-center justify-between mb-1">
-                        <span className={`text-xs ${c.isCurrent ? 'font-semibold text-blue-800' : 'text-slate-700'}`}>
-                          {c.name}
-                          {c.isCurrent && <span className="ml-1.5 text-[10px] text-blue-500 font-normal">(viewing)</span>}
-                        </span>
-                        <span className="text-xs tabular-nums text-right">
-                          <strong className="text-slate-800">{Number(c.sum).toLocaleString('en-IN')}</strong>
-                          {unit && <span className="text-slate-400"> {unit}</span>}
-                          <span className="text-slate-400 ml-1">· {sharePct}%</span>
-                        </span>
+                    key={managerTarget.id}
+                    className={`p-4 space-y-3 ${idx < items.length - 1 ? 'border-b border-slate-100' : ''}`}
+                  >
+                    {/* Item header */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="space-y-1.5 flex-1 min-w-0">
+                        {/* Number + direction + unit badges */}
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className={`inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold flex-shrink-0 ${groupMeta.color}`}>
+                            {idx + 1}
+                          </span>
+                          <span className={`inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                            isHigherBetter ? 'bg-green-50 text-green-700' : 'bg-orange-50 text-orange-700'
+                          }`}>
+                            {isHigherBetter ? '↑ Higher is better' : '↓ Lower is better'}
+                          </span>
+                          {unit && (
+                            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-slate-100 text-slate-600">
+                              unit: {unit}
+                            </span>
+                          )}
+                        </div>
+                        {/* Title */}
+                        <p className="text-sm font-semibold text-slate-800 leading-snug">
+                          {managerTarget.title.replace(/— L[0-9]\.[0-9] Team.*$/, '').trim()}
+                        </p>
                       </div>
-                      <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                        <div
-                          className={`h-full rounded-full transition-all ${c.isCurrent ? 'bg-blue-400' : 'bg-slate-400'}`}
-                          style={{ width: `${Math.min(sharePct, 100)}%` }}
-                        />
+
+                      {/* Target context box */}
+                      <div className="flex-shrink-0 w-56 bg-slate-50 border border-slate-200 rounded-lg overflow-hidden text-xs">
+                        {managerTarget.company_target != null && (() => {
+                          const orgVal = parseFloat(managerTarget.company_target);
+                          const delta = managerPlan - orgVal;
+                          const deltaPct = orgVal > 0 ? Math.abs(Math.round((delta / orgVal) * 100)) : 0;
+                          return (
+                            <>
+                              <div className="flex items-center justify-between px-3 py-2 border-b border-slate-100">
+                                <span className="flex items-center gap-1 text-slate-500 font-medium">
+                                  Org. allocated
+                                  <InfoIcon
+                                    title="Org. Allocated Target"
+                                    body="The target amount cascaded down to your team from the organisation above — set by your manager or senior leadership. This is what management expects your team to collectively deliver this cycle. It is NOT the company's total target; it is the specific share assigned to your level."
+                                  />
+                                </span>
+                                <span className="font-semibold text-slate-700 tabular-nums">
+                                  {Number(orgVal).toLocaleString('en-IN')}{unit ? ` ${unit}` : ''}
+                                </span>
+                              </div>
+                              <div className="flex items-center justify-between px-3 py-2 border-b border-slate-100">
+                                <span className="flex items-center gap-1 text-slate-500 font-medium">
+                                  Your commitment
+                                  <InfoIcon
+                                    title="Your Commitment"
+                                    body="The target you personally committed to in your approved plan. Your team's contributions are compared against this figure — not against the org. allocation. If you committed less than the allocation, your team must still cover your commitment; the gap to allocation is your responsibility to flag upward."
+                                  />
+                                </span>
+                                <span className="font-bold text-slate-900 tabular-nums">
+                                  {Number(managerPlan).toLocaleString('en-IN')}{unit ? ` ${unit}` : ''}
+                                </span>
+                              </div>
+                              <div className={`px-3 py-1.5 text-[10px] font-semibold text-center ${
+                                Math.abs(delta) < 0.01 ? 'bg-emerald-50 text-emerald-700'
+                                  : delta > 0 ? 'bg-orange-50 text-orange-700'
+                                  : 'bg-red-50 text-red-700'
+                              }`}>
+                                {Math.abs(delta) < 0.01
+                                  ? '✓ Commitment matches org. allocation'
+                                  : delta > 0
+                                  ? `↑ Over-committed by ${Number(delta).toLocaleString('en-IN')}${unit ? ` ${unit}` : ''} (+${deltaPct}%)`
+                                  : `↓ Under-committed by ${Number(Math.abs(delta)).toLocaleString('en-IN')}${unit ? ` ${unit}` : ''} (−${deltaPct}%)`
+                                }
+                              </div>
+                            </>
+                          );
+                        })()}
+                        {managerTarget.company_target == null && (
+                          <div className="flex items-center justify-between px-3 py-2">
+                            <span className="flex items-center gap-1 text-slate-500 font-medium">
+                              Your commitment
+                              <InfoIcon
+                                title="Your Commitment"
+                                body="The target you personally committed to in your approved plan. Your team's contributions are compared against this figure."
+                              />
+                            </span>
+                            <span className="font-bold text-slate-900 tabular-nums">
+                              {Number(managerPlan).toLocaleString('en-IN')}{unit ? ` ${unit}` : ''}
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
-                  );
-                })}
-                <div className="flex items-center justify-between px-3 py-2 bg-slate-50 border-t border-slate-100">
-                  <span className="text-xs font-bold text-slate-600">Team Total</span>
-                  <span className="text-xs font-bold text-slate-800 tabular-nums">
-                    {Number(teamTotal).toLocaleString('en-IN')}{unit ? ` ${unit}` : ''}
-                  </span>
-                </div>
-              </div>
 
-              {/* Gap callout */}
-              {isShort && (
-                <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-800">
-                  <span className="font-bold mt-0.5">⚠</span>
-                  <span>
-                    Short by <strong>{Number(gap).toLocaleString('en-IN')}{unit ? ` ${unit}` : ''}</strong> ({100 - pct}% uncovered) —
-                    reject and push for higher commitments, or cover the gap yourself.
-                  </span>
-                </div>
-              )}
-              {isOver && (
-                <div className="flex items-start gap-2 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 text-xs text-emerald-800">
-                  <span className="font-bold mt-0.5">↑</span>
-                  <span>
-                    Over-committed by <strong>{Number(Math.abs(gap)).toLocaleString('en-IN')}{unit ? ` ${unit}` : ''}</strong> —
-                    team exceeds your target by {Math.abs(pct - 100)}%.
-                  </span>
-                </div>
-              )}
-              {gap === 0 && (
-                <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 text-xs text-emerald-700">
-                  <span>✓</span>
-                  <span>Team commitment exactly matches your target — cascade fully covered.</span>
-                </div>
-              )}
+                    {/* Progress bar */}
+                    <div>
+                      <div className="h-3 bg-slate-100 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all ${
+                            pct >= 100 ? 'bg-emerald-500' : pct >= 70 ? 'bg-blue-500' : 'bg-amber-500'
+                          }`}
+                          style={{ width: `${Math.min(pct, 100)}%` }}
+                        />
+                      </div>
+                      <div className="flex items-center justify-between mt-1">
+                        <span className="text-xs text-slate-500">
+                          Team total: <strong>{Number(teamTotal).toLocaleString('en-IN')}{unit ? ` ${unit}` : ''}</strong>
+                        </span>
+                        <span className={`text-xs font-bold ${
+                          pct >= 100 ? 'text-emerald-600' : pct >= 70 ? 'text-blue-600' : 'text-amber-600'
+                        }`}>
+                          {pct}% covered
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Per-person breakdown */}
+                    <div className="border border-slate-100 rounded-lg overflow-hidden">
+                      <div className="bg-slate-50 px-3 py-1.5">
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wide">
+                          Per-person breakdown
+                        </span>
+                      </div>
+                      {contributions.map(c => {
+                        const sharePct = managerPlan > 0 ? Math.round((c.sum / managerPlan) * 100) : 0;
+                        return (
+                          <div key={c.id} className={`px-3 py-2.5 border-t border-slate-100 ${c.isCurrent ? 'bg-blue-50' : 'bg-white'}`}>
+                            <div className="flex items-center justify-between mb-1">
+                              <span className={`text-xs ${c.isCurrent ? 'font-semibold text-blue-800' : 'text-slate-700'}`}>
+                                {c.name}
+                                {c.isCurrent && <span className="ml-1.5 text-[10px] text-blue-500 font-normal">(viewing)</span>}
+                              </span>
+                              <span className="text-xs tabular-nums text-right">
+                                <strong className="text-slate-800">{Number(c.sum).toLocaleString('en-IN')}</strong>
+                                {unit && <span className="text-slate-400"> {unit}</span>}
+                                <span className="text-slate-400 ml-1">· {sharePct}%</span>
+                              </span>
+                            </div>
+                            <div className="h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                              <div
+                                className={`h-full rounded-full transition-all ${c.isCurrent ? 'bg-blue-400' : 'bg-slate-400'}`}
+                                style={{ width: `${Math.min(sharePct, 100)}%` }}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                      <div className="flex items-center justify-between px-3 py-2 bg-slate-50 border-t border-slate-100">
+                        <span className="text-xs font-bold text-slate-600">Team Total</span>
+                        <span className="text-xs font-bold text-slate-800 tabular-nums">
+                          {Number(teamTotal).toLocaleString('en-IN')}{unit ? ` ${unit}` : ''}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Gap callout */}
+                    {isShort && (
+                      <div className="flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-800">
+                        <span className="font-bold mt-0.5">⚠</span>
+                        <span>
+                          Short by <strong>{Number(gap).toLocaleString('en-IN')}{unit ? ` ${unit}` : ''}</strong> ({100 - pct}% uncovered) —
+                          reject and push for higher commitments, or cover the gap yourself.
+                        </span>
+                      </div>
+                    )}
+                    {isOver && (
+                      <div className="flex items-start gap-2 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 text-xs text-emerald-800">
+                        <span className="font-bold mt-0.5">↑</span>
+                        <span>
+                          Over-committed by <strong>{Number(Math.abs(gap)).toLocaleString('en-IN')}{unit ? ` ${unit}` : ''}</strong> —
+                          team exceeds your target by {Math.abs(pct - 100)}%.
+                        </span>
+                      </div>
+                    )}
+                    {gap === 0 && (
+                      <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 text-xs text-emerald-700">
+                        <span>✓</span>
+                        <span>Team commitment exactly matches your target — cascade fully covered.</span>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
             </div>
           );
-        })}
-      </div>
+        });
+      })()}
     </div>
   );
 }
@@ -864,7 +949,12 @@ function ReporteeView({ employeeId, cycle, myApprovedCount, isHrAdmin, onBack })
         {reportee && (
           <div>
             <span className="font-semibold text-slate-800">{reportee.name}</span>
-            {reportee.grade && <span className="text-xs text-slate-400 ml-2">{reportee.grade}</span>}
+            {reportee.grade_code && (
+              <span className="ml-2 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600">
+                {reportee.grade_code}
+              </span>
+            )}
+            {reportee.grade && <span className="text-xs text-slate-500 ml-1">{reportee.grade}</span>}
             {reportee.dept && <span className="text-xs text-slate-400 ml-1">· {reportee.dept}</span>}
           </div>
         )}
@@ -1165,10 +1255,20 @@ function ReporteeCard({ reportee, selected, onReview }) {
       {/* Info */}
       <div className="flex-1 min-w-0">
         <p className="font-semibold text-slate-800 text-sm">{reportee.name}</p>
-        <div className="flex items-center gap-3 mt-0.5 flex-wrap">
-          {reportee.grade && <span className="text-xs text-slate-400">{reportee.grade}</span>}
-          {reportee.dept && <span className="text-xs text-slate-400">· {reportee.dept}</span>}
+        {/* Grade badge + designation + department */}
+        <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+          {reportee.grade_code && (
+            <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600 flex-shrink-0">
+              {reportee.grade_code}
+            </span>
+          )}
+          {reportee.grade && (
+            <span className="text-xs text-slate-600 font-medium truncate">{reportee.grade}</span>
+          )}
         </div>
+        {reportee.dept && (
+          <p className="text-[11px] text-slate-400 mt-0.5">{reportee.dept}</p>
+        )}
         <div className="flex items-center gap-2 mt-1.5">
           <span className={`w-2 h-2 rounded-full flex-shrink-0 ${statusInfo.dot}`} />
           <span className={`text-xs font-medium ${statusInfo.color}`}>{statusInfo.label}</span>

@@ -179,7 +179,12 @@
 - DONE: FOLLOWUP PROMPT: Can you split this screen 'Team Targets' in sections so that Target cascading can be reviewed properly and along with team wise list can be viewed, right now it's veritically available.
 - DONE: FOLLOWUP PROMPT: Improve the 'Cascade Coverage' widget by showing the framework type OKR,KPI etc along with their units and timeline.
 - DONE: FOLLOWUP PROMPT: move 'Team Readiness' in it's own tab and put theory of bidirectional or any information in that first tab, in previous layout some more information were there which are now removed check that as well.
+- DONE: the terminalogy 'Company Target' in 'Team Targets' is inappropriate because it's not entire the company target but the company target allocated to this team.
+- DONE: when you are showing employees on 'Team Targets' show the designation, grade of the employees
+- DONE: provide some numbering or group indication of this view that each item can be separated from others like Key-result are showing and similarly KPI will also come and there is no seggregating visible.
+- DONE: Always showing the data of OKR, KRA-KPI, Goals, Compentency as per their importance i.e. first OKR data, then KRA-KPI, Goals, and then compentency on the screen.
 - Can we also provide dril-down view if the CEO has opened the 'Team Targets' window and want to see tree-structure manager wise drive down view how the department wise managers and their team is performing so they can check on behalf of individual managers right from the Admin/CEO level. Think if we can provide separate tab to view organizational status for currently logged-in manager to their direct or indirect subordinates, existing tab to show only direct reportees and new tab all direct+indirect both reportees with drilldown view.
+- Suggest what will come in 'Self Appraisal' and 'Team Appraisal' menus? So that I can also understand what is missing here. These are the menu items showing on the main landing page.
 - Provide me the steps which I should follow to demonstrate in InfoBuz for comprehensive demo of cascading in the client InfoBuz.
 - Check the data of InfoBuz again, that OKR and KRA-KPI should be there at all level, along with competency, the mapping of Company OKR to each and every employees should be properly mapped, no incorrect mapping that employee has only KRA-KPI and no OKR.
 - 

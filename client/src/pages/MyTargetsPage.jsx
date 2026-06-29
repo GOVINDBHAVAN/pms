@@ -8,18 +8,9 @@ import {
 import { getCycles } from '../api/cyclesApi';
 import { getOrgSettings } from '../api/orgApi';
 import CheckinModal from '../components/targets/CheckinModal';
+import { FRAMEWORK_TYPE_META, FRAMEWORK_GROUP_ORDER } from '../utils/constants';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
-
-const FRAMEWORK_TYPE_META = {
-  okr_objective: { label: 'OKR Objective', color: 'bg-violet-100 text-violet-700', icon: '🎯', group: 'OKR', order: 1 },
-  okr_kr:        { label: 'Key Result',     color: 'bg-purple-100 text-purple-700', icon: '🔑', group: 'OKR', order: 2 },
-  kra:           { label: 'KRA',            color: 'bg-blue-100 text-blue-700',     icon: '📁', group: 'KRA/KPI', order: 3 },
-  kpi:           { label: 'KPI',            color: 'bg-cyan-100 text-cyan-700',     icon: '📊', group: 'KRA/KPI', order: 4 },
-  goal:          { label: 'Goal',           color: 'bg-emerald-100 text-emerald-700', icon: '✅', group: 'Goals', order: 5 },
-  competency:    { label: 'Competency',     color: 'bg-amber-100 text-amber-700',   icon: '⭐', group: 'Competency', order: 6 },
-  bsc_metric:    { label: 'BSC Metric',     color: 'bg-slate-100 text-slate-700',   icon: '📐', group: 'Balanced Scorecard', order: 7 },
-};
 
 const STATUS_META = {
   draft:     { label: 'Draft',     color: 'bg-slate-100 text-slate-500' },
@@ -1238,12 +1229,16 @@ export default function MyTargetsPage() {
     await load();
   }
 
-  // Group targets by framework group for display
+  // Group targets by framework group for display — sorted by canonical importance order
   const activeGroups = [...new Set(
     activeTypes
       .map(t => FRAMEWORK_TYPE_META[t]?.group)
       .filter(Boolean)
-  )];
+  )].sort((a, b) => {
+    const ia = FRAMEWORK_GROUP_ORDER.indexOf(a);
+    const ib = FRAMEWORK_GROUP_ORDER.indexOf(b);
+    return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+  });
 
   // Count submittable targets
   const submittableCount = targets.filter(t => ['draft', 'rejected'].includes(t.status)).length;
