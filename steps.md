@@ -90,7 +90,8 @@
 - DONE: FOLLOWUP PROMPT: Keep the name Check-in for the periodic progress updates (daily → quarterly). Reserve "Self-Assessment" strictly for the end-of-cycle formal rating screen (which is part of the review cycle phase). This matches industry norms (BambooHR, Lattice, Leapsome all use this split) and avoids confusion.
 - Whether can it be possible that company OKR be reviewed quarterly or semi-annually or annually and other supporting things like employee or HOD reviews are done as per given cycle, the management (CEO/VP/Directors) can track / view the company vs others status but they can update their status in different frequency of cycle. Similarly HOD can update their status at different frequency of cycle than their subordinates who might update the status daily, weekly, monthly etc and HOD updating the status monthly or quarterly.
 - FOLLOWUP PROMPT: yes proceed, since it's a POC project, we can modify the database structure multiple times.
-- Create another demo company with both perfect use cases of Bidirectional cascade. (IT company with another name and sales based OKR with customer functional support team with their OWN OKR and Technical product team for software related OKR along with business revenue partly.)
+- DONE: Create another demo company with both perfect use cases of Bidirectional cascade. (IT company with another name and sales based OKR with customer functional support team with their OWN OKR and Technical product team for software related OKR along with business revenue partly.)
+- RESPONSE OF CLAUDE: @_ClaudeResponse_.md
 - In 'Org settings' Do we need 'Cycle Defaults' or it will come in the 'Cycles' section/configuration?
 
 
