@@ -5,7 +5,7 @@ import {
   getTargets, createTarget, updateTarget, deleteTarget,
   submitAllTargets, getCascadeContext, getLibrary,
 } from '../api/targetsApi';
-import { getActiveCycle } from '../api/cyclesApi';
+import { getCycles } from '../api/cyclesApi';
 import { getOrgSettings } from '../api/orgApi';
 import CheckinModal from '../components/targets/CheckinModal';
 
@@ -1039,6 +1039,8 @@ function SubmitConfirmModal({ targets, cycle, onConfirm, onClose }) {
 export default function MyTargetsPage() {
   const { employee } = useAuthStore();
 
+  const [cycles, setCycles] = useState([]);
+  const [selectedCycleId, setSelectedCycleId] = useState(null);
   const [cycle, setCycle] = useState(null);
   const [targets, setTargets] = useState([]);
   const [context, setContext] = useState(null);
@@ -1059,38 +1061,56 @@ export default function MyTargetsPage() {
   const activeTypes = orgSettings?.settings?.active_types ||
     ['okr_objective', 'okr_kr', 'kra', 'kpi', 'goal', 'competency'];
 
-  // Determine if the employee can edit (goal_setting phase only)
+  // Determine if the employee can edit (goal_setting phase only, and only on the current cycle)
   const canEdit = cycle?.status === 'goal_setting';
 
   // Check-ins available during active and review phases when the cycle flag is set
   const canCheckin = !!(cycle?.check_in_allowed === 1 && ['active', 'review'].includes(cycle?.status));
 
+  // Init: load all cycles + org settings once, default to active cycle
+  useEffect(() => {
+    async function fetchInitial() {
+      try {
+        const [allCycles, orgData] = await Promise.all([getCycles(), getOrgSettings()]);
+        const sorted = [...allCycles].sort((a, b) =>
+          (b.period_start || '').localeCompare(a.period_start || '')
+        );
+        setCycles(sorted);
+        setOrgSettings(orgData);
+        const active = sorted.find(c => !['closed', 'draft'].includes(c.status));
+        const def = active || sorted[0] || null;
+        setCycle(def);
+        setSelectedCycleId(def?.id || null);
+        if (!def) setLoading(false);
+      } catch (e) {
+        setError(e?.response?.data?.error || 'Failed to load');
+        setLoading(false);
+      }
+    }
+    fetchInitial();
+  }, []);
+
+  // Reload targets whenever the selected cycle changes
   const load = useCallback(async () => {
+    if (!selectedCycleId || cycles.length === 0) return;
+    const selectedCycle = cycles.find(c => c.id === selectedCycleId) || null;
+    setCycle(selectedCycle);
+    if (!selectedCycle) return;
     setLoading(true);
     setError('');
     try {
-      const [activeCycle, orgData] = await Promise.all([
-        getActiveCycle(),
-        getOrgSettings(),
+      const [myTargets, cascadeCtx] = await Promise.all([
+        getTargets({ cycle_id: selectedCycle.id }),
+        getCascadeContext(selectedCycle.id),
       ]);
-
-      setCycle(activeCycle);
-      setOrgSettings(orgData);
-
-      if (activeCycle) {
-        const [myTargets, cascadeCtx] = await Promise.all([
-          getTargets({ cycle_id: activeCycle.id }),
-          getCascadeContext(activeCycle.id),
-        ]);
-        setTargets(myTargets);
-        setContext(cascadeCtx);
-      }
+      setTargets(myTargets);
+      setContext(cascadeCtx);
     } catch (e) {
       setError(e?.response?.data?.error || 'Failed to load targets');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [selectedCycleId, cycles]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -1158,6 +1178,36 @@ export default function MyTargetsPage() {
             )}
           </div>
         </div>
+
+        {/* Cycle Selector */}
+        {cycles.length > 1 && (
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Review Cycle:</span>
+            <select
+              value={selectedCycleId || ''}
+              onChange={e => {
+                setSelectedCycleId(Number(e.target.value));
+                setTargets([]);
+              }}
+              className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+            >
+              {cycles.map(c => {
+                const isActive = !['closed', 'draft'].includes(c.status);
+                return (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                    {isActive ? ' (Current)' : c.status === 'closed' ? ' (Closed)' : ' (Draft)'}
+                  </option>
+                );
+              })}
+            </select>
+            {cycle?.status === 'closed' && (
+              <span className="text-xs text-slate-500 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-full">
+                Historical view — read only
+              </span>
+            )}
+          </div>
+        )}
 
         {/* Status summary pills */}
         {!loading && cycle && (

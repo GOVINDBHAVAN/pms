@@ -8,7 +8,7 @@ import {
   rejectTarget as apiReject,
   linkTarget as apiLink,
 } from '../api/targetsApi';
-import { getActiveCycle } from '../api/cyclesApi';
+import { getCycles } from '../api/cyclesApi';
 import { getOrgSettings } from '../api/orgApi';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -862,6 +862,8 @@ export default function TeamTargetsPage() {
   const { employeeId } = useParams();
   const navigate = useNavigate();
 
+  const [cycles, setCycles] = useState([]);
+  const [selectedCycleId, setSelectedCycleId] = useState(null);
   const [cycle, setCycle] = useState(null);
   const [orgSettings, setOrgSettings] = useState(null);
   const [myApprovedCount, setMyApprovedCount] = useState(0);
@@ -871,30 +873,53 @@ export default function TeamTargetsPage() {
   const isHrAdmin = ['admin', 'hr'].includes(employee?.role);
   const effectiveCascade = cycle?.cascade_mode || orgSettings?.cascade_mode || 'top_down';
 
+  // Init: load all cycles + org settings once, default to active cycle
   useEffect(() => {
-    async function init() {
+    async function fetchInitial() {
       setLoading(true);
       setError('');
       try {
-        const [activeCycle, orgData] = await Promise.all([
-          getActiveCycle(),
-          getOrgSettings(),
-        ]);
-        setCycle(activeCycle);
+        const [allCycles, orgData] = await Promise.all([getCycles(), getOrgSettings()]);
+        const sorted = [...allCycles].sort((a, b) =>
+          (b.period_start || '').localeCompare(a.period_start || '')
+        );
+        setCycles(sorted);
         setOrgSettings(orgData);
-
-        if (activeCycle) {
-          const ownTargets = await getTargets({ cycle_id: activeCycle.id });
-          setMyApprovedCount(ownTargets.filter(t => t.status === 'approved').length);
+        const active = sorted.find(c => !['closed', 'draft'].includes(c.status));
+        const def = active || sorted[0] || null;
+        setCycle(def);
+        setSelectedCycleId(def?.id || null);
+        if (!def) {
+          setLoading(false);
+          return;
         }
+        const ownTargets = await getTargets({ cycle_id: def.id });
+        setMyApprovedCount(ownTargets.filter(t => t.status === 'approved').length);
       } catch (e) {
         setError(e?.response?.data?.error || 'Failed to load');
       } finally {
         setLoading(false);
       }
     }
-    init();
+    fetchInitial();
   }, []);
+
+  // Reload when selected cycle changes (after initial load)
+  useEffect(() => {
+    if (!selectedCycleId || cycles.length === 0) return;
+    const selected = cycles.find(c => c.id === selectedCycleId) || null;
+    if (!selected || selected === cycle) return;
+    setCycle(selected);
+    setMyApprovedCount(0);
+    async function reloadForCycle() {
+      try {
+        const ownTargets = await getTargets({ cycle_id: selected.id });
+        setMyApprovedCount(ownTargets.filter(t => t.status === 'approved').length);
+      } catch (_) {}
+    }
+    reloadForCycle();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedCycleId]);
 
   function handleReview(empId) {
     navigate(`/team-targets/${empId}`);
@@ -918,6 +943,33 @@ export default function TeamTargetsPage() {
             </p>
           </div>
         </div>
+
+        {/* Cycle Selector */}
+        {cycles.length > 1 && (
+          <div className="flex items-center gap-3 flex-wrap">
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wide">Review Cycle:</span>
+            <select
+              value={selectedCycleId || ''}
+              onChange={e => setSelectedCycleId(Number(e.target.value))}
+              className="border border-slate-200 rounded-lg px-3 py-1.5 text-sm text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-blue-400"
+            >
+              {cycles.map(c => {
+                const isActive = !['closed', 'draft'].includes(c.status);
+                return (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                    {isActive ? ' (Current)' : c.status === 'closed' ? ' (Closed)' : ' (Draft)'}
+                  </option>
+                );
+              })}
+            </select>
+            {cycle?.status === 'closed' && (
+              <span className="text-xs text-slate-500 bg-slate-100 border border-slate-200 px-2.5 py-1 rounded-full">
+                Historical view — read only
+              </span>
+            )}
+          </div>
+        )}
 
         {error && (
           <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700">{error}</div>
