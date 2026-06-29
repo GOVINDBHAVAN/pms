@@ -11,6 +11,13 @@ const PERIOD_TYPES = [
   { value: 'annual',      label: 'Annual' },
 ];
 
+const STATUS_FLAGS = [
+  { value: 'on_track',  label: 'On Track',  color: 'bg-emerald-100 text-emerald-700 border-emerald-300', dot: 'bg-emerald-500' },
+  { value: 'at_risk',   label: 'At Risk',   color: 'bg-amber-100 text-amber-700 border-amber-300',       dot: 'bg-amber-400'  },
+  { value: 'blocked',   label: 'Blocked',   color: 'bg-red-100 text-red-700 border-red-300',             dot: 'bg-red-500'    },
+  { value: 'completed', label: 'Completed', color: 'bg-blue-100 text-blue-700 border-blue-300',          dot: 'bg-blue-500'   },
+];
+
 function suggestPeriodLabel(type) {
   const now = new Date();
   const year = now.getFullYear();
@@ -91,11 +98,15 @@ export default function CheckinModal({ target, cycleId, onClose, onCheckinAdded 
   const [loadingHistory, setLoadingHistory] = useState(true);
   const [tab, setTab] = useState('add');
 
+  const defaultFrequency = target.checkin_frequency || 'monthly';
+
   const [form, setForm] = useState(() => ({
-    period_type: 'monthly',
-    period_label: suggestPeriodLabel('monthly'),
+    period_type: defaultFrequency,
+    period_label: suggestPeriodLabel(defaultFrequency),
     actual_value: '',
     notes: '',
+    status_flag: 'on_track',
+    confidence_score: '',
   }));
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState('');
@@ -124,6 +135,7 @@ export default function CheckinModal({ target, cycleId, onClose, onCheckinAdded 
     if (!form.period_label.trim()) return setErr('Period label is required');
     setSaving(true);
     try {
+      const isOkrKr = target.framework_type === 'okr_kr';
       await createCheckin({
         target_id: target.id,
         cycle_id: cycleId,
@@ -131,10 +143,14 @@ export default function CheckinModal({ target, cycleId, onClose, onCheckinAdded 
         period_label: form.period_label.trim(),
         actual_value: parseFloat(form.actual_value),
         notes: form.notes || null,
+        status_flag: form.status_flag,
+        confidence_score: isOkrKr && form.confidence_score !== ''
+          ? parseFloat(form.confidence_score)
+          : undefined,
       });
       setSaved(true);
       setTimeout(() => setSaved(false), 2500);
-      setForm(f => ({ ...f, actual_value: '', notes: '' }));
+      setForm(f => ({ ...f, actual_value: '', notes: '', confidence_score: '' }));
       loadHistory();
       setTab('history');
       onCheckinAdded?.();
@@ -273,6 +289,55 @@ export default function CheckinModal({ target, cycleId, onClose, onCheckinAdded 
               )}
             </div>
 
+            {/* Status flag */}
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 mb-2">
+                Status <span className="text-red-500">*</span>
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {STATUS_FLAGS.map(sf => (
+                  <button
+                    key={sf.value}
+                    type="button"
+                    onClick={() => setField('status_flag', sf.value)}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg border text-xs font-medium transition-all ${
+                      form.status_flag === sf.value
+                        ? `${sf.color} border-2`
+                        : 'bg-white text-slate-600 border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    <span className={`w-2 h-2 rounded-full flex-shrink-0 ${sf.dot}`} />
+                    {sf.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Confidence score — OKR Key Results only (Rule PT4) */}
+            {target.framework_type === 'okr_kr' && (
+              <div>
+                <label className="block text-xs font-semibold text-slate-600 mb-1">
+                  Confidence Score
+                  <span className="text-slate-400 font-normal ml-1">(0.0 – 1.0) — how confident are you of hitting this KR by cycle end?</span>
+                </label>
+                <div className="flex items-center gap-3">
+                  <input
+                    type="range"
+                    min="0" max="1" step="0.1"
+                    value={form.confidence_score === '' ? 0.7 : form.confidence_score}
+                    onChange={e => setField('confidence_score', e.target.value)}
+                    className="flex-1"
+                  />
+                  <span className="text-sm font-semibold text-slate-700 w-10 text-right">
+                    {form.confidence_score === '' ? '0.7' : parseFloat(form.confidence_score).toFixed(1)}
+                  </span>
+                </div>
+                <p className="text-[10px] text-slate-400 mt-0.5">
+                  0.7 = target zone for ambitious OKRs. &gt;1.0 shown as exceptional.
+                </p>
+              </div>
+            )}
+
             <div>
               <label className="block text-xs font-semibold text-slate-600 mb-1">
                 Notes / Comments <span className="text-slate-400 font-normal">(optional)</span>
@@ -354,6 +419,19 @@ export default function CheckinModal({ target, cycleId, onClose, onCheckinAdded 
                           </span>
                           {idx === 0 && (
                             <span className="text-[10px] bg-blue-100 text-blue-600 px-1.5 py-0.5 rounded font-medium">latest</span>
+                          )}
+                          {c.status_flag && (() => {
+                            const sf = STATUS_FLAGS.find(f => f.value === c.status_flag);
+                            return sf ? (
+                              <span className={`text-[10px] px-1.5 py-0.5 rounded border ${sf.color}`}>
+                                {sf.label}
+                              </span>
+                            ) : null;
+                          })()}
+                          {c.confidence_score != null && (
+                            <span className="text-[10px] bg-violet-50 text-violet-600 px-1.5 py-0.5 rounded">
+                              Confidence: {parseFloat(c.confidence_score).toFixed(1)}
+                            </span>
                           )}
                           {c.acknowledged_by_name && (
                             <span className="text-[10px] bg-emerald-50 text-emerald-600 px-1.5 py-0.5 rounded">

@@ -280,6 +280,12 @@ function TargetRow({ target, onEdit, onDelete, onCheckin, canEdit, canCheckin })
               Rejected: {target.rejection_note}
             </span>
           )}
+          {/* Check-in frequency badge */}
+          {target.checkin_frequency && !['okr_objective','kra'].includes(target.framework_type) && (
+            <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded">
+              🔁 {CHECKIN_FREQUENCIES.find(f => f.value === target.checkin_frequency)?.label || target.checkin_frequency}
+            </span>
+          )}
           {/* Actual progress (visible once check-ins are recorded) */}
           {target.actual_value != null && target.planned_target != null &&
            !['okr_objective', 'kra'].includes(target.framework_type) && (
@@ -450,6 +456,16 @@ function TargetGroup({ groupName, targets, onEdit, onDelete, onAdd, onCheckin, c
 }
 
 // ── Add / Edit Target Modal ───────────────────────────────────────────────────
+const CHECKIN_FREQUENCIES = [
+  { value: 'daily',       label: 'Daily'            },
+  { value: 'weekly',      label: 'Weekly'           },
+  { value: 'bi_weekly',   label: 'Bi-Weekly'        },
+  { value: 'monthly',     label: 'Monthly'          },
+  { value: 'quarterly',   label: 'Quarterly'        },
+  { value: 'semi_annual', label: 'Semi-Annual'      },
+  { value: 'annual',      label: 'Annual'           },
+];
+
 const EMPTY_FORM = {
   framework_type: 'goal',
   title: '',
@@ -462,6 +478,7 @@ const EMPTY_FORM = {
   weight: '',
   parent_target_id: '',
   over_plan_note: '',
+  checkin_frequency: 'monthly',
 };
 
 function TargetModal({ initial, cycle, cascadeContext, orgSettings, activeTypes, onSave, onClose }) {
@@ -482,6 +499,7 @@ function TargetModal({ initial, cycle, cascadeContext, orgSettings, activeTypes,
       weight: initial.weight ?? '',
       parent_target_id: initial.parent_target_id || '',
       over_plan_note: initial.over_plan_note || '',
+      checkin_frequency: initial.checkin_frequency || 'monthly',
     } : {}),
   }));
   const [saving, setSaving] = useState(false);
@@ -857,6 +875,28 @@ function TargetModal({ initial, cycle, cascadeContext, orgSettings, activeTypes,
                 step="0.5"
                 className="w-full border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
+            </div>
+          )}
+
+          {/* Check-in frequency — skip for OKR Objectives and KRAs (folders only) */}
+          {!['okr_objective', 'kra'].includes(form.framework_type) && (
+            <div>
+              <label className="block text-xs font-semibold text-slate-600 mb-1">
+                Check-in Frequency
+                <InfoIcon
+                  title="Check-in Frequency"
+                  body="How often you plan to update progress on this target. The system will remind you and flag this target as overdue if no check-in is recorded within this window. Company OKRs are typically quarterly; HOD targets monthly; employee targets weekly or monthly."
+                />
+              </label>
+              <select
+                value={form.checkin_frequency}
+                onChange={e => set('checkin_frequency', e.target.value)}
+                className="w-full border border-slate-200 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {CHECKIN_FREQUENCIES.map(f => (
+                  <option key={f.value} value={f.value}>{f.label}</option>
+                ))}
+              </select>
             </div>
           )}
 

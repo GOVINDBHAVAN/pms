@@ -255,6 +255,7 @@ router.post('/', requireAuth, (req, res) => {
       library_id, unit, measurement_type,
       planned_target, stretch_target, company_target,
       weight, parent_target_id, cascade_direction,
+      checkin_frequency,
     } = req.body;
 
     if (!cycle_id) return res.status(400).json({ error: 'cycle_id is required' });
@@ -340,13 +341,16 @@ router.post('/', requireAuth, (req, res) => {
       }
     }
 
+    const VALID_FREQUENCIES = ['daily','weekly','bi_weekly','monthly','quarterly','semi_annual','annual'];
+    const frequency = VALID_FREQUENCIES.includes(checkin_frequency) ? checkin_frequency : 'monthly';
+
     db.run(
       `INSERT INTO targets
          (org_id, cycle_id, employee_id, parent_target_id, cascade_direction,
           framework_type, title, description, library_id, unit, measurement_type,
           company_target, planned_target, stretch_target, weight,
-          is_over_planned, over_plan_ratio, hierarchy_level, status)
-       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
+          is_over_planned, over_plan_ratio, hierarchy_level, status, checkin_frequency)
+       VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)`,
       [
         req.user.org_id, cycle_id, req.user.id,
         parent_target_id || null, targetCascadeDir,
@@ -355,7 +359,7 @@ router.post('/', requireAuth, (req, res) => {
         company_target || null, planned_target || null, stretch_target || null,
         weight || 0,
         isOverPlanned, overPlanRatio,
-        hierarchyLevel, targetStatus,
+        hierarchyLevel, targetStatus, frequency,
       ]
     );
     saveDb();
@@ -393,7 +397,7 @@ router.put('/:id', requireAuth, (req, res) => {
     const {
       title, description, library_id, unit, measurement_type,
       planned_target, stretch_target, company_target, weight,
-      parent_target_id, over_plan_note,
+      parent_target_id, over_plan_note, checkin_frequency,
     } = req.body;
 
     // Rule V7: stretch > planned
@@ -429,23 +433,29 @@ router.put('/:id', requireAuth, (req, res) => {
       }
     }
 
+    const VALID_FREQUENCIES = ['daily','weekly','bi_weekly','monthly','quarterly','semi_annual','annual'];
+    const newFrequency = VALID_FREQUENCIES.includes(checkin_frequency)
+      ? checkin_frequency
+      : target.checkin_frequency || 'monthly';
+
     const oldSnap = { ...target };
     db.run(
       `UPDATE targets SET
-         title           = COALESCE(?, title),
-         description     = COALESCE(?, description),
-         library_id      = ?,
-         unit            = COALESCE(?, unit),
-         measurement_type= COALESCE(?, measurement_type),
-         company_target  = ?,
-         planned_target  = ?,
-         stretch_target  = ?,
-         weight          = COALESCE(?, weight),
-         parent_target_id= ?,
-         over_plan_note  = COALESCE(?, over_plan_note),
-         is_over_planned = ?,
-         over_plan_ratio = ?,
-         updated_at      = datetime('now')
+         title             = COALESCE(?, title),
+         description       = COALESCE(?, description),
+         library_id        = ?,
+         unit              = COALESCE(?, unit),
+         measurement_type  = COALESCE(?, measurement_type),
+         company_target    = ?,
+         planned_target    = ?,
+         stretch_target    = ?,
+         weight            = COALESCE(?, weight),
+         parent_target_id  = ?,
+         over_plan_note    = COALESCE(?, over_plan_note),
+         is_over_planned   = ?,
+         over_plan_ratio   = ?,
+         checkin_frequency = ?,
+         updated_at        = datetime('now')
        WHERE id = ? AND org_id = ?`,
       [
         title?.trim() || null, description || null,
@@ -458,6 +468,7 @@ router.put('/:id', requireAuth, (req, res) => {
         newParentId || null,
         over_plan_note || null,
         isOverPlanned, overPlanRatio,
+        newFrequency,
         req.params.id, req.user.org_id,
       ]
     );

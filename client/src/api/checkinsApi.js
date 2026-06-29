@@ -26,3 +26,9 @@ export async function acknowledgeCheckin(id) {
   const { data } = await axios.patch(`${BASE}/${id}/acknowledge`, {}, { headers: hdrs() });
   return data;
 }
+
+export async function getRollup(cycleId) {
+  const params = cycleId ? { cycle_id: cycleId } : {};
+  const { data } = await axios.get(`${BASE}/rollup`, { headers: hdrs(), params });
+  return data;
+}
