@@ -27,15 +27,20 @@ router.get('/', requireAuth, (req, res) => {
     // Determine whose targets to fetch
     let targetEmployeeId = req.user.id;
     if (employee_id && ['admin', 'hr', 'manager'].includes(req.user.role)) {
-      // Manager can view a direct reportee's targets
-      const reportees = rowsToObjects(db.exec(
-        `SELECT id FROM employees WHERE reporting_to = ? AND org_id = ?`,
-        [req.user.id, req.user.org_id]
-      ));
       const isHrAdmin = ['admin', 'hr'].includes(req.user.role);
-      const isDirectReportee = reportees.some(r => r.id == employee_id);
-      if (!isHrAdmin && !isDirectReportee) {
-        return res.status(403).json({ error: 'Can only view direct reportees\' targets' });
+      if (!isHrAdmin) {
+        // Allow viewing any subordinate in the manager's subtree (direct or indirect)
+        const inSubtree = rowsToObjects(db.exec(
+          `WITH RECURSIVE sub AS (
+             SELECT id FROM employees WHERE reporting_to = ? AND org_id = ?
+             UNION ALL
+             SELECT e.id FROM employees e JOIN sub ON e.reporting_to = sub.id WHERE e.org_id = ?
+           ) SELECT 1 FROM sub WHERE id = ?`,
+          [req.user.id, req.user.org_id, req.user.org_id, parseInt(employee_id)]
+        )).length > 0;
+        if (!inSubtree) {
+          return res.status(403).json({ error: 'Can only view subordinates\' targets' });
+        }
       }
       targetEmployeeId = parseInt(employee_id);
     }
@@ -210,6 +215,91 @@ router.get('/manager-view', requireAuth, (req, res) => {
     }
 
     res.json(Object.values(byEmployee));
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ── GET /targets/org-tree?cycle_id=&root_id= ─────────────────────────────────
+// Full subordinate tree under current user with per-node target summary.
+// Admin/HR may pass root_id to start from any manager's node.
+router.get('/org-tree', requireAuth, (req, res) => {
+  try {
+    const db = getDb();
+    const { cycle_id, root_id } = req.query;
+    const isHrAdmin = ['admin', 'hr'].includes(req.user.role);
+    const startId = isHrAdmin && root_id ? parseInt(root_id) : req.user.id;
+
+    const treeRows = rowsToObjects(db.exec(
+      `WITH RECURSIVE sub AS (
+         SELECT e.id, e.name, e.reporting_to, e.grade_id, e.dept_id, 0 AS depth
+         FROM employees e
+         WHERE e.reporting_to = ? AND e.org_id = ? AND e.is_active = 1
+         UNION ALL
+         SELECT e.id, e.name, e.reporting_to, e.grade_id, e.dept_id, s.depth + 1
+         FROM employees e JOIN sub s ON e.reporting_to = s.id
+         WHERE e.org_id = ? AND e.is_active = 1
+       )
+       SELECT sub.id, sub.name, sub.reporting_to, sub.depth,
+              g.code AS grade_code, g.label AS grade,
+              d.name AS dept
+       FROM sub
+       LEFT JOIN grades g ON g.id = sub.grade_id
+       LEFT JOIN departments d ON d.id = sub.dept_id
+       ORDER BY sub.depth, sub.name`,
+      [startId, req.user.org_id, req.user.org_id]
+    ));
+
+    if (!treeRows.length) return res.json([]);
+
+    if (cycle_id) {
+      const ids = treeRows.map(r => r.id);
+      const ph = ids.map(() => '?').join(',');
+      const PENDING = `status IN ('submitted','linked','proposed')`;
+      const targetRows = rowsToObjects(db.exec(
+        `SELECT employee_id,
+                COUNT(*) AS total,
+                SUM(CASE WHEN status='approved' THEN 1 ELSE 0 END) AS approved,
+                SUM(CASE WHEN ${PENDING} THEN 1 ELSE 0 END) AS submitted,
+                SUM(CASE WHEN status='proposed' THEN 1 ELSE 0 END) AS proposed,
+                SUM(CASE WHEN status='draft' THEN 1 ELSE 0 END) AS draft,
+                SUM(CASE WHEN status='rejected' THEN 1 ELSE 0 END) AS rejected,
+                SUM(CASE WHEN framework_type IN ('okr_objective','okr_kr') AND status='approved'  THEN 1 ELSE 0 END) AS okr_approved,
+                SUM(CASE WHEN framework_type IN ('okr_objective','okr_kr') AND ${PENDING}          THEN 1 ELSE 0 END) AS okr_pending,
+                SUM(CASE WHEN framework_type IN ('kra','kpi')              AND status='approved'  THEN 1 ELSE 0 END) AS kpi_approved,
+                SUM(CASE WHEN framework_type IN ('kra','kpi')              AND ${PENDING}          THEN 1 ELSE 0 END) AS kpi_pending,
+                SUM(CASE WHEN framework_type = 'goal'                      AND status='approved'  THEN 1 ELSE 0 END) AS goal_approved,
+                SUM(CASE WHEN framework_type = 'goal'                      AND ${PENDING}          THEN 1 ELSE 0 END) AS goal_pending,
+                SUM(CASE WHEN framework_type = 'competency'                AND status='approved'  THEN 1 ELSE 0 END) AS comp_approved,
+                SUM(CASE WHEN framework_type = 'competency'                AND ${PENDING}          THEN 1 ELSE 0 END) AS comp_pending,
+                SUM(CASE WHEN framework_type = 'bsc_metric'                AND status='approved'  THEN 1 ELSE 0 END) AS bsc_approved,
+                SUM(CASE WHEN framework_type = 'bsc_metric'                AND ${PENDING}          THEN 1 ELSE 0 END) AS bsc_pending
+         FROM targets
+         WHERE employee_id IN (${ph}) AND cycle_id = ? AND org_id = ?
+         GROUP BY employee_id`,
+        [...ids, parseInt(cycle_id), req.user.org_id]
+      ));
+      const ZERO_COUNTS = {
+        total: 0, approved: 0, submitted: 0, proposed: 0, draft: 0, rejected: 0,
+        okr_approved: 0, okr_pending: 0, kpi_approved: 0, kpi_pending: 0,
+        goal_approved: 0, goal_pending: 0, comp_approved: 0, comp_pending: 0,
+        bsc_approved: 0, bsc_pending: 0,
+      };
+      const byEmp = {};
+      for (const t of targetRows) byEmp[t.employee_id] = t;
+      return res.json(treeRows.map(r => ({
+        ...r,
+        ...(byEmp[r.id] || ZERO_COUNTS),
+      })));
+    }
+
+    res.json(treeRows.map(r => ({
+      ...r,
+      total: 0, approved: 0, submitted: 0, proposed: 0, draft: 0, rejected: 0,
+      okr_approved: 0, okr_pending: 0, kpi_approved: 0, kpi_pending: 0,
+      goal_approved: 0, goal_pending: 0, comp_approved: 0, comp_pending: 0,
+      bsc_approved: 0, bsc_pending: 0,
+    })));
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

@@ -33,6 +33,14 @@ export async function getManagerView(cycleId) {
   return data;
 }
 
+export async function getOrgTree(cycleId, rootId) {
+  const params = {};
+  if (cycleId) params.cycle_id = cycleId;
+  if (rootId) params.root_id = rootId;
+  const { data } = await axios.get(`${BASE}/org-tree`, { headers: hdrs(), params });
+  return data;
+}
+
 export async function getLibrary(type) {
   const { data } = await axios.get(`${BASE}/library`, {
     headers: hdrs(),

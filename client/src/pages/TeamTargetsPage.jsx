@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import AppLayout from '../components/layout/AppLayout';
 import { useAuthStore } from '../store/authStore';
 import {
-  getTargets, getManagerView,
+  getTargets, getManagerView, getOrgTree,
   approveTarget as apiApprove,
   rejectTarget as apiReject,
   linkTarget as apiLink,
@@ -418,8 +418,8 @@ function LinkModal({ target, myApprovedTargets, onConfirm, onClose }) {
 }
 
 // ── Target Approval Card ──────────────────────────────────────────────────────
-function TargetApprovalCard({ target, myApprovedCount, isHrAdmin, onApprove, onReject, onLink, cycleStatus }) {
-  const canAct = cycleStatus === 'goal_setting';
+function TargetApprovalCard({ target, myApprovedCount, isHrAdmin, onApprove, onReject, onLink, cycleStatus, readOnly = false }) {
+  const canAct = cycleStatus === 'goal_setting' && !readOnly;
   const needsAction = ['submitted', 'proposed', 'linked'].includes(target.status);
   const canApproveNow = isHrAdmin || myApprovedCount > 0;
 
@@ -877,7 +877,7 @@ function TeamCoverageWidget({ myApprovedTargets, allReportees, currentEmployeeId
 }
 
 // ── Reportee Detail View ──────────────────────────────────────────────────────
-function ReporteeView({ employeeId, cycle, myApprovedCount, isHrAdmin, onBack }) {
+function ReporteeView({ employeeId, cycle, myApprovedCount, isHrAdmin, onBack, readOnly = false }) {
   const [reportee, setReportee] = useState(null);
   const [targets, setTargets] = useState([]);
   const [myTargets, setMyTargets] = useState([]);
@@ -1039,6 +1039,7 @@ function ReporteeView({ employeeId, cycle, myApprovedCount, isHrAdmin, onBack })
                   onReject={t => setRejectTarget(t)}
                   onLink={t => setLinkTarget(t)}
                   cycleStatus={cycle?.status}
+                  readOnly={readOnly}
                 />
               ))}
             </div>
@@ -1046,22 +1047,22 @@ function ReporteeView({ employeeId, cycle, myApprovedCount, isHrAdmin, onBack })
         );
       })}
 
-      {/* Modals */}
-      {approveTarget && (
+      {/* Modals — suppressed in read-only mode */}
+      {!readOnly && approveTarget && (
         <ApproveModal
           target={approveTarget}
           onConfirm={payload => handleApprove(approveTarget, payload)}
           onClose={() => setApproveTarget(null)}
         />
       )}
-      {rejectTarget && (
+      {!readOnly && rejectTarget && (
         <RejectModal
           target={rejectTarget}
           onConfirm={note => handleReject(rejectTarget, note)}
           onClose={() => setRejectTarget(null)}
         />
       )}
-      {linkTarget && (
+      {!readOnly && linkTarget && (
         <LinkModal
           target={linkTarget}
           myApprovedTargets={myTargets}
@@ -1316,6 +1317,300 @@ function ReporteeCard({ reportee, selected, onReview }) {
   );
 }
 
+// ── Org Drilldown: Tree Node ──────────────────────────────────────────────────
+const TYPE_GROUPS = [
+  { key: 'okr',  label: 'OKR',     approvedKey: 'okr_approved',  pendingKey: 'okr_pending',  dot: 'bg-purple-400' },
+  { key: 'kpi',  label: 'KRA/KPI', approvedKey: 'kpi_approved',  pendingKey: 'kpi_pending',  dot: 'bg-blue-400' },
+  { key: 'goal', label: 'Goals',   approvedKey: 'goal_approved', pendingKey: 'goal_pending', dot: 'bg-green-400' },
+  { key: 'comp', label: 'Comp',    approvedKey: 'comp_approved', pendingKey: 'comp_pending', dot: 'bg-orange-400' },
+  { key: 'bsc',  label: 'BSC',     approvedKey: 'bsc_approved',  pendingKey: 'bsc_pending',  dot: 'bg-teal-400' },
+];
+
+function OrgTreeNode({ node, directReporteeIds, contribution, onViewEmployee }) {
+  const [expanded, setExpanded] = useState(false);
+  const hasChildren = node.children.length > 0;
+  const isDirect = directReporteeIds.includes(node.id);
+
+  const allApproved = node.total > 0 && node.approved === node.total;
+  const hasPending = (node.submitted + node.proposed) > 0;
+  const noTargets = node.total === 0;
+
+  const activeGroups = TYPE_GROUPS.filter(g => (node[g.approvedKey] || 0) + (node[g.pendingKey] || 0) > 0);
+
+  return (
+    <div className={`border rounded-xl overflow-hidden ${
+      noTargets ? 'border-slate-200' : allApproved ? 'border-emerald-200' : hasPending ? 'border-yellow-200' : 'border-slate-200'
+    }`}>
+      <div className={`p-3 ${
+        noTargets ? 'bg-white' : allApproved ? 'bg-emerald-50/30' : hasPending ? 'bg-yellow-50/30' : 'bg-white'
+      }`}>
+        <div className="flex items-start gap-3">
+          {/* Expand toggle */}
+          <button
+            onClick={() => hasChildren && setExpanded(!expanded)}
+            className={`mt-0.5 w-5 h-5 flex items-center justify-center rounded text-[10px] font-bold flex-shrink-0 ${
+              hasChildren
+                ? 'bg-slate-100 hover:bg-slate-200 text-slate-600 cursor-pointer'
+                : 'text-slate-200 cursor-default'
+            }`}
+          >
+            {hasChildren ? (expanded ? '▼' : '▶') : '·'}
+          </button>
+
+          {/* Avatar */}
+          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 ${
+            isDirect ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-600'
+          }`}>
+            {node.name?.charAt(0).toUpperCase()}
+          </div>
+
+          {/* Info block */}
+          <div className="flex-1 min-w-0 space-y-1.5">
+            {/* Name + grade + chips */}
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="font-semibold text-slate-800 text-sm">{node.name}</span>
+              {node.grade_code && (
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600">
+                  {node.grade_code}
+                </span>
+              )}
+              {isDirect && (
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700">
+                  Direct
+                </span>
+              )}
+              {hasChildren && (
+                <span className="text-[10px] text-slate-400">
+                  · {node.children.length} report{node.children.length !== 1 ? 's' : ''}
+                </span>
+              )}
+            </div>
+
+            {node.dept && <p className="text-[11px] text-slate-400">{node.dept}</p>}
+
+            {/* Framework-type breakdown chips */}
+            {noTargets ? (
+              <span className="text-[10px] text-slate-400 italic">No targets submitted yet</span>
+            ) : (
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {activeGroups.map(g => {
+                  const a = node[g.approvedKey] || 0;
+                  const p = node[g.pendingKey] || 0;
+                  const allOk = a > 0 && p === 0;
+                  return (
+                    <span
+                      key={g.key}
+                      className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-semibold ${
+                        allOk ? 'bg-emerald-100 text-emerald-700'
+                              : p > 0 ? 'bg-yellow-100 text-yellow-800'
+                              : 'bg-slate-100 text-slate-500'
+                      }`}
+                    >
+                      <span className={`w-1.5 h-1.5 rounded-full ${g.dot}`} />
+                      {g.label}
+                      {a > 0 && <span className="ml-0.5">{a}✓</span>}
+                      {p > 0 && <span className={a > 0 ? 'ml-0.5' : ''}>{p}●</span>}
+                    </span>
+                  );
+                })}
+                {node.rejected > 0 && (
+                  <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-red-50 text-red-600">
+                    {node.rejected} rejected
+                  </span>
+                )}
+              </div>
+            )}
+
+            {/* Contribution bars (only for direct reportees of current user) */}
+            {contribution && contribution.length > 0 && (
+              <div className="mt-1 space-y-1 pt-1 border-t border-slate-100">
+                <p className="text-[9px] font-bold text-slate-400 uppercase tracking-wide">Contribution to your targets</p>
+                {contribution.slice(0, 3).map(item => (
+                  <div key={item.title} className="flex items-center gap-2">
+                    <span className="text-[10px] text-slate-500 truncate" style={{ minWidth: '90px', maxWidth: '140px' }}>
+                      {item.title.length > 22 ? item.title.slice(0, 22) + '…' : item.title}
+                    </span>
+                    <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                      <div
+                        className={`h-full rounded-full ${
+                          item.pct >= 100 ? 'bg-emerald-500' : item.pct >= 70 ? 'bg-blue-400' : 'bg-amber-400'
+                        }`}
+                        style={{ width: `${Math.min(item.pct, 100)}%` }}
+                      />
+                    </div>
+                    <span className={`text-[10px] font-bold tabular-nums w-8 text-right ${
+                      item.pct >= 100 ? 'text-emerald-600' : item.pct >= 70 ? 'text-blue-600' : 'text-amber-600'
+                    }`}>{item.pct}%</span>
+                  </div>
+                ))}
+                {contribution.length > 3 && (
+                  <p className="text-[10px] text-slate-400">+{contribution.length - 3} more targets</p>
+                )}
+              </div>
+            )}
+          </div>
+
+          {/* Review / View button */}
+          <button
+            onClick={() => onViewEmployee(node.id)}
+            className={`flex-shrink-0 mt-0.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
+              isDirect
+                ? 'bg-blue-100 text-blue-700 hover:bg-blue-200'
+                : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+            }`}
+          >
+            {isDirect ? 'Review →' : 'View →'}
+          </button>
+        </div>
+      </div>
+
+      {/* Expanded children */}
+      {expanded && hasChildren && (
+        <div className="border-t border-slate-100 pl-7 pr-3 py-2 space-y-2 bg-slate-50/30">
+          {node.children.map(child => (
+            <OrgTreeNode
+              key={child.id}
+              node={child}
+              directReporteeIds={directReporteeIds}
+              contribution={null}
+              onViewEmployee={onViewEmployee}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ── Org Drilldown Tab ─────────────────────────────────────────────────────────
+const NUMERIC_TARGET_TYPES = ['kpi', 'goal', 'okr_kr', 'bsc_metric'];
+
+function computeContributions(myTargets, reporteeTargets) {
+  return myTargets
+    .filter(mt => NUMERIC_TARGET_TYPES.includes(mt.framework_type) && mt.planned_target != null)
+    .map(mt => {
+      const matching = (reporteeTargets || []).filter(t =>
+        t.framework_type === mt.framework_type &&
+        t.planned_target != null &&
+        !['rejected', 'deleted'].includes(t.status)
+      );
+      const sum = matching.reduce((s, t) => s + (parseFloat(t.planned_target) || 0), 0);
+      if (sum === 0) return null;
+      const pct = parseFloat(mt.planned_target) > 0
+        ? Math.round((sum / parseFloat(mt.planned_target)) * 100) : 0;
+      return { title: mt.title, sum, pct, unit: mt.unit || '', type: mt.framework_type };
+    })
+    .filter(Boolean);
+}
+
+function OrgDrilldownTab({ cycle, isHrAdmin, myApprovedCount, directReporteeIds, currentUserId, myTargets, reportees }) {
+  const [nodes, setNodes] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+  const [loaded, setLoaded] = useState(false);
+  const [selectedNodeId, setSelectedNodeId] = useState(null);
+
+  useEffect(() => {
+    if (!cycle?.id || loaded) return;
+    setLoaded(true);
+    setLoading(true);
+    getOrgTree(cycle.id)
+      .then(setNodes)
+      .catch(e => setError(e?.response?.data?.error || 'Failed to load org tree'))
+      .finally(() => setLoading(false));
+  }, [cycle?.id, loaded]);
+
+  function buildTree(list, parentId) {
+    return list
+      .filter(n => n.reporting_to === parentId)
+      .map(n => ({ ...n, children: buildTree(list, n.id) }));
+  }
+
+  // Pre-compute contribution from each direct reportee into manager's numeric targets
+  const contributionByEmployee = {};
+  if (myTargets.length > 0) {
+    for (const r of reportees) {
+      const items = computeContributions(myTargets, r.targets);
+      if (items.length > 0) contributionByEmployee[r.id] = items;
+    }
+  }
+
+  if (selectedNodeId) {
+    const isDirectReport = directReporteeIds.includes(selectedNodeId);
+    return (
+      <ReporteeView
+        employeeId={selectedNodeId}
+        cycle={cycle}
+        myApprovedCount={myApprovedCount}
+        isHrAdmin={isHrAdmin}
+        onBack={() => setSelectedNodeId(null)}
+        readOnly={!isHrAdmin && !isDirectReport}
+      />
+    );
+  }
+
+  const rootNodes = buildTree(nodes, currentUserId);
+
+  const totalPeople = nodes.length;
+  const totalApprovedAll = nodes.filter(n => n.total > 0 && n.approved === n.total).length;
+  const totalPending = nodes.filter(n => (n.submitted + n.proposed) > 0).length;
+  const totalNotStarted = nodes.filter(n => n.total === 0).length;
+
+  return (
+    <div className="space-y-4">
+      <div className="bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-xs text-slate-600 leading-relaxed">
+        <strong>Org Drilldown</strong> — full reporting hierarchy, direct and indirect.
+        {isHrAdmin
+          ? ' As admin/HR you can view and action targets at any level.'
+          : ' Approval actions are available only for your direct reportees; all others are read-only.'}
+        {' '}Use ▶ to expand any manager node.
+      </div>
+
+      {/* Subtree summary strip */}
+      {!loading && totalPeople > 0 && (
+        <div className="grid grid-cols-4 gap-2">
+          {[
+            { label: 'People in subtree', value: totalPeople,      color: 'bg-slate-50 border-slate-200 text-slate-700' },
+            { label: 'Fully approved',    value: totalApprovedAll, color: 'bg-emerald-50 border-emerald-200 text-emerald-700' },
+            { label: 'Pending review',    value: totalPending,     color: totalPending > 0 ? 'bg-yellow-50 border-yellow-200 text-yellow-800' : 'bg-slate-50 border-slate-200 text-slate-400' },
+            { label: 'Not started',       value: totalNotStarted,  color: totalNotStarted > 0 ? 'bg-slate-50 border-slate-300 text-slate-600' : 'bg-emerald-50 border-emerald-200 text-emerald-700' },
+          ].map(s => (
+            <div key={s.label} className={`border rounded-xl px-3 py-2.5 text-center ${s.color}`}>
+              <p className="text-xl font-bold tabular-nums leading-none">{s.value}</p>
+              <p className="text-[10px] font-semibold uppercase tracking-wide mt-1 opacity-70">{s.label}</p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-lg px-4 py-3 text-sm text-red-700">{error}</div>
+      )}
+
+      {loading && (
+        <div className="text-sm text-slate-400 py-12 text-center">Loading org tree…</div>
+      )}
+
+      {!loading && rootNodes.length === 0 && !error && (
+        <div className="bg-white border border-slate-200 border-dashed rounded-xl py-12 text-center">
+          <p className="text-slate-400 text-sm">No subordinates found in the hierarchy.</p>
+          <p className="text-slate-400 text-xs mt-1">Check that employees have reporting_to set correctly.</p>
+        </div>
+      )}
+
+      {!loading && rootNodes.map(node => (
+        <OrgTreeNode
+          key={node.id}
+          node={node}
+          directReporteeIds={directReporteeIds}
+          contribution={contributionByEmployee[node.id] || null}
+          onViewEmployee={setSelectedNodeId}
+        />
+      ))}
+    </div>
+  );
+}
+
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function TeamTargetsPage() {
   const { employee } = useAuthStore();
@@ -1465,7 +1760,8 @@ export default function TeamTargetsPage() {
                   {[
                     { key: 'coverage',   label: 'Coverage Overview' },
                     { key: 'readiness',  label: 'Team Readiness' },
-                    { key: 'team',       label: 'Review Team' },
+                    { key: 'team',       label: 'Direct Reportees' },
+                    { key: 'org',        label: 'Org Drilldown' },
                   ].map(tab => (
                     <button
                       key={tab.key}
@@ -1557,7 +1853,7 @@ export default function TeamTargetsPage() {
                       onClick={() => switchTab('team')}
                       className="text-blue-600 underline underline-offset-2 hover:text-blue-800"
                     >
-                      Review Team
+                      Direct Reportees
                     </button>{' '}
                     tab.
                   </div>
@@ -1571,7 +1867,7 @@ export default function TeamTargetsPage() {
                 </div>
               )}
 
-              {/* ── Tab 3: Review Team ── */}
+              {/* ── Tab 3: Direct Reportees ── */}
               {activeTab === 'team' && (
                 <div className="space-y-4">
                   {/* Condensed cascade hint for context while reviewing */}
@@ -1616,6 +1912,19 @@ export default function TeamTargetsPage() {
                     />
                   )}
                 </div>
+              )}
+
+              {/* ── Tab 4: Org Drilldown ── */}
+              {activeTab === 'org' && (
+                <OrgDrilldownTab
+                  cycle={cycle}
+                  isHrAdmin={isHrAdmin}
+                  myApprovedCount={myApprovedCount}
+                  directReporteeIds={reportees.map(r => r.id)}
+                  currentUserId={employee.id}
+                  myTargets={myTargets}
+                  reportees={reportees}
+                />
               )}
             </>
           );
