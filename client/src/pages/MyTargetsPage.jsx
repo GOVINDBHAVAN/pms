@@ -7,6 +7,7 @@ import {
 } from '../api/targetsApi';
 import { getActiveCycle } from '../api/cyclesApi';
 import { getOrgSettings } from '../api/orgApi';
+import CheckinModal from '../components/targets/CheckinModal';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
@@ -219,9 +220,32 @@ function ContextPanel({ context, cycle }) {
   );
 }
 
+// ── Mini progress bar used inside TargetRow ───────────────────────────────────
+function MiniProgress({ actual, planned, measurementType }) {
+  if (actual == null || planned == null) return null;
+  const pct = (parseFloat(actual) / parseFloat(planned)) * 100;
+  const isLower = measurementType === 'lower_better';
+  const onTrack = isLower ? actual <= planned : pct >= 100;
+  const barColor = onTrack ? 'bg-emerald-400' : pct >= 70 ? 'bg-amber-400' : 'bg-red-400';
+  return (
+    <div className="flex items-center gap-2">
+      <div className="w-20 h-1 bg-slate-100 rounded-full overflow-hidden">
+        <div className={`h-full rounded-full ${barColor}`} style={{ width: `${Math.min(Math.abs(pct), 100)}%` }} />
+      </div>
+      <span className={`text-[10px] font-medium ${onTrack ? 'text-emerald-600' : 'text-amber-600'}`}>
+        {fmt(actual)} ({pct.toFixed(0)}%)
+      </span>
+    </div>
+  );
+}
+
 // ── Target Row ────────────────────────────────────────────────────────────────
-function TargetRow({ target, onEdit, onDelete, canEdit }) {
+function TargetRow({ target, onEdit, onDelete, onCheckin, canEdit, canCheckin }) {
   const meta = FRAMEWORK_TYPE_META[target.framework_type] || FRAMEWORK_TYPE_META.goal;
+  const showCheckin = canCheckin &&
+    ['approved', 'active', 'locked'].includes(target.status) &&
+    !['okr_objective', 'kra'].includes(target.framework_type) &&
+    target.planned_target != null;
 
   return (
     <div className="flex items-start gap-3 py-3 border-b border-slate-50 last:border-0 group">
@@ -256,12 +280,30 @@ function TargetRow({ target, onEdit, onDelete, canEdit }) {
               Rejected: {target.rejection_note}
             </span>
           )}
+          {/* Actual progress (visible once check-ins are recorded) */}
+          {target.actual_value != null && target.planned_target != null &&
+           !['okr_objective', 'kra'].includes(target.framework_type) && (
+            <MiniProgress
+              actual={target.actual_value}
+              planned={target.planned_target}
+              measurementType={target.measurement_type}
+            />
+          )}
         </div>
       </div>
       <div className="flex items-center gap-2 flex-shrink-0">
         <span className="text-sm font-semibold text-slate-700 tabular-nums w-12 text-right">
           {target.weight != null ? `${Number(target.weight).toFixed(0)}%` : '—'}
         </span>
+        {showCheckin && (
+          <button
+            onClick={() => onCheckin(target)}
+            className="text-xs text-emerald-600 hover:text-emerald-700 px-2 py-1 rounded hover:bg-emerald-50 border border-emerald-200 font-medium"
+            title="Record actual progress for this period"
+          >
+            Check-in
+          </button>
+        )}
         {canEdit && ['draft', 'rejected'].includes(target.status) && (
           <>
             <button
@@ -284,7 +326,7 @@ function TargetRow({ target, onEdit, onDelete, canEdit }) {
 }
 
 // ── Target Group Section ──────────────────────────────────────────────────────
-function TargetGroup({ groupName, targets, onEdit, onDelete, onAdd, canEdit, activeTypes }) {
+function TargetGroup({ groupName, targets, onEdit, onDelete, onAdd, onCheckin, canEdit, canCheckin, activeTypes }) {
   const [collapsed, setCollapsed] = useState(false);
   const help = GROUP_HELP[groupName];
   const groupTargets = targets.filter(t => {
@@ -347,10 +389,10 @@ function TargetGroup({ groupName, targets, onEdit, onDelete, onAdd, canEdit, act
                 );
                 return (
                   <div key={obj.id} className="py-2">
-                    <TargetRow target={obj} onEdit={onEdit} onDelete={onDelete} canEdit={canEdit} />
+                    <TargetRow target={obj} onEdit={onEdit} onDelete={onDelete} onCheckin={onCheckin} canEdit={canEdit} canCheckin={canCheckin} />
                     {krs.map(kr => (
                       <div key={kr.id} className="ml-6 border-l-2 border-purple-100 pl-3">
-                        <TargetRow target={kr} onEdit={onEdit} onDelete={onDelete} canEdit={canEdit} />
+                        <TargetRow target={kr} onEdit={onEdit} onDelete={onDelete} onCheckin={onCheckin} canEdit={canEdit} canCheckin={canCheckin} />
                       </div>
                     ))}
                     {canEdit && (
@@ -365,7 +407,7 @@ function TargetGroup({ groupName, targets, onEdit, onDelete, onAdd, canEdit, act
                 );
               })}
               {standaloneKRs.map(kr => (
-                <TargetRow key={kr.id} target={kr} onEdit={onEdit} onDelete={onDelete} canEdit={canEdit} />
+                <TargetRow key={kr.id} target={kr} onEdit={onEdit} onDelete={onDelete} onCheckin={onCheckin} canEdit={canEdit} canCheckin={canCheckin} />
               ))}
             </>
           )}
@@ -383,14 +425,14 @@ function TargetGroup({ groupName, targets, onEdit, onDelete, onAdd, canEdit, act
                       <TargetRow target={kra} onEdit={onEdit} onDelete={onDelete} canEdit={canEdit} />
                       {underKra.map(kpi => (
                         <div key={kpi.id} className="ml-6 border-l-2 border-cyan-100 pl-3">
-                          <TargetRow target={kpi} onEdit={onEdit} onDelete={onDelete} canEdit={canEdit} />
+                          <TargetRow target={kpi} onEdit={onEdit} onDelete={onDelete} onCheckin={onCheckin} canEdit={canEdit} canCheckin={canCheckin} />
                         </div>
                       ))}
                     </div>
                   );
                 })}
                 {standaloneKpis.map(kpi => (
-                  <TargetRow key={kpi.id} target={kpi} onEdit={onEdit} onDelete={onDelete} canEdit={canEdit} />
+                  <TargetRow key={kpi.id} target={kpi} onEdit={onEdit} onDelete={onDelete} onCheckin={onCheckin} canEdit={canEdit} canCheckin={canCheckin} />
                 ))}
               </>
             );
@@ -398,7 +440,7 @@ function TargetGroup({ groupName, targets, onEdit, onDelete, onAdd, canEdit, act
 
           {(groupName === 'Goals' || groupName === 'Competency' || groupName === 'Balanced Scorecard') &&
             groupTargets.map(t => (
-              <TargetRow key={t.id} target={t} onEdit={onEdit} onDelete={onDelete} canEdit={canEdit} />
+              <TargetRow key={t.id} target={t} onEdit={onEdit} onDelete={onDelete} onCheckin={onCheckin} canEdit={canEdit} canCheckin={canCheckin} />
             ))
           }
         </div>
@@ -968,6 +1010,7 @@ export default function MyTargetsPage() {
   const [editTarget, setEditTarget] = useState(null);
   const [showSubmit, setShowSubmit] = useState(false);
   const [addPrefill, setAddPrefill] = useState(null);
+  const [checkinTarget, setCheckinTarget] = useState(null);
 
   // Derive effective cascade mode
   const effectiveCascade = cycle?.cascade_mode || orgSettings?.cascade_mode || 'top_down';
@@ -978,6 +1021,9 @@ export default function MyTargetsPage() {
 
   // Determine if the employee can edit (goal_setting phase only)
   const canEdit = cycle?.status === 'goal_setting';
+
+  // Check-ins available during active and review phases when the cycle flag is set
+  const canCheckin = !!(cycle?.check_in_allowed === 1 && ['active', 'review'].includes(cycle?.status));
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -1165,7 +1211,9 @@ export default function MyTargetsPage() {
                     onEdit={t => { setEditTarget(t); setShowAdd(true); }}
                     onDelete={handleDelete}
                     onAdd={prefill => handleAdd(typeof prefill === 'object' ? prefill : null)}
+                    onCheckin={t => setCheckinTarget(t)}
                     canEdit={canEdit}
+                    canCheckin={canCheckin}
                     activeTypes={activeTypes}
                   />
                 ))}
@@ -1238,6 +1286,16 @@ export default function MyTargetsPage() {
           cycle={cycle}
           onConfirm={handleSubmitAll}
           onClose={() => setShowSubmit(false)}
+        />
+      )}
+
+      {/* Check-in Modal */}
+      {checkinTarget && cycle && (
+        <CheckinModal
+          target={checkinTarget}
+          cycleId={cycle.id}
+          onClose={() => setCheckinTarget(null)}
+          onCheckinAdded={load}
         />
       )}
     </AppLayout>
