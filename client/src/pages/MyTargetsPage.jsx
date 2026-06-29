@@ -120,28 +120,32 @@ function InfoIcon({ title, body }) {
 }
 
 // ── Weight Bar ────────────────────────────────────────────────────────────────
-function WeightBar({ targets, label, filterFn }) {
+// mode='total'  → enforces 100%; shows ✓ or / 100%
+// mode='contribution' → shows weight as a segment; no 100% check
+function WeightBar({ targets, label, filterFn, mode = 'total' }) {
   const filtered = targets.filter(filterFn);
   if (!filtered.length) return null;
   const sum = filtered.reduce((s, t) => s + (parseFloat(t.weight) || 0), 0);
+  if (mode === 'contribution' && sum === 0) return null;
   const pctFill = Math.min(sum, 100);
-  const ok = Math.abs(sum - 100) <= 0.01;
-  const over = sum > 100;
+  const ok = mode === 'total' && Math.abs(sum - 100) <= 0.01;
+  const over = mode === 'total' && sum > 100;
 
   return (
     <div className="flex items-center gap-3 text-xs">
-      <span className="text-slate-500 w-28 flex-shrink-0">{label}</span>
+      <span className={`w-28 flex-shrink-0 ${mode === 'contribution' ? 'text-slate-400 pl-2' : 'text-slate-500'}`}>{label}</span>
       <div className="flex-1 h-2 bg-slate-100 rounded-full overflow-hidden">
         <div
-          className={`h-full rounded-full transition-all ${ok ? 'bg-emerald-500' : over ? 'bg-red-500' : 'bg-blue-400'}`}
+          className={`h-full rounded-full transition-all ${ok ? 'bg-emerald-500' : over ? 'bg-red-500' : mode === 'contribution' ? 'bg-blue-300' : 'bg-blue-400'}`}
           style={{ width: `${pctFill}%` }}
         />
       </div>
       <span className={`font-semibold tabular-nums w-14 text-right ${ok ? 'text-emerald-600' : over ? 'text-red-600' : 'text-slate-500'}`}>
         {sum.toFixed(1)}%
       </span>
-      {ok && <span className="text-emerald-500">✓</span>}
-      {!ok && <span className="text-slate-400">/ 100%</span>}
+      {mode === 'total' && ok && <span className="text-emerald-500">✓</span>}
+      {mode === 'total' && !ok && <span className="text-slate-400">/ 100%</span>}
+      {mode === 'contribution' && <span className="w-4" />}
     </div>
   );
 }
@@ -963,7 +967,7 @@ function SubmitConfirmModal({ targets, cycle, onConfirm, onClose }) {
 
   const draftCount = targets.filter(t => ['draft', 'rejected'].includes(t.status)).length;
   const goalSum = targets
-    .filter(t => t.framework_type !== 'competency' && ['draft', 'rejected'].includes(t.status))
+    .filter(t => t.framework_type !== 'competency' && t.framework_type !== 'okr_objective' && ['draft', 'rejected'].includes(t.status))
     .reduce((s, t) => s + (parseFloat(t.weight) || 0), 0);
   const compSum = targets
     .filter(t => t.framework_type === 'competency' && ['draft', 'rejected'].includes(t.status))
@@ -1319,24 +1323,36 @@ export default function MyTargetsPage() {
               {/* Right column: weight tracker + context */}
               <div className="space-y-4">
                 {/* Weight Tracker */}
-                <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-3">
-                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wide">
+                <div className="bg-white border border-slate-200 rounded-xl p-4 space-y-2">
+                  <h3 className="text-xs font-bold text-slate-500 uppercase tracking-wide mb-3">
                     Weight Tracker
                     <InfoIcon
                       title="Weight Tracker"
                       body="All goal target weights must sum to exactly 100% before submission (Rule V1). Competency weights are tracked separately and must also sum to 100%. The system enforces this as a hard block on submission."
                     />
                   </h3>
-                  <WeightBar
-                    targets={targets}
-                    label="Goals"
-                    filterFn={t => t.framework_type !== 'competency' && !['deleted'].includes(t.status)}
-                  />
-                  <WeightBar
-                    targets={targets}
-                    label="Competencies"
-                    filterFn={t => t.framework_type === 'competency'}
-                  />
+                  {/* Per-group contribution rows */}
+                  <WeightBar targets={targets} label="OKR (Key Results)" mode="contribution"
+                    filterFn={t => t.framework_type === 'okr_kr' && !['deleted'].includes(t.status)} />
+                  <WeightBar targets={targets} label="KRA / KPI" mode="contribution"
+                    filterFn={t => (t.framework_type === 'kra' || t.framework_type === 'kpi') && !['deleted'].includes(t.status)} />
+                  <WeightBar targets={targets} label="Goals" mode="contribution"
+                    filterFn={t => t.framework_type === 'goal' && !['deleted'].includes(t.status)} />
+                  <WeightBar targets={targets} label="BSC Metrics" mode="contribution"
+                    filterFn={t => t.framework_type === 'bsc_metric' && !['deleted'].includes(t.status)} />
+                  {/* Totals */}
+                  <div className="border-t border-slate-100 pt-2 space-y-2">
+                    <WeightBar
+                      targets={targets}
+                      label="Goal Total"
+                      filterFn={t => t.framework_type !== 'competency' && t.framework_type !== 'okr_objective' && !['deleted'].includes(t.status)}
+                    />
+                    <WeightBar
+                      targets={targets}
+                      label="Competencies"
+                      filterFn={t => t.framework_type === 'competency'}
+                    />
+                  </div>
 
                   {canEdit && (
                     <button

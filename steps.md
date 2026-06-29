@@ -166,4 +166,8 @@
 - List down the features which are covered in the project, and display them as features content (categorized) for management presentation of demo.
   
 
+### Understanding the user interface or fixes
 
+- DONE: help me understand why the Goal is showing 170% in InfoBuz client Employee login of Rahul Mehta.
+- DONE: FOLLOWUP PROMPT: then why only Goals is showing, instead of break-up of all line items.
+- 
