@@ -4,6 +4,8 @@ const cors = require('cors');
 const { initDatabase, getDb } = require('./db/database');
 const { seed } = require('./db/seeds/01_demo');
 const { seedTargets } = require('./db/seeds/02_demo_targets');
+const { seed: seedInfoBuz } = require('./db/seeds/03_infobuz');
+const { seedTargets: seedInfoBuzTargets } = require('./db/seeds/04_infobuz_targets');
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -45,6 +47,8 @@ async function start() {
     await initDatabase();
     await seed();
     await seedTargets();
+    await seedInfoBuz();
+    seedInfoBuzTargets(require('./db/database').getDb());
     app.listen(PORT, () => {
       console.log(`PMS Server running on http://localhost:${PORT}`);
       console.log(`Health check: http://localhost:${PORT}/api/v1/health`);

@@ -19,3 +19,37 @@ VP CX ← Head Onboarding (Sunita, NX-010): Top-down TTV KR + proposed activatio
 VP CX ← Head Support (Ganesh, NX-011): Entire OKR set is proposed — no top-down assignment yet; two objectives covering SLA excellence and knowledge-base building
 Head Platform ← Sr Backend Eng (Sneha, NX-014): proposed quality OKR ("Zero P0 bugs") rooted in a real FY24-25 incident
 This creates a V13-blocked cycle — 5 unlinked bottom-up proposals mean the cycle cannot advance to active until each VP links them. 
+
+
+
+
+
+# Create demo company with bidirectional cascade OKRs
+
+What was built
+New files:
+
+server/db/seeds/04_infobuz_targets.js — 4-cycle targets for InfoBuz
+server/db/seeds/03_infobuz.js — export fix (seed wrapper, not raw function)
+server/index.js — wired both InfoBuz seeds
+4 cycles seeded:
+
+Cycle	Status	ARR	Cascade
+FY 2022-23	closed	₹50 Cr	top_down — CEO + VP only
+FY 2023-24	closed	₹75 Cr	top_down — CEO + VP + L3
+FY 2024-25	closed	₹100 Cr	top_down — full L1→L6 + monthly check-ins
+FY 2025-26	goal_setting	₹200 Cr	bidirectional LIVE
+How to test the cascade POC (FY 2025-26)
+Screen: My Targets
+
+Login as	What you see
+ankit.joshi@infobuz.in	KPI: 25,000 MRR proposed, is_over_planned=1, ratio 1.25, over-plan note with BSNL/HDFC pipeline evidence
+karan.singh@infobuz.in	KPI: 15,000 MRR proposed (5K below 20K baseline), description explains Infosys churn
+Screen: Team Targets
+
+Login as	What you see
+rohit.verma@infobuz.in (L5.1)	3 reportee proposals: Ankit 25K (+5K) + Maya 20K + Vikash 20K = 65K team; Rohit's own contribution shows 30K (reduced by 5K — burden relieved by Ankit's over-plan)
+arun.kumar@infobuz.in (L5.3)	Karan 15K (-5K) + Preethi 20K + Sujith 20K = 55K (5K short); Arun's own shows 40K (raised by 5K to absorb Karan's gap)
+vikram.joshi@infobuz.in (VP Sales L2)	Full team rollup: North 315K (+5K from Ankit) vs South 550K, total 950K exactly — over/under net-cancel
+V13 block: All 18 L6 proposals have parentId=null → cycle cannot advance to active until a manager links each proposal to a top-down target.
+
