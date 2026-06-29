@@ -172,5 +172,8 @@
 - DONE: help me understand why the Goal is showing 170% in InfoBuz client Employee login of Rahul Mehta.
 - DONE: FOLLOWUP PROMPT: then why only Goals is showing, instead of break-up of all line items.
 - DONE: help me understand in Infobuz Rohit Verma login, when approving Ankit Joshi goals, 'Link to My Target' button is showing, I am not able to understand the purpose of this button, can you add some information on the UI and also explain the purpose of this action, there is no approve button is visible.
-- can we also improve 'Team Targets' screen for managers to understand at a glance somewhere in the screen if their team target is as per expectation or now, is there any scope of improvement? It's InfoBuz client and Arun Kumar as manager login
-- I still not convienced with what has been developed, my important demo point is bidirectional cascading is not intuitive 
+- DONE: can we also improve 'Team Targets' screen for managers to understand at a glance somewhere in the screen if their team target is as per expectation or now, is there any scope of improvement? It's InfoBuz client and Arun Kumar as manager login
+- DONE: I still not convienced with what has been developed, my important demo point is bidirectional cascading is not intuitive, more understandable, my primary demo purpose is to showcase executive employees enter less target and that balancing should cascade upword and similarly manager's targetted amount should be cascading automatically to it's subordinates when they start enterring the targets, can you also update the data of InfoBuz with more details for completance.
+- Also check how cascading will work at same peers level of L6, that L6.1 plan less target so can the balance be shift to L6.2 and L6.3, and can manager transfer this difference of L6.1 to both L6.2 and L6.3?
+- Provide me the steps which I should follow to demonstrate in InfoBuz for comprehensive demo of cascading in the client InfoBuz.
+- 

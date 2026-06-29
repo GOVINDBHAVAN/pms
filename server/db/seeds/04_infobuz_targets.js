@@ -6,7 +6,7 @@
  *   FY 2023-24  closed  ₹75 Cr ARR  — CEO + VP + L3 with actuals
  *   FY 2024-25  closed  ₹100 Cr ARR — full hierarchy CEO→L6 + monthly check-ins
  *   FY 2025-26  goal_setting ₹200 Cr — BIDIRECTIONAL LIVE (V13 blocking):
- *     Top-down:  CEO approved → VP submitted → L3/L4/L5 draft
+ *     Top-down:  CEO → VP → L3 → L4 → L5: ALL APPROVED (demo-ready)
  *     Bottom-up: ALL L6 proposed (unlinked, blocking cycle advance)
  *       L6.1 Ankit Joshi  OVER-PLANS  25,000 vs 20,000 (+5K) → L5.1 own burden -5K
  *       L6.7 Karan Singh  UNDER-PLANS 15,000 vs 20,000 (-5K) → L5.3 self-absorbs +5K
@@ -687,157 +687,189 @@ function seedInfoBuzTargets(db) {
     submittedAt: '2025-04-08', approvedAt: '2025-04-10', approvedBy: CEO,
   });
 
-  // VP Sales — SUBMITTED (pending CEO approval)
+  // VP Sales — APPROVED (demo: full chain approved so L5 managers can approve their teams)
   const c4vpARR = insertTarget(db, {
     orgId, cycleId: cy2526, empId: vpSal, parentId: c4ARR, type: 'okr_kr', dir: 'top_down',
     title: 'Sales Revenue Contribution FY26', unit: 'INR Cr',
     companyTarget: 150, planned: 150, stretch: 170,
     desc: 'Sales team commits to ₹150 Cr (75% of ₹200 Cr ARR target). Remaining from renewals, expansion, product-led growth.',
-    weight: 40, level: 2, status: 'submitted',
-    submittedAt: '2025-04-14',
+    weight: 40, level: 2, status: 'approved',
+    submittedAt: '2025-04-14', approvedAt: '2025-04-16', approvedBy: CEO,
   });
   insertTarget(db, {
     orgId, cycleId: cy2526, empId: vpSal, parentId: c4KRA, type: 'kra', dir: 'top_down',
     title: 'Revenue Growth',
-    weight: 20, level: 2, status: 'submitted', submittedAt: '2025-04-14',
+    weight: 20, level: 2, status: 'approved',
+    submittedAt: '2025-04-14', approvedAt: '2025-04-16', approvedBy: CEO,
   });
   const c4vpMRR = insertTarget(db, {
     orgId, cycleId: cy2526, empId: vpSal, type: 'kpi', dir: 'top_down',
     title: 'Monthly New Business MRR', unit: 'INR',
     companyTarget: 950000, planned: 950000, stretch: 1100000,
     desc: 'VP Sales team MRR = entire sales org salary pool (₹9.5L/month). Bidirectional: L6 self-propose their MRR; L5/L4/L3 reconcile upward. Company ambition: ₹12L (1.26× salary pool).',
-    weight: 25, level: 2, status: 'submitted', submittedAt: '2025-04-14',
+    weight: 25, level: 2, status: 'approved',
+    submittedAt: '2025-04-14', approvedAt: '2025-04-16', approvedBy: CEO,
   });
   insertTarget(db, {
     orgId, cycleId: cy2526, empId: vpSal, type: 'kra', dir: 'top_down',
     title: 'New Business Acquisition',
-    weight: 15, level: 2, status: 'submitted', submittedAt: '2025-04-14',
+    weight: 15, level: 2, status: 'approved',
+    submittedAt: '2025-04-14', approvedAt: '2025-04-16', approvedBy: CEO,
   });
 
-  // L3.1 Amit North — DRAFT
+  // L3.1 Amit North — APPROVED
   const c4l3nMRR = insertTarget(db, {
     orgId, cycleId: cy2526, empId: l3n, parentId: c4vpMRR, type: 'kpi', dir: 'top_down',
     title: 'Monthly New Business MRR — North Region', unit: 'INR',
     companyTarget: 310000, planned: 310000, stretch: 345000,
     desc: 'North: L4.1 (240K) = 70K (L3.1 own) + 240K (L4.1 team). Net after bottom-up: Ankit Joshi +₹5K over-plan → North total bumps to ₹315K vs ₹310K company target.',
-    weight: 50, level: 3, status: 'draft',
+    weight: 50, level: 3, status: 'approved',
+    submittedAt: '2025-04-18', approvedAt: '2025-04-20', approvedBy: vpSal,
   });
   insertTarget(db, {
     orgId, cycleId: cy2526, empId: l3n, type: 'kra', dir: 'top_down', title: 'Revenue Growth',
-    weight: 50, level: 3, status: 'draft',
+    weight: 50, level: 3, status: 'approved',
+    submittedAt: '2025-04-18', approvedAt: '2025-04-20', approvedBy: vpSal,
   });
 
-  // L3.2 Priya South — DRAFT
+  // L3.2 Priya South — APPROVED
   const c4l3sMRR = insertTarget(db, {
     orgId, cycleId: cy2526, empId: l3s, parentId: c4vpMRR, type: 'kpi', dir: 'top_down',
     title: 'Monthly New Business MRR — South Region', unit: 'INR',
     companyTarget: 550000, planned: 550000, stretch: 610000,
     desc: 'South: L4.2 (430K) + L4.3 solo (50K) + L3.2 own (70K) = 550K. Note: L6.7 Karan Singh under-planned -₹5K → L5.3 Arun Kumar self-absorbs gap by raising own contribution to 40K.',
-    weight: 50, level: 3, status: 'draft',
+    weight: 50, level: 3, status: 'approved',
+    submittedAt: '2025-04-18', approvedAt: '2025-04-20', approvedBy: vpSal,
   });
   insertTarget(db, {
     orgId, cycleId: cy2526, empId: l3s, type: 'kra', dir: 'top_down', title: 'Revenue Growth',
-    weight: 50, level: 3, status: 'draft',
+    weight: 50, level: 3, status: 'approved',
+    submittedAt: '2025-04-18', approvedAt: '2025-04-20', approvedBy: vpSal,
   });
 
-  // L4.1 Sanjay — DRAFT
+  // L4.1 Sanjay — APPROVED
   const c4l41MRR = insertTarget(db, {
     orgId, cycleId: cy2526, empId: l41, parentId: c4l3nMRR, type: 'kpi', dir: 'top_down',
     title: 'Monthly New Business MRR — North Area 1', unit: 'INR',
     companyTarget: 240000, planned: 240000, stretch: 265000,
     desc: 'Team = 50K own + L5.1 (95K) + L5.2 (95K) = 240K. Bottom-up net: Ankit Joshi (L6.1) +5K → team overachieves to 245K.',
-    weight: 60, level: 4, status: 'draft',
+    weight: 60, level: 4, status: 'approved',
+    submittedAt: '2025-04-21', approvedAt: '2025-04-23', approvedBy: l3n,
   });
   insertTarget(db, {
     orgId, cycleId: cy2526, empId: l41, type: 'kra', dir: 'top_down', title: 'Revenue Growth',
-    weight: 40, level: 4, status: 'draft',
+    weight: 40, level: 4, status: 'approved',
+    submittedAt: '2025-04-21', approvedAt: '2025-04-23', approvedBy: l3n,
   });
 
-  // L4.2 Deepak — DRAFT
+  // L4.2 Deepak — APPROVED
   const c4l42MRR = insertTarget(db, {
     orgId, cycleId: cy2526, empId: l42, parentId: c4l3sMRR, type: 'kpi', dir: 'top_down',
     title: 'Monthly New Business MRR — South Area 2', unit: 'INR',
     companyTarget: 430000, planned: 430000, stretch: 475000,
     desc: 'Team = 50K + 4×95K = 430K. Bottom-up: L6.7 Karan -5K → L5.3 Arun self-compensates to 40K own. Team net = 430K (unchanged — Arun covers the gap internally).',
-    weight: 50, level: 4, status: 'draft',
+    weight: 50, level: 4, status: 'approved',
+    submittedAt: '2025-04-21', approvedAt: '2025-04-23', approvedBy: l3s,
   });
   insertTarget(db, {
     orgId, cycleId: cy2526, empId: l42, type: 'kra', dir: 'top_down', title: 'Revenue Growth',
-    weight: 50, level: 4, status: 'draft',
+    weight: 50, level: 4, status: 'approved',
+    submittedAt: '2025-04-21', approvedAt: '2025-04-23', approvedBy: l3s,
   });
 
-  // L4.3 Sunita Solo — DRAFT
+  // L4.3 Sunita Solo — APPROVED
   insertTarget(db, {
     orgId, cycleId: cy2526, empId: l43, parentId: c4l3sMRR, type: 'kpi', dir: 'top_down',
     title: 'Monthly New Business MRR — South Area 3 (Solo)', unit: 'INR',
     companyTarget: 50000, planned: 50000, stretch: 58000,
     desc: 'Sunita Iyer — individual quota, no L5/L6. Over-achieved 52K in FY25; FY26 target raised to 50K baseline.',
-    weight: 60, level: 4, status: 'draft',
+    weight: 60, level: 4, status: 'approved',
+    submittedAt: '2025-04-21', approvedAt: '2025-04-23', approvedBy: l3s,
   });
 
-  // L5.1 Rohit — DRAFT, own contribution REDUCED to 30K (L6.1 over-plan relieves 5K burden)
+  // L5.1 Rohit — APPROVED; own contribution REDUCED to 30K (L6.1 over-plan relieves 5K burden)
   const c4l51MRR = insertTarget(db, {
     orgId, cycleId: cy2526, empId: l51, parentId: c4l41MRR, type: 'kpi', dir: 'top_down',
     title: 'Monthly New Business MRR — L5.1 Team (Rohit Verma)', unit: 'INR',
     companyTarget: 95000, planned: 95000, stretch: 105000,
     desc: 'Team company_target = 95K. L6 bottom-up: Ankit 25K + Maya 20K + Vikash 20K = 65K. Rohit own = 30K (reduced from 35K salary baseline: Ankit over-committed +5K, so Rohit burden drops by 5K). Team total = 30K + 65K = 95K exactly.',
-    weight: 60, level: 5, status: 'draft',
+    weight: 70, level: 5, status: 'approved',
+    submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l41,
   });
-  // Rohit own KPI showing the reduced personal contribution
   insertTarget(db, {
-    orgId, cycleId: cy2526, empId: l51, type: 'kpi', dir: 'top_down',
-    title: 'Rohit\'s Own MRR Contribution (personal accounts)', unit: 'INR',
-    companyTarget: 35000, planned: 30000,
-    desc: 'Rohit personal target = 30K (normally 35K salary-based). Reduced by ₹5K because Ankit Joshi (L6.1) over-planned by ₹5K. The surplus from Ankit absorbs Rohit\'s gap — bidirectional cascade at work.',
-    weight: 0, level: 5, status: 'draft',
+    orgId, cycleId: cy2526, empId: l51, type: 'kra', dir: 'top_down', title: 'New Business Acquisition',
+    weight: 30, level: 5, status: 'approved',
+    submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l41,
   });
 
-  // L5.2 Kavya — DRAFT standard
+  // L5.2 Kavya — APPROVED standard
   const c4l52MRR = insertTarget(db, {
     orgId, cycleId: cy2526, empId: l52, parentId: c4l41MRR, type: 'kpi', dir: 'top_down',
     title: 'Monthly New Business MRR — L5.2 Team (Kavya Nair)', unit: 'INR',
     companyTarget: 95000, planned: 95000, stretch: 105000,
     desc: 'L6 team: Swati 20K + Mohit 20K + Divya 20K = 60K. Kavya own = 35K. Net = 95K.',
-    weight: 60, level: 5, status: 'draft',
+    weight: 70, level: 5, status: 'approved',
+    submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l41,
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: l52, type: 'kra', dir: 'top_down', title: 'New Business Acquisition',
+    weight: 30, level: 5, status: 'approved',
+    submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l41,
   });
 
-  // L5.3 Arun — DRAFT, own contribution RAISED to 40K (absorbs L6.7 gap)
+  // L5.3 Arun — APPROVED; own contribution RAISED to 40K (absorbs L6.7 Karan's gap)
   const c4l53MRR = insertTarget(db, {
     orgId, cycleId: cy2526, empId: l53, parentId: c4l42MRR, type: 'kpi', dir: 'top_down',
     title: 'Monthly New Business MRR — L5.3 Team (Arun Kumar)', unit: 'INR',
     companyTarget: 95000, planned: 95000, stretch: 105000,
     desc: 'Team company_target = 95K. L6 bottom-up: Karan 15K + Preethi 20K + Sujith 20K = 55K (short by 5K — Karan under-planned). Arun raises own to 40K (from 35K) to close gap. Net = 40K + 55K = 95K exactly.',
-    weight: 60, level: 5, status: 'draft',
+    weight: 70, level: 5, status: 'approved',
+    submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l42,
   });
-  // Arun own KPI showing the increased personal contribution
   insertTarget(db, {
-    orgId, cycleId: cy2526, empId: l53, type: 'kpi', dir: 'top_down',
-    title: 'Arun\'s Own MRR Contribution (personal accounts)', unit: 'INR',
-    companyTarget: 35000, planned: 40000,
-    isOverPlanned: 1, overRatio: 1.14,
-    overNote: 'L6.7 Karan Singh under-planned by ₹5K (₹15K vs ₹20K baseline — Infosys account lost to competitor). Arun self-absorbs the shortfall: raising own MRR contribution from ₹35K to ₹40K. Net team = 95K unchanged.',
-    overApproved: 0,
-    weight: 0, level: 5, status: 'draft',
+    orgId, cycleId: cy2526, empId: l53, type: 'kra', dir: 'top_down', title: 'New Business Acquisition',
+    weight: 30, level: 5, status: 'approved',
+    submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l42,
   });
 
-  // L5.4, L5.5, L5.6 — DRAFT standard
+  // L5.4, L5.5, L5.6 — APPROVED standard
   const c4l54MRR = insertTarget(db, {
     orgId, cycleId: cy2526, empId: l54, parentId: c4l42MRR, type: 'kpi', dir: 'top_down',
     title: 'Monthly New Business MRR — L5.4 Team (Neha Singh)', unit: 'INR',
-    companyTarget: 95000, planned: 95000, weight: 60, level: 5, status: 'draft',
+    companyTarget: 95000, planned: 95000, weight: 70, level: 5, status: 'approved',
+    submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l42,
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: l54, type: 'kra', dir: 'top_down', title: 'New Business Acquisition',
+    weight: 30, level: 5, status: 'approved',
+    submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l42,
   });
   const c4l55MRR = insertTarget(db, {
     orgId, cycleId: cy2526, empId: l55, parentId: c4l42MRR, type: 'kpi', dir: 'top_down',
     title: 'Monthly New Business MRR — L5.5 Team (Ravi Joshi)', unit: 'INR',
-    companyTarget: 95000, planned: 95000, weight: 60, level: 5, status: 'draft',
+    companyTarget: 95000, planned: 95000, weight: 70, level: 5, status: 'approved',
+    submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l42,
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: l55, type: 'kra', dir: 'top_down', title: 'New Business Acquisition',
+    weight: 30, level: 5, status: 'approved',
+    submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l42,
   });
   const c4l56MRR = insertTarget(db, {
     orgId, cycleId: cy2526, empId: l56, parentId: c4l42MRR, type: 'kpi', dir: 'top_down',
     title: 'Monthly New Business MRR — L5.6 Team (Pooja Bose)', unit: 'INR',
-    companyTarget: 95000, planned: 95000, weight: 60, level: 5, status: 'draft',
+    companyTarget: 95000, planned: 95000, weight: 70, level: 5, status: 'approved',
+    submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l42,
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: l56, type: 'kra', dir: 'top_down', title: 'New Business Acquisition',
+    weight: 30, level: 5, status: 'approved',
+    submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l42,
   });
 
   // ── BOTTOM-UP TRACK: L6 Proposals (ALL unlinked — V13 blocks cycle advance) ──
+  // Weight = 100% since MRR is each L6 executive's sole goal target.
+  // Competency targets are tracked separately (100% in competency bucket).
 
   // L6.1 ANKIT JOSHI — OVER-PLANS 25,000 (baseline 20,000, over_plan_ratio = 1.25)
   insertTarget(db, {
@@ -848,7 +880,19 @@ function seedInfoBuzTargets(db) {
     isOverPlanned: 1, overRatio: 1.25,
     overNote: 'Over-plan by ₹5,000 vs ₹20,000 baseline. Evidence: (1) BSNL Phase-2 ₹8K MRR contract ready for sign-off by Apr 15. (2) HDFC Insurance pilot converting — decision expected Apr 20. I am willing to forfeit Q1 incentive if target is missed.',
     overApproved: 0,
-    weight: 80, level: 6, status: 'proposed', submittedAt: '2025-04-18',
+    weight: 100, level: 6, status: 'proposed', submittedAt: '2025-04-18',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: l61, type: 'competency', dir: 'bottom_up',
+    title: 'Sales Execution',
+    desc: 'Consistent pipeline discipline, deal velocity, and CRM hygiene. FY26 focus: enterprise deal closures.',
+    weight: 50, level: 6, status: 'proposed', submittedAt: '2025-04-18',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: l61, type: 'competency', dir: 'bottom_up',
+    title: 'Ownership & Accountability',
+    desc: 'Proactive communication on deal slippages; takes full ownership of pipeline health.',
+    weight: 50, level: 6, status: 'proposed', submittedAt: '2025-04-18',
   });
 
   // L6.2 Maya Sharma — Standard 20K
@@ -856,7 +900,7 @@ function seedInfoBuzTargets(db) {
     orgId, cycleId: cy2526, empId: l62, type: 'kpi', dir: 'bottom_up',
     title: 'My New Business MRR Target', unit: 'INR',
     companyTarget: 20000, planned: 20000,
-    weight: 80, level: 6, status: 'proposed', submittedAt: '2025-04-18',
+    weight: 100, level: 6, status: 'proposed', submittedAt: '2025-04-18',
   });
 
   // L6.3 Vikash Kumar — Standard 20K
@@ -864,7 +908,7 @@ function seedInfoBuzTargets(db) {
     orgId, cycleId: cy2526, empId: l63, type: 'kpi', dir: 'bottom_up',
     title: 'My New Business MRR Target', unit: 'INR',
     companyTarget: 20000, planned: 20000,
-    weight: 80, level: 6, status: 'proposed', submittedAt: '2025-04-18',
+    weight: 100, level: 6, status: 'proposed', submittedAt: '2025-04-18',
   });
 
   // L6.4–6.6 under L5.2 Kavya — Standard 20K each
@@ -873,18 +917,31 @@ function seedInfoBuzTargets(db) {
       orgId, cycleId: cy2526, empId, type: 'kpi', dir: 'bottom_up',
       title: 'My New Business MRR Target', unit: 'INR',
       companyTarget: 20000, planned: 20000,
-      weight: 80, level: 6, status: 'proposed', submittedAt: '2025-04-18',
+      weight: 100, level: 6, status: 'proposed', submittedAt: '2025-04-18',
     });
   }
 
   // L6.7 KARAN SINGH — UNDER-PLANS 15,000 (baseline 20,000, gap = -5K)
+  // This is the key demo: Karan commits ₹5K less than baseline → Arun must cover the shortfall
   insertTarget(db, {
     orgId, cycleId: cy2526, empId: l67, type: 'kpi', dir: 'bottom_up',
     title: 'My New Business MRR Target', unit: 'INR',
     companyTarget: 20000, planned: 15000, stretch: 22000,
     desc: 'Self-proposed MRR for FY26. Under-planning vs ₹20K baseline by ₹5K. Context: In FY25 I lost Infosys account (₹8K MRR) in May to a competitor on pricing — annual avg was only ₹15K. FY26: rebuilt pipeline to 4 new SMEs but none above ₹3K MRR yet. Committing to ₹15K realistic baseline; plan to reach ₹20K by Q2 once 2 pending deals close.',
     isOverPlanned: 0,
-    weight: 80, level: 6, status: 'proposed', submittedAt: '2025-04-18',
+    weight: 100, level: 6, status: 'proposed', submittedAt: '2025-04-18',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: l67, type: 'competency', dir: 'bottom_up',
+    title: 'Customer Focus',
+    desc: 'Rebuilding client relationships after FY25 churn. Focus: retention-first selling and needs-based demos.',
+    weight: 60, level: 6, status: 'proposed', submittedAt: '2025-04-18',
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: l67, type: 'competency', dir: 'bottom_up',
+    title: 'Adaptability & Learning',
+    desc: 'Pivoting from SME-only to targeting mid-market accounts; learning enterprise sales methodology.',
+    weight: 40, level: 6, status: 'proposed', submittedAt: '2025-04-18',
   });
 
   // L6.8–6.9 under L5.3 Arun — Standard 20K each
@@ -893,7 +950,7 @@ function seedInfoBuzTargets(db) {
       orgId, cycleId: cy2526, empId, type: 'kpi', dir: 'bottom_up',
       title: 'My New Business MRR Target', unit: 'INR',
       companyTarget: 20000, planned: 20000,
-      weight: 80, level: 6, status: 'proposed', submittedAt: '2025-04-19',
+      weight: 100, level: 6, status: 'proposed', submittedAt: '2025-04-19',
     });
   }
 
@@ -903,7 +960,7 @@ function seedInfoBuzTargets(db) {
       orgId, cycleId: cy2526, empId, type: 'kpi', dir: 'bottom_up',
       title: 'My New Business MRR Target', unit: 'INR',
       companyTarget: 20000, planned: 20000,
-      weight: 80, level: 6, status: 'proposed', submittedAt: '2025-04-19',
+      weight: 100, level: 6, status: 'proposed', submittedAt: '2025-04-19',
     });
   }
 
@@ -913,7 +970,7 @@ function seedInfoBuzTargets(db) {
       orgId, cycleId: cy2526, empId, type: 'kpi', dir: 'bottom_up',
       title: 'My New Business MRR Target', unit: 'INR',
       companyTarget: 20000, planned: 20000,
-      weight: 80, level: 6, status: 'proposed', submittedAt: '2025-04-19',
+      weight: 100, level: 6, status: 'proposed', submittedAt: '2025-04-19',
     });
   }
 
@@ -923,13 +980,39 @@ function seedInfoBuzTargets(db) {
       orgId, cycleId: cy2526, empId, type: 'kpi', dir: 'bottom_up',
       title: 'My New Business MRR Target', unit: 'INR',
       companyTarget: 20000, planned: 20000,
-      weight: 80, level: 6, status: 'proposed', submittedAt: '2025-04-20',
+      weight: 100, level: 6, status: 'proposed', submittedAt: '2025-04-20',
     });
   }
 
-  console.log('InfoBuz 4-cycle targets seeded. FY25-26: 18 L6 bottom-up proposals unlinked (V13 BLOCKED).');
-  console.log('  Over-plan: IB-S13 Ankit Joshi 25K vs 20K baseline → L5.1 Rohit own burden -5K');
+  // Competency targets for L5.3 Arun Kumar (demo login for Team Targets)
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: l53, type: 'competency', dir: 'top_down',
+    title: 'Leadership & Coaching',
+    desc: 'Developing L6 team capacity; addressing Karan Singh performance gap with structured coaching plan.',
+    weight: 40, level: 5, status: 'approved',
+    submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l42,
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: l53, type: 'competency', dir: 'top_down',
+    title: 'Ownership & Accountability',
+    desc: 'Self-absorbing team shortfall (raising own MRR from ₹35K to ₹40K) demonstrates accountability.',
+    weight: 35, level: 5, status: 'approved',
+    submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l42,
+  });
+  insertTarget(db, {
+    orgId, cycleId: cy2526, empId: l53, type: 'competency', dir: 'top_down',
+    title: 'Strategic Thinking',
+    desc: 'Identifying mid-market opportunities to diversify from SME-heavy portfolio in South territory.',
+    weight: 25, level: 5, status: 'approved',
+    submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l42,
+  });
+
+  console.log('InfoBuz 4-cycle targets seeded. FY25-26 bidirectional demo:');
+  console.log('  Chain L1→L5: all APPROVED (demo-ready for L5 managers to approve team)');
+  console.log('  L6: 18 bottom-up proposals (weight=100%/goal) + competencies for key employees');
+  console.log('  Over-plan: IB-S13 Ankit Joshi 25K vs 20K baseline → L5.1 Rohit burden -5K');
   console.log('  Under-plan: IB-S19 Karan Singh 15K vs 20K baseline → L5.3 Arun self-absorbs +5K');
+  console.log('  V13 BLOCKED: 18 proposals unlinked → cycle cannot advance to active');
 }
 
 module.exports = { seedTargets: seedInfoBuzTargets };

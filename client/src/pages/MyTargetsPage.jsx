@@ -168,58 +168,136 @@ function CascadeGateBanner({ gate, cascadeMode }) {
 }
 
 // ── Context Panel ─────────────────────────────────────────────────────────────
-function ContextPanel({ context, cycle }) {
-  const [collapsed, setCollapsed] = useState(false);
+// Shows what the manager hierarchy expects — the cascade context for target entry.
+function ContextPanel({ context, cycle, myTargets }) {
+  const [showFull, setShowFull] = useState(false);
   if (!context) return null;
 
   const { chain, targets } = context;
   if (!chain?.length) return null;
 
+  // Immediate manager is depth=1
+  const immediateMgr = chain.find(p => p.depth === 1);
+  const mgrTargets = immediateMgr
+    ? targets.filter(t => t.employee_id === immediateMgr.id && t.planned_target != null)
+    : [];
+  const higherChain = chain.filter(p => p.depth > 1);
+
+  // For each of my numeric targets, find matching manager target for comparison
+  const NUMERIC_TYPES = ['kpi', 'goal', 'okr_kr', 'bsc_metric'];
+  const myNumericProposals = (myTargets || []).filter(t =>
+    NUMERIC_TYPES.includes(t.framework_type) &&
+    t.company_target != null && t.planned_target != null
+  );
+
   return (
-    <div className="bg-slate-50 border border-slate-200 rounded-xl overflow-hidden">
-      <button
-        className="w-full flex items-center justify-between px-4 py-3 text-left"
-        onClick={() => setCollapsed(v => !v)}
-      >
+    <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+      <div className="px-4 py-3 bg-slate-50 border-b border-slate-100">
         <span className="text-xs font-bold text-slate-500 uppercase tracking-wide">
-          Your Manager Chain &amp; Their Targets
+          Cascade Context
         </span>
-        <span className="text-slate-400 text-xs">{collapsed ? '▼ Show' : '▲ Hide'}</span>
-      </button>
-      {!collapsed && (
-        <div className="px-4 pb-4 space-y-3">
-          {chain.slice(1).map(person => {
-            const personTargets = targets.filter(t => t.employee_id === person.id);
-            return (
-              <div key={person.id} className="border-l-2 border-slate-300 pl-3">
-                <p className="text-xs font-semibold text-slate-600">
-                  {person.name}
-                  <span className="text-slate-400 font-normal ml-1">(depth {person.depth})</span>
-                </p>
-                {personTargets.length === 0 && (
-                  <p className="text-xs text-slate-400 mt-1">No approved targets yet</p>
-                )}
-                {personTargets.map(t => (
-                  <div key={t.id} className="mt-1.5 flex items-start gap-2">
-                    <span className="text-[10px] font-medium text-slate-400 pt-0.5 w-16 flex-shrink-0">
-                      {FRAMEWORK_TYPE_META[t.framework_type]?.label || t.framework_type}
-                    </span>
-                    <div className="min-w-0">
-                      <p className="text-xs text-slate-700 truncate">{t.title}</p>
-                      {t.planned_target != null && (
-                        <p className="text-[10px] text-slate-400">
-                          Target: {fmt(t.planned_target)} {t.unit || ''}
-                          {t.weight ? ` · ${t.weight}%` : ''}
-                        </p>
+        <p className="text-[10px] text-slate-400 mt-0.5">What your manager hierarchy expects — your targets should contribute to these.</p>
+      </div>
+
+      <div className="p-4 space-y-4">
+        {/* Immediate manager block */}
+        {immediateMgr && (
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 text-[10px] font-bold flex-shrink-0">
+                {immediateMgr.name?.charAt(0)}
+              </div>
+              <div>
+                <span className="text-xs font-semibold text-slate-800">{immediateMgr.name}</span>
+                <span className="text-[10px] text-slate-400 ml-1">— your direct manager</span>
+              </div>
+            </div>
+
+            {mgrTargets.length === 0 ? (
+              <p className="text-xs text-slate-400 ml-8">No approved targets yet — they may still be in goal-setting.</p>
+            ) : (
+              <div className="ml-8 space-y-2">
+                {mgrTargets.slice(0, 3).map(t => {
+                  const meta = FRAMEWORK_TYPE_META[t.framework_type];
+                  // Find my proposal that matches this (by type + unit)
+                  const myMatch = myNumericProposals.find(m =>
+                    m.framework_type === t.framework_type
+                  );
+                  return (
+                    <div key={t.id} className="bg-slate-50 rounded-lg px-3 py-2 border border-slate-100">
+                      <div className="flex items-start gap-2">
+                        <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded flex-shrink-0 ${meta?.color || 'bg-slate-100 text-slate-600'}`}>
+                          {meta?.label || t.framework_type}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-xs text-slate-700 leading-snug">{t.title}</p>
+                          <p className="text-[10px] text-slate-500 mt-0.5">
+                            Team target: <strong className="text-slate-700">{fmt(t.planned_target)}</strong>
+                            {t.unit ? ` ${t.unit}` : ''}
+                          </p>
+                        </div>
+                      </div>
+                      {myMatch && (
+                        <div className="mt-1.5 flex items-center gap-3 text-[10px] border-t border-slate-200 pt-1.5">
+                          <span className="text-slate-500">
+                            Your allocation: <strong>{fmt(myMatch.company_target)}</strong>
+                          </span>
+                          <span className="text-slate-500">
+                            You committed: <strong className={
+                              parseFloat(myMatch.planned_target) < parseFloat(myMatch.company_target)
+                                ? 'text-orange-600' : 'text-emerald-600'
+                            }>{fmt(myMatch.planned_target)}</strong>
+                          </span>
+                          {parseFloat(myMatch.planned_target) !== parseFloat(myMatch.company_target) && (
+                            <span className={`font-semibold ${
+                              parseFloat(myMatch.planned_target) < parseFloat(myMatch.company_target)
+                                ? 'text-orange-600' : 'text-emerald-600'
+                            }`}>
+                              {parseFloat(myMatch.planned_target) < parseFloat(myMatch.company_target) ? '↓ short' : '↑ over'}
+                            </span>
+                          )}
+                        </div>
                       )}
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
+                {mgrTargets.length > 3 && (
+                  <p className="text-[10px] text-slate-400">+{mgrTargets.length - 3} more targets</p>
+                )}
               </div>
-            );
-          })}
-        </div>
-      )}
+            )}
+          </div>
+        )}
+
+        {/* Chain above (collapsed by default) */}
+        {higherChain.length > 0 && (
+          <div>
+            <button
+              onClick={() => setShowFull(v => !v)}
+              className="text-[10px] text-blue-600 hover:text-blue-700 flex items-center gap-1"
+            >
+              {showFull ? '▲ Hide full chain' : `▼ Show full chain (${higherChain.length} more level${higherChain.length !== 1 ? 's' : ''})`}
+            </button>
+            {showFull && (
+              <div className="mt-2 space-y-2 pl-2 border-l-2 border-slate-200">
+                {higherChain.map(person => {
+                  const personTargets = targets.filter(t => t.employee_id === person.id && t.planned_target != null);
+                  return (
+                    <div key={person.id}>
+                      <p className="text-xs font-semibold text-slate-500">{person.name}</p>
+                      {personTargets.map(t => (
+                        <p key={t.id} className="text-[10px] text-slate-400 ml-2">
+                          {FRAMEWORK_TYPE_META[t.framework_type]?.label}: {fmt(t.planned_target)} {t.unit || ''}
+                        </p>
+                      ))}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -274,6 +352,20 @@ function TargetRow({ target, onEdit, onDelete, onCheckin, canEdit, canCheckin })
               Stretch: {fmt(target.stretch_target)}{target.unit ? ` ${target.unit}` : ''}
             </span>
           )}
+          {/* Company allocation baseline vs what employee committed */}
+          {target.company_target != null && target.planned_target != null &&
+           Math.abs(parseFloat(target.company_target) - parseFloat(target.planned_target)) > 0.01 && (() => {
+            const delta = parseFloat(target.planned_target) - parseFloat(target.company_target);
+            const pctDiff = Math.abs(delta / parseFloat(target.company_target) * 100).toFixed(0);
+            const isOver = delta > 0;
+            return (
+              <span className={`text-xs font-semibold px-1.5 py-0.5 rounded ${
+                isOver ? 'bg-emerald-50 text-emerald-700' : 'bg-orange-50 text-orange-700'
+              }`}>
+                Allocation: {fmt(target.company_target)} · {isOver ? '+' : ''}{fmt(delta)} ({isOver ? 'over' : 'under'} by {pctDiff}%)
+              </span>
+            );
+          })()}
           {target.parent_title && (
             <span className="text-xs text-slate-400 italic truncate max-w-[180px]">
               ↑ {target.parent_title}
@@ -1281,15 +1373,28 @@ export default function MyTargetsPage() {
 
             {/* Cascade mode explanation */}
             {canEdit && (
-              <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 text-xs text-blue-700">
+              <div className="bg-blue-50 border border-blue-100 rounded-xl px-4 py-3 text-xs text-blue-700 space-y-1">
                 {effectiveCascade === 'top_down' && (
-                  <><strong>Top-Down mode:</strong> Targets flow from leadership down. Your targets must link to your manager's approved targets and be approved before the cycle activates.</>
+                  <>
+                    <p><strong>Top-Down Cascade:</strong> Your manager sets targets first. Your targets must link to their approved targets and show how you contribute to their commitment.</p>
+                    <p className="text-blue-600">If your manager commits ₹95,000 MRR to their manager, and you are 1 of 3 reportees, your expected contribution is approximately ₹20,000–₹35,000.</p>
+                  </>
                 )}
                 {effectiveCascade === 'bottom_up' && (
-                  <><strong>Bottom-Up mode:</strong> Propose your own targets freely. Your manager will link and approve them. Targets start as "Proposed".</>
+                  <>
+                    <p><strong>Bottom-Up Cascade:</strong> Propose your own targets freely — your manager will review, link to their commitment, and approve.</p>
+                    <p className="text-blue-600">Your proposals start as "Proposed" status. Each target shows your company allocation baseline — commit more or less than the baseline and explain why.</p>
+                  </>
                 )}
                 {effectiveCascade === 'bidirectional' && (
-                  <><strong>Bidirectional mode:</strong> Both tracks run simultaneously. You can have manager-assigned targets and your own proposals. Both must sum to 100% weight and be approved before the cycle activates.</>
+                  <>
+                    <p><strong>Bidirectional Cascade:</strong> You propose your own targets (bottom-up track) while top-down targets may also be assigned to you. Both tracks run simultaneously.</p>
+                    <p className="text-blue-600">
+                      Each target shows your <strong>allocation baseline</strong> (the company's expected contribution from your role) alongside what you commit to.
+                      If you commit less than the baseline, your manager must personally cover the gap.
+                      If you commit more, your manager's personal burden reduces.
+                    </p>
+                  </>
                 )}
               </div>
             )}
@@ -1365,7 +1470,7 @@ export default function MyTargetsPage() {
                 </div>
 
                 {/* Cascade Context */}
-                <ContextPanel context={context} cycle={cycle} />
+                <ContextPanel context={context} cycle={cycle} myTargets={targets} />
               </div>
             </div>
           </>

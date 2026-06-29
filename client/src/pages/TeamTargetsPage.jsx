@@ -587,10 +587,141 @@ function TargetApprovalCard({ target, myApprovedCount, isHrAdmin, onApprove, onR
 }
 
 // ── Reportee Detail View ──────────────────────────────────────────────────────
+// ── Team Coverage Widget ──────────────────────────────────────────────────────
+// Shows manager's numeric targets vs sum of team proposals — the cascade math.
+function TeamCoverageWidget({ myApprovedTargets, allReportees, currentEmployeeId }) {
+  const NUMERIC_TYPES = ['kpi', 'goal', 'okr_kr', 'bsc_metric'];
+
+  const coverageItems = myApprovedTargets
+    .filter(t => NUMERIC_TYPES.includes(t.framework_type) && t.planned_target != null)
+    .map(managerTarget => {
+      const contributions = allReportees.map(r => {
+        const matching = (r.targets || []).filter(t =>
+          t.framework_type === managerTarget.framework_type &&
+          t.planned_target != null &&
+          !['rejected', 'deleted'].includes(t.status)
+        );
+        const sum = matching.reduce((s, t) => s + (parseFloat(t.planned_target) || 0), 0);
+        return { id: r.id, name: r.name, sum, isCurrent: r.id === currentEmployeeId };
+      }).filter(c => c.sum > 0);
+
+      const teamTotal = contributions.reduce((s, c) => s + c.sum, 0);
+      const gap = parseFloat(managerTarget.planned_target) - teamTotal;
+      const pct = managerTarget.planned_target > 0
+        ? Math.round((teamTotal / managerTarget.planned_target) * 100) : 0;
+
+      return { managerTarget, contributions, teamTotal, gap, pct };
+    })
+    .filter(item => item.contributions.length > 0);
+
+  if (!coverageItems.length) return null;
+
+  return (
+    <div className="bg-white border border-slate-200 rounded-xl overflow-hidden">
+      <div className="px-4 py-3 bg-slate-50 border-b border-slate-100 flex items-center gap-2">
+        <span className="text-sm font-bold text-slate-700">Cascade Coverage</span>
+        <span className="text-xs text-slate-400">— how your team's commitments compare to your target</span>
+      </div>
+      <div className="p-4 space-y-5">
+        {coverageItems.map(({ managerTarget, contributions, teamTotal, gap, pct }) => {
+          const isShort = gap > 0;
+          const isOver = gap < 0;
+          return (
+            <div key={managerTarget.id}>
+              {/* Manager's target */}
+              <div className="flex items-center justify-between mb-2">
+                <div>
+                  <span className="text-xs font-semibold text-slate-700">
+                    {managerTarget.title.replace(/— L[0-9]\.[0-9] Team.*$/, '').trim()}
+                  </span>
+                  {managerTarget.unit && (
+                    <span className="text-xs text-slate-400 ml-1">· {managerTarget.unit}</span>
+                  )}
+                </div>
+                <span className="text-xs text-slate-500">
+                  Your target: <strong className="text-slate-800">{Number(managerTarget.planned_target).toLocaleString('en-IN')}</strong>
+                </span>
+              </div>
+
+              {/* Progress bar */}
+              <div className="mb-2">
+                <div className="h-2.5 bg-slate-100 rounded-full overflow-hidden">
+                  <div
+                    className={`h-full rounded-full transition-all ${
+                      pct >= 100 ? 'bg-emerald-500' : pct >= 70 ? 'bg-blue-500' : 'bg-amber-500'
+                    }`}
+                    style={{ width: `${Math.min(pct, 100)}%` }}
+                  />
+                </div>
+                <div className="flex items-center justify-between mt-1">
+                  <span className="text-xs text-slate-500">
+                    Team commits: <strong>{Number(teamTotal).toLocaleString('en-IN')}</strong>
+                  </span>
+                  <span className={`text-xs font-semibold ${pct >= 100 ? 'text-emerald-600' : 'text-amber-600'}`}>
+                    {pct}% covered
+                  </span>
+                </div>
+              </div>
+
+              {/* Per-person breakdown */}
+              <div className="bg-slate-50 rounded-lg divide-y divide-slate-100">
+                {contributions.map(c => (
+                  <div key={c.id} className={`flex items-center gap-3 px-3 py-2 ${c.isCurrent ? 'bg-blue-50' : ''}`}>
+                    <span className={`text-xs flex-1 ${c.isCurrent ? 'font-semibold text-blue-800' : 'text-slate-600'}`}>
+                      {c.name}{c.isCurrent && ' (viewing now)'}
+                    </span>
+                    <span className="text-xs font-semibold text-slate-700 tabular-nums">
+                      {Number(c.sum).toLocaleString('en-IN')}
+                    </span>
+                  </div>
+                ))}
+                <div className="flex items-center gap-3 px-3 py-2 bg-white rounded-b-lg">
+                  <span className="text-xs font-bold text-slate-500 flex-1">Team Total</span>
+                  <span className="text-xs font-bold text-slate-800 tabular-nums">
+                    {Number(teamTotal).toLocaleString('en-IN')}
+                  </span>
+                </div>
+              </div>
+
+              {/* Gap callout */}
+              {isShort && (
+                <div className="mt-2 flex items-start gap-2 bg-amber-50 border border-amber-200 rounded-lg px-3 py-2 text-xs text-amber-800">
+                  <span className="font-bold mt-0.5">⚠</span>
+                  <span>
+                    Team is short by <strong>{Number(gap).toLocaleString('en-IN')} {managerTarget.unit || ''}</strong> —
+                    you must personally cover this gap, or reject and push for higher commitments.
+                  </span>
+                </div>
+              )}
+              {isOver && (
+                <div className="mt-2 flex items-start gap-2 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 text-xs text-emerald-800">
+                  <span className="font-bold mt-0.5">↑</span>
+                  <span>
+                    Team over-commits by <strong>{Number(Math.abs(gap)).toLocaleString('en-IN')} {managerTarget.unit || ''}</strong> —
+                    your personal burden reduces, or you can raise your own target to match.
+                  </span>
+                </div>
+              )}
+              {gap === 0 && (
+                <div className="mt-2 flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-lg px-3 py-2 text-xs text-emerald-700">
+                  <span>✓</span>
+                  <span>Team commitment exactly matches your target — cascade fully covered.</span>
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
+// ── Reportee Detail View ──────────────────────────────────────────────────────
 function ReporteeView({ employeeId, cycle, myApprovedCount, isHrAdmin, onBack }) {
   const [reportee, setReportee] = useState(null);
   const [targets, setTargets] = useState([]);
   const [myTargets, setMyTargets] = useState([]);
+  const [allReportees, setAllReportees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -609,6 +740,7 @@ function ReporteeView({ employeeId, cycle, myApprovedCount, isHrAdmin, onBack })
       ]);
       const emp = managerView.find(r => r.id == employeeId);
       setReportee(emp);
+      setAllReportees(managerView);
       setTargets(reporteeTargets.filter(t => t.status !== 'deleted'));
       setMyTargets(ownTargets.filter(t => t.status === 'approved'));
     } catch (e) {
@@ -690,6 +822,15 @@ function ReporteeView({ employeeId, cycle, myApprovedCount, isHrAdmin, onBack })
 
       {loading && (
         <div className="text-sm text-slate-400 py-12 text-center">Loading targets…</div>
+      )}
+
+      {/* Cascade coverage — shows team total vs manager's own target */}
+      {!loading && myTargets.length > 0 && allReportees.length > 0 && (
+        <TeamCoverageWidget
+          myApprovedTargets={myTargets}
+          allReportees={allReportees}
+          currentEmployeeId={parseInt(employeeId)}
+        />
       )}
 
       {!loading && targets.length === 0 && (
