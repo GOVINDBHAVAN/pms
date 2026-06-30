@@ -17,34 +17,34 @@
 
 | Login Email | Name | Level | Role | Key Target |
 |---|---|---|---|---|
-| `rahul.mehta@infobuz.in` | Rahul Mehta | L9 CEO | Admin | OKR Obj: Scale to ₹200 Cr ARR |
-| `vikram.joshi@infobuz.in` | Vikram Joshi | L8 VP Sales | Manager | KR: Sales Revenue = ₹150 Cr |
-| `amit.sharma@infobuz.in` | Amit Sharma | L7 Director (North) | Manager | KR: North Region Revenue = ₹50 Cr |
-| `sanjay.reddy@infobuz.in` | Sanjay Reddy | L6 Area Manager | Manager | KR: North Area 1 = ₹28 Cr |
+| `rahul.mehta@infobuz.in` | Rahul Mehta | L1 CEO | Admin | OKR Obj: Scale to ₹200 Cr ARR |
+| `vikram.joshi@infobuz.in` | Vikram Joshi | L2 VP Sales | Manager | KR: Sales Revenue = ₹150 Cr |
+| `amit.sharma@infobuz.in` | Amit Sharma | L3 Director (North) | Manager | KR: North Region Revenue = ₹50 Cr |
+| `sanjay.reddy@infobuz.in` | Sanjay Reddy | L4 Area Manager | Manager | KR: North Area 1 = ₹28 Cr |
 | `rohit.verma@infobuz.in` | Rohit Verma | L5 Team Lead | Manager | KR: Team Revenue = ₹12 Cr (top-down) |
-| `ankit.joshi@infobuz.in` | Ankit Joshi | L3 Executive | Employee | KR: ₹0.30 Cr (bottom-up, proposed) |
-| `maya.sharma@infobuz.in` | Maya Sharma | L3 Executive | Employee | KR: ₹0.24 Cr (bottom-up, proposed) |
-| `vikash.kumar@infobuz.in` | Vikash Kumar | L3 Executive | Employee | KR: ₹0.24 Cr (bottom-up, proposed) |
+| `ankit.joshi@infobuz.in` | Ankit Joshi | L6 Executive | Employee | KR: ₹0.30 Cr (bottom-up, proposed) |
+| `maya.sharma@infobuz.in` | Maya Sharma | L6 Executive | Employee | KR: ₹0.24 Cr (bottom-up, proposed) |
+| `vikash.kumar@infobuz.in` | Vikash Kumar | L6 Executive | Employee | KR: ₹0.24 Cr (bottom-up, proposed) |
 
 ---
 
 ## Revenue OKR Cascade Chain
 
 ```
-Rahul Mehta (CEO L9)       OKR: "Scale InfoBuz to ₹200 Cr ARR"
+Rahul Mehta (CEO · L1)       OKR: "Scale InfoBuz to ₹200 Cr ARR"
                                KR: Annual Recurring Revenue = ₹200 Cr ✓ Approved
                                 ↓
-Vikram Joshi (VP L8)           KR: Sales Revenue Contribution = ₹150 Cr ✓ Approved
+Vikram Joshi (VP · L2)         KR: Sales Revenue Contribution = ₹150 Cr ✓ Approved
                                 ↓
-Amit Sharma (Director L7)      KR: North Region Revenue = ₹50 Cr ✓ Approved
+Amit Sharma (Director · L3)    KR: North Region Revenue = ₹50 Cr ✓ Approved
                                 ↓
-Sanjay Reddy (Area Mgr L6)     KR: North Area 1 Revenue = ₹28 Cr ✓ Approved
+Sanjay Reddy (Area Mgr · L4)   KR: North Area 1 Revenue = ₹28 Cr ✓ Approved
                                 ↓
-Rohit Verma (Team Lead L5)     KR: L5.1 Team Revenue = ₹12 Cr ✓ Approved
+Rohit Verma (Team Lead · L5)   KR: L5.1 Team Revenue = ₹12 Cr ✓ Approved
                                 ↓ (gap here — only ₹0.78 Cr proposed so far)
-Ankit Joshi  (Executive L3)    KR: My Revenue Contribution = ₹0.30 Cr ⏳ Proposed
-Maya Sharma  (Executive L3)    KR: My Revenue Contribution = ₹0.24 Cr ⏳ Proposed
-Vikash Kumar (Executive L3)    KR: My Revenue Contribution = ₹0.24 Cr ⏳ Proposed
+Ankit Joshi  (Executive · L6)  KR: My Revenue Contribution = ₹0.30 Cr ⏳ Proposed
+Maya Sharma  (Executive · L6)  KR: My Revenue Contribution = ₹0.24 Cr ⏳ Proposed
+Vikash Kumar (Executive · L6)  KR: My Revenue Contribution = ₹0.24 Cr ⏳ Proposed
 ```
 
 **Gap to show:** ₹0.78 Cr team proposals vs ₹12 Cr Rohit's assignment (~6.5% coverage)
@@ -165,8 +165,8 @@ Login: `rahul.mehta@infobuz.in`
 
 ## Key Talking Points
 
-1. **Top-down is done** — L9 to L5 chain fully approved; navigate it in under 2 minutes
-2. **Bottom-up is live** — L3 associates proposed targets without waiting; appear in manager's Team Targets immediately
+1. **Top-down is done** — L1 to L5 chain fully approved; navigate it in under 2 minutes
+2. **Bottom-up is live** — L6 associates proposed targets without waiting; appear in manager's Team Targets immediately
 3. **The gap tells a real story** — ₹0.78 Cr proposed vs ₹12 Cr assigned; system surfaces reality
 4. **"Link to My Target"** is the unique bidirectional moment — manager connects the two flows with one action
 5. **Org Drilldown** closes the loop — CEO verifies cascade reaches the frontline, not just VPs
