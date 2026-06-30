@@ -24,3 +24,21 @@ export async function selfRate(cycleId, targetId, payload) {
   );
   return data;
 }
+
+// GET /appraisal/cycles/:cycleId/team
+// Returns { cycle, orgSettings, reportees: [{ employee, targets, priorSummary }] }
+export async function getTeamAppraisal(cycleId) {
+  const { data } = await axios.get(`${BASE}/cycles/${cycleId}/team`, { headers: hdrs() });
+  return data;
+}
+
+// POST /appraisal/cycles/:cycleId/employees/:empId/targets/:targetId/manager-rate
+// Save manager_rating and manager_comment for one of a direct report's targets.
+export async function managerRate(cycleId, empId, targetId, payload) {
+  const { data } = await axios.post(
+    `${BASE}/cycles/${cycleId}/employees/${empId}/targets/${targetId}/manager-rate`,
+    payload,
+    { headers: hdrs() }
+  );
+  return data;
+}

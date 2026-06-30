@@ -9,6 +9,7 @@ import CyclesPage      from './pages/CyclesPage';
 import MyTargetsPage   from './pages/MyTargetsPage';
 import TeamTargetsPage    from './pages/TeamTargetsPage';
 import SelfAppraisalPage from './pages/SelfAppraisalPage';
+import TeamAppraisalPage from './pages/TeamAppraisalPage';
 import PrivateRoute       from './components/layout/PrivateRoute';
 import WizardShell     from './components/wizard/WizardShell';
 import AppLayout       from './components/layout/AppLayout';
@@ -88,8 +89,8 @@ export default function App() {
         <Route path="/team-targets/:employeeId"  element={<PrivateRoute><TeamTargetsPage /></PrivateRoute>} />
 
         <Route path="/appraisal/self"            element={<PrivateRoute><SelfAppraisalPage /></PrivateRoute>} />
-        <Route path="/appraisal/team"            element={<PrivateRoute><Placeholder title="Team Appraisal" /></PrivateRoute>} />
-        <Route path="/appraisal/team/:employeeId"element={<PrivateRoute><Placeholder title="Rate Employee" /></PrivateRoute>} />
+        <Route path="/appraisal/team"            element={<PrivateRoute><TeamAppraisalPage /></PrivateRoute>} />
+        <Route path="/appraisal/team/:employeeId"element={<PrivateRoute><TeamAppraisalPage /></PrivateRoute>} />
 
         <Route path="/calibration"       element={<PrivateRoute><Placeholder title="Calibration" /></PrivateRoute>} />
         <Route path="/reports"           element={<PrivateRoute><Placeholder title="Reports" /></PrivateRoute>} />
