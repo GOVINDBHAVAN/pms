@@ -7,8 +7,9 @@ import OrgSettingsPage from './pages/OrgSettingsPage';
 import EmployeesPage   from './pages/EmployeesPage';
 import CyclesPage      from './pages/CyclesPage';
 import MyTargetsPage   from './pages/MyTargetsPage';
-import TeamTargetsPage from './pages/TeamTargetsPage';
-import PrivateRoute    from './components/layout/PrivateRoute';
+import TeamTargetsPage    from './pages/TeamTargetsPage';
+import SelfAppraisalPage from './pages/SelfAppraisalPage';
+import PrivateRoute       from './components/layout/PrivateRoute';
 import WizardShell     from './components/wizard/WizardShell';
 import AppLayout       from './components/layout/AppLayout';
 
@@ -86,7 +87,7 @@ export default function App() {
         <Route path="/team-targets/proposed"     element={<PrivateRoute><TeamTargetsPage /></PrivateRoute>} />
         <Route path="/team-targets/:employeeId"  element={<PrivateRoute><TeamTargetsPage /></PrivateRoute>} />
 
-        <Route path="/appraisal/self"            element={<PrivateRoute><Placeholder title="Self Appraisal" /></PrivateRoute>} />
+        <Route path="/appraisal/self"            element={<PrivateRoute><SelfAppraisalPage /></PrivateRoute>} />
         <Route path="/appraisal/team"            element={<PrivateRoute><Placeholder title="Team Appraisal" /></PrivateRoute>} />
         <Route path="/appraisal/team/:employeeId"element={<PrivateRoute><Placeholder title="Rate Employee" /></PrivateRoute>} />
 

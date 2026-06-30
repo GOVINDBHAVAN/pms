@@ -39,6 +39,7 @@ app.use('/api/v1/employees', require('./routes/employees'));
 app.use('/api/v1/cycles',    require('./routes/cycles'));
 app.use('/api/v1/targets',   require('./routes/targets'));
 app.use('/api/v1/checkins',  require('./routes/checkins'));
+app.use('/api/v1/appraisal', require('./routes/appraisal'));
 app.use('/api/v1/reports',   require('./routes/reports'));
 
 // ── Start ──────────────────────────────────────────────────────────────────

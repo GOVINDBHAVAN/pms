@@ -226,3 +226,40 @@ L4.1 → L5.1+L5.2 (MRR)	210,000	170,000	81% — Short by 40K ⚠
 L4.2 → L5.3–L5.6 (MRR)	390,000	340,000	87% — Short by 50K ⚠
 Neha Singh (L5.4: 80K) and Pooja Bose (L5.6: 70K) are the deliberately under-committed managers showing the "missing out" warning.
 
+
+
+
+# Design performance appraisal menu structure
+
+## Self Appraisal — everything shipped:
+
+server/routes/appraisal.js (done earlier)
+
+GET /appraisal/cycles/:cycleId/self — returns cycle, org settings (rating scale, bands, weightage), and all approved/active/locked targets with last check-in pre-fill
+POST /appraisal/cycles/:cycleId/targets/:id/self-rate — validates cycle is review, blocks folder types, writes self_rating + self_comment + optional actual_value, audit-logs every save
+client/src/pages/SelfAppraisalPage.jsx — full page:
+
+Cycle selector — defaults to the review-phase cycle, falls back to any active cycle
+Phase gate banner — if cycle isn't review, shows exactly what phase it's in, the full state machine in order, and why appraisal isn't open yet. Targets still render read-only so employees can preview what they'll need to rate
+Target groups — same group order as My Targets (OKR → KRA/KPI → Goals → BSC → Competency). Objectives and KRAs render as folder headers with their KRs/KPIs indented below them
+Per-target card: frozen planned target display, actual value input (pre-filled from last check-in per Rule PT5, with a note), rating widget (n-point buttons for 5/3/custom scales, number input for percentage type), self-comment textarea, per-target Save button with "Saved ✓" flash
+Right panel: progress tracker (X of Y rated, progress bar), estimated score preview (goal score × goalsPct + comp score × compPct), performance band badge in band colour — all labelled as estimate, not final
+InfoIcons on every field and every group header (per CLAUDE.md §11)
+App.jsx — Placeholder replaced with SelfAppraisalPage
+
+
+Self Appraisal — everything shipped:
+
+server/routes/appraisal.js (done earlier)
+
+GET /appraisal/cycles/:cycleId/self — returns cycle, org settings (rating scale, bands, weightage), and all approved/active/locked targets with last check-in pre-fill
+POST /appraisal/cycles/:cycleId/targets/:id/self-rate — validates cycle is review, blocks folder types, writes self_rating + self_comment + optional actual_value, audit-logs every save
+client/src/pages/SelfAppraisalPage.jsx — full page:
+
+Cycle selector — defaults to the review-phase cycle, falls back to any active cycle
+Phase gate banner — if cycle isn't review, shows exactly what phase it's in, the full state machine in order, and why appraisal isn't open yet. Targets still render read-only so employees can preview what they'll need to rate
+Target groups — same group order as My Targets (OKR → KRA/KPI → Goals → BSC → Competency). Objectives and KRAs render as folder headers with their KRs/KPIs indented below them
+Per-target card: frozen planned target display, actual value input (pre-filled from last check-in per Rule PT5, with a note), rating widget (n-point buttons for 5/3/custom scales, number input for percentage type), self-comment textarea, per-target Save button with "Saved ✓" flash
+Right panel: progress tracker (X of Y rated, progress bar), estimated score preview (goal score × goalsPct + comp score × compPct), performance band badge in band colour — all labelled as estimate, not final
+InfoIcons on every field and every group header (per CLAUDE.md §11)
+App.jsx — Placeholder replaced with SelfAppraisalPage
