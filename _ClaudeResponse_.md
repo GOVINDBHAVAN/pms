@@ -107,3 +107,26 @@ Frontend (from previous session)
 
 TeamTargetsPage: TeamCoverageWidget shows the cascade math — team total vs Arun's own target, with per-person breakdown and the gap callout
 MyTargetsPage: ContextPanel redesigned to show allocation baseline vs committed amount comparison; over/under delta badge on each target row
+
+
+
+# Verify InfoBuz OKR and KRA-KPI mapping for all employees
+
+Summary of what was fixed:
+
+Every InfoBuz employee now has in FY 2025-26:
+
+Layer	OKR KR	KRA	KPI	Competencies
+CEO (L1)	4 Objectives × KRs	Revenue Growth	—	3
+VP Sales (L2)	✅ linked to CEO ARR KR	2 KRAs	MRR KPI	3
+VP Product (L2)	✅ Uptime + Velocity	Quality	Bug Escape Rate	3
+VP CX (L2)	✅ NPS + Churn	Retention	CSAT	3
+L3 HR (reports CEO)	✅ eNPS + Attrition	People Dev	—	3
+L3 Sales ×2	✅ linked to VP Sales KR	Revenue Growth	MRR KPI	3
+L3 Eng / CX	✅ linked to VP Product/CX KRs	Quality/CX	Bug Rate/Tickets	3
+L4 Sales ×3	✅ cascade chain	Revenue/NBA	MRR	3
+L4 Eng / CX	✅ cascade chain	Quality/CX	Bug Rate/Tickets	3
+L5 Sales ×6	✅ cascade chain	NBA	MRR	3
+L5 Eng ×2 / CX	✅ cascade chain	Quality/CX	Bug Rate/CSAT	3
+L6 Sales ×18	✅ proposed (unlinked — V13 demo)	NBA	MRR	3
+Zero employees without OKR contribution, KRA, or competency. The V13 block is preserved (18 L6 OKR KRs unlinked, blocking cycle advance). Ankit Joshi's over-plan and Karan Singh's under-plan narratives are intact.

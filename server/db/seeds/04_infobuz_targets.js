@@ -23,6 +23,7 @@
  */
 
 const { getDb, saveDb } = require('../database');
+// saveDb is called at the end of seedInfoBuzTargets to persist targets to disk
 
 function rows(res) {
   if (!res.length || !res[0].values.length) return [];
@@ -157,6 +158,17 @@ function seedInfoBuzTargets(db) {
   const l616 = e['IB-S28']; // Meena Gupta
   const l617 = e['IB-S29']; // Sachin Nair
   const l618 = e['IB-S30']; // Tanvi Pillai
+  // Non-sales employees
+  const l2Prod = e['IB-P01']; // Karthik Menon, VP Product
+  const l2CX   = e['IB-CX1']; // Divya Subramaniam, VP CX
+  const l3Eng  = e['IB-P02']; // Sneha Krishnan, L3 Eng
+  const l3CX   = e['IB-CX2']; // Ganesh Iyer, L3 CX
+  const l3HR   = e['IB-HR1']; // Pooja Mehta, L3 HR
+  const l4Eng  = e['IB-P03']; // Manish Verma, L4 Eng
+  const l4CX   = e['IB-CX3']; // Ritika Gupta, L4 CX
+  const l5EngA = e['IB-P04']; // Zubair Ahmed, L5 Eng
+  const l5EngB = e['IB-P05']; // Ankita Rao, L5 Eng
+  const l5CX   = e['IB-CX4']; // Rishab Pillai, L5 CX
 
   console.log('Seeding InfoBuz 4-cycle targets (FY22-23 through FY25-26)...');
 
@@ -650,369 +662,605 @@ function seedInfoBuzTargets(db) {
 
   // ── TOP-DOWN TRACK ────────────────────────────────────────────────────────
 
-  // CEO — APPROVED
-  const c4Obj = insertTarget(db, {
+  // CEO — 4 OKR Objectives covering all company pillars (goal sum=100%)
+  const c4Obj1 = insertTarget(db, {
     orgId, cycleId: cy2526, empId: CEO, type: 'okr_objective', dir: 'top_down',
     title: 'Scale InfoBuz to ₹200 Cr ARR — India\'s #1 B2B SaaS Platform',
-    desc: 'Double ARR from ₹99 Cr to ₹200 Cr. Three pillars: (1) Sales acceleration with 6-level cascade, (2) Product NPS 85+, (3) Zero churn in top 50 accounts.',
-    weight: 70, level: 1, status: 'approved',
+    weight: 30, level: 1, status: 'approved',
     submittedAt: '2025-04-08', approvedAt: '2025-04-10', approvedBy: CEO,
   });
   const c4ARR = insertTarget(db, {
-    orgId, cycleId: cy2526, empId: CEO, parentId: c4Obj, type: 'okr_kr', dir: 'top_down',
+    orgId, cycleId: cy2526, empId: CEO, parentId: c4Obj1, type: 'okr_kr', dir: 'top_down',
     title: 'Annual Recurring Revenue (ARR)', unit: 'INR Cr',
     companyTarget: 200, planned: 200, stretch: 220,
-    weight: 35, level: 1, status: 'approved',
-    submittedAt: '2025-04-08', approvedAt: '2025-04-10', approvedBy: CEO,
-  });
-  insertTarget(db, {
-    orgId, cycleId: cy2526, empId: CEO, parentId: c4Obj, type: 'okr_kr', dir: 'top_down',
-    title: 'New Customer Logos', unit: 'count',
-    companyTarget: 120, planned: 120, stretch: 150,
     weight: 20, level: 1, status: 'approved',
     submittedAt: '2025-04-08', approvedAt: '2025-04-10', approvedBy: CEO,
   });
   insertTarget(db, {
-    orgId, cycleId: cy2526, empId: CEO, parentId: c4Obj, type: 'okr_kr', dir: 'top_down',
+    orgId, cycleId: cy2526, empId: CEO, parentId: c4Obj1, type: 'okr_kr', dir: 'top_down',
+    title: 'New Customer Logos', unit: 'count',
+    companyTarget: 120, planned: 120, stretch: 150,
+    weight: 10, level: 1, status: 'approved',
+    submittedAt: '2025-04-08', approvedAt: '2025-04-10', approvedBy: CEO,
+  });
+  const c4Obj2 = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: CEO, type: 'okr_objective', dir: 'top_down',
+    title: 'Deliver Zero-Defect Product with 30+ Feature Releases Annually',
+    weight: 20, level: 1, status: 'approved',
+    submittedAt: '2025-04-08', approvedAt: '2025-04-10', approvedBy: CEO,
+  });
+  const c4Uptime = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: CEO, parentId: c4Obj2, type: 'okr_kr', dir: 'top_down',
+    title: 'Platform Uptime', unit: '%',
+    companyTarget: 99.9, planned: 99.9, stretch: 99.95,
+    weight: 12, level: 1, status: 'approved',
+    submittedAt: '2025-04-08', approvedAt: '2025-04-10', approvedBy: CEO,
+  });
+  const c4Velocity = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: CEO, parentId: c4Obj2, type: 'okr_kr', dir: 'top_down',
+    title: 'Sprint Velocity (Avg)', unit: 'points',
+    companyTarget: 40, planned: 40, stretch: 50,
+    weight: 8, level: 1, status: 'approved',
+    submittedAt: '2025-04-08', approvedAt: '2025-04-10', approvedBy: CEO,
+  });
+  const c4Obj3 = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: CEO, type: 'okr_objective', dir: 'top_down',
+    title: 'Achieve NPS 85+ and Zero Churn in Top 50 Accounts',
+    weight: 20, level: 1, status: 'approved',
+    submittedAt: '2025-04-08', approvedAt: '2025-04-10', approvedBy: CEO,
+  });
+  const c4CNPS = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: CEO, parentId: c4Obj3, type: 'okr_kr', dir: 'top_down',
     title: 'Customer NPS', unit: 'score',
     companyTarget: 85, planned: 85, stretch: 92,
-    weight: 15, level: 1, status: 'approved',
+    weight: 12, level: 1, status: 'approved',
+    submittedAt: '2025-04-08', approvedAt: '2025-04-10', approvedBy: CEO,
+  });
+  const c4Churn = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: CEO, parentId: c4Obj3, type: 'okr_kr', dir: 'top_down',
+    title: 'Churn Rate', unit: '%', measure: 'lower_better',
+    companyTarget: 3, planned: 3, stretch: 2,
+    weight: 8, level: 1, status: 'approved',
+    submittedAt: '2025-04-08', approvedAt: '2025-04-10', approvedBy: CEO,
+  });
+  const c4Obj4 = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: CEO, type: 'okr_objective', dir: 'top_down',
+    title: 'Build a Culture of High-Performance and Low Attrition',
+    weight: 20, level: 1, status: 'approved',
+    submittedAt: '2025-04-08', approvedAt: '2025-04-10', approvedBy: CEO,
+  });
+  const c4eNPS = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: CEO, parentId: c4Obj4, type: 'okr_kr', dir: 'top_down',
+    title: 'Employee eNPS', unit: 'score',
+    companyTarget: 50, planned: 50, stretch: 65,
+    weight: 12, level: 1, status: 'approved',
+    submittedAt: '2025-04-08', approvedAt: '2025-04-10', approvedBy: CEO,
+  });
+  const c4Attrition = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: CEO, parentId: c4Obj4, type: 'okr_kr', dir: 'top_down',
+    title: 'Annual Attrition Rate', unit: '%', measure: 'lower_better',
+    companyTarget: 10, planned: 10, stretch: 8,
+    weight: 8, level: 1, status: 'approved',
     submittedAt: '2025-04-08', approvedAt: '2025-04-10', approvedBy: CEO,
   });
   const c4KRA = insertTarget(db, {
     orgId, cycleId: cy2526, empId: CEO, type: 'kra', dir: 'top_down',
     title: 'Revenue Growth',
-    desc: 'Continuing KRA from FY22. FY26 target: double ARR via 6-level bidirectional sales cascade.',
-    weight: 30, level: 1, status: 'approved',
+    weight: 10, level: 1, status: 'approved',
     submittedAt: '2025-04-08', approvedAt: '2025-04-10', approvedBy: CEO,
   });
+  // CEO competencies (sum=100%)
+  for (const [title, wt] of [['Strategic Thinking', 40], ['Leadership & Coaching', 35], ['Communication & Influence', 25]]) {
+    insertTarget(db, { orgId, cycleId: cy2526, empId: CEO, type: 'competency', dir: 'top_down',
+      title, weight: wt, level: 1, status: 'approved', submittedAt: '2025-04-08', approvedAt: '2025-04-10', approvedBy: CEO });
+  }
 
-  // VP Sales — APPROVED (demo: full chain approved so L5 managers can approve their teams)
+  // VP Sales — APPROVED (full chain approved so L5 managers can approve their teams)
   const c4vpARR = insertTarget(db, {
     orgId, cycleId: cy2526, empId: vpSal, parentId: c4ARR, type: 'okr_kr', dir: 'top_down',
     title: 'Sales Revenue Contribution FY26', unit: 'INR Cr',
     companyTarget: 150, planned: 150, stretch: 170,
-    desc: 'Sales team commits to ₹150 Cr (75% of ₹200 Cr ARR target). Remaining from renewals, expansion, product-led growth.',
     weight: 40, level: 2, status: 'approved',
     submittedAt: '2025-04-14', approvedAt: '2025-04-16', approvedBy: CEO,
   });
   insertTarget(db, {
     orgId, cycleId: cy2526, empId: vpSal, parentId: c4KRA, type: 'kra', dir: 'top_down',
-    title: 'Revenue Growth',
-    weight: 20, level: 2, status: 'approved',
+    title: 'Revenue Growth', weight: 20, level: 2, status: 'approved',
     submittedAt: '2025-04-14', approvedAt: '2025-04-16', approvedBy: CEO,
   });
   const c4vpMRR = insertTarget(db, {
     orgId, cycleId: cy2526, empId: vpSal, type: 'kpi', dir: 'top_down',
     title: 'Monthly New Business MRR', unit: 'INR',
     companyTarget: 950000, planned: 950000, stretch: 1100000,
-    desc: 'VP Sales team MRR = entire sales org salary pool (₹9.5L/month). Bidirectional: L6 self-propose their MRR; L5/L4/L3 reconcile upward. Company ambition: ₹12L (1.26× salary pool).',
     weight: 25, level: 2, status: 'approved',
     submittedAt: '2025-04-14', approvedAt: '2025-04-16', approvedBy: CEO,
   });
   insertTarget(db, {
     orgId, cycleId: cy2526, empId: vpSal, type: 'kra', dir: 'top_down',
-    title: 'New Business Acquisition',
-    weight: 15, level: 2, status: 'approved',
+    title: 'New Business Acquisition', weight: 15, level: 2, status: 'approved',
     submittedAt: '2025-04-14', approvedAt: '2025-04-16', approvedBy: CEO,
   });
+  for (const [title, wt] of [['Leadership & Coaching', 40], ['Strategic Thinking', 35], ['Communication & Influence', 25]]) {
+    insertTarget(db, { orgId, cycleId: cy2526, empId: vpSal, type: 'competency', dir: 'top_down',
+      title, weight: wt, level: 2, status: 'approved', submittedAt: '2025-04-14', approvedAt: '2025-04-16', approvedBy: CEO });
+  }
 
-  // L3.1 Amit North — APPROVED
+  // VP Product (Karthik Menon) — OKR KRs linked to CEO Obj2, KRA, KPI, Competencies
+  const c4vpProdUptime = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: l2Prod, parentId: c4Uptime, type: 'okr_kr', dir: 'top_down',
+    title: 'Product Platform Uptime', unit: '%',
+    companyTarget: 99.9, planned: 99.9, stretch: 99.95,
+    weight: 25, level: 2, status: 'approved',
+    submittedAt: '2025-04-14', approvedAt: '2025-04-16', approvedBy: CEO,
+  });
+  const c4vpProdVelocity = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: l2Prod, parentId: c4Velocity, type: 'okr_kr', dir: 'top_down',
+    title: 'Sprint Velocity (Avg)', unit: 'points',
+    companyTarget: 40, planned: 40, stretch: 50,
+    weight: 20, level: 2, status: 'approved',
+    submittedAt: '2025-04-14', approvedAt: '2025-04-16', approvedBy: CEO,
+  });
+  insertTarget(db, { orgId, cycleId: cy2526, empId: l2Prod, type: 'kra', dir: 'top_down',
+    title: 'Product Quality & Reliability', weight: 30, level: 2, status: 'approved',
+    submittedAt: '2025-04-14', approvedAt: '2025-04-16', approvedBy: CEO });
+  insertTarget(db, { orgId, cycleId: cy2526, empId: l2Prod, type: 'kpi', dir: 'top_down',
+    title: 'Bug Escape Rate', unit: '%', measure: 'lower_better',
+    companyTarget: 2, planned: 2, stretch: 1,
+    weight: 25, level: 2, status: 'approved', submittedAt: '2025-04-14', approvedAt: '2025-04-16', approvedBy: CEO });
+  for (const [title, wt] of [['Technical Aptitude', 40], ['Leadership & Coaching', 35], ['Strategic Thinking', 25]]) {
+    insertTarget(db, { orgId, cycleId: cy2526, empId: l2Prod, type: 'competency', dir: 'top_down',
+      title, weight: wt, level: 2, status: 'approved', submittedAt: '2025-04-14', approvedAt: '2025-04-16', approvedBy: CEO });
+  }
+
+  // VP CX (Divya Subramaniam) — OKR KRs linked to CEO Obj3, KRA, KPI, Competencies
+  const c4vpCXNPS = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: l2CX, parentId: c4CNPS, type: 'okr_kr', dir: 'top_down',
+    title: 'Customer NPS Achievement', unit: 'score',
+    companyTarget: 85, planned: 85, stretch: 92,
+    weight: 30, level: 2, status: 'approved',
+    submittedAt: '2025-04-14', approvedAt: '2025-04-16', approvedBy: CEO,
+  });
+  const c4vpCXChurn = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: l2CX, parentId: c4Churn, type: 'okr_kr', dir: 'top_down',
+    title: 'Enterprise Account Retention Rate', unit: '%',
+    companyTarget: 97, planned: 97, stretch: 99,
+    weight: 25, level: 2, status: 'approved',
+    submittedAt: '2025-04-14', approvedAt: '2025-04-16', approvedBy: CEO,
+  });
+  insertTarget(db, { orgId, cycleId: cy2526, empId: l2CX, type: 'kra', dir: 'top_down',
+    title: 'Customer Satisfaction & Retention', weight: 25, level: 2, status: 'approved',
+    submittedAt: '2025-04-14', approvedAt: '2025-04-16', approvedBy: CEO });
+  insertTarget(db, { orgId, cycleId: cy2526, empId: l2CX, type: 'kpi', dir: 'top_down',
+    title: 'CSAT Score', unit: 'score', companyTarget: 4.5, planned: 4.5, stretch: 4.8,
+    weight: 20, level: 2, status: 'approved', submittedAt: '2025-04-14', approvedAt: '2025-04-16', approvedBy: CEO });
+  for (const [title, wt] of [['Customer Focus', 45], ['Communication & Influence', 35], ['Strategic Thinking', 20]]) {
+    insertTarget(db, { orgId, cycleId: cy2526, empId: l2CX, type: 'competency', dir: 'top_down',
+      title, weight: wt, level: 2, status: 'approved', submittedAt: '2025-04-14', approvedAt: '2025-04-16', approvedBy: CEO });
+  }
+
+  // L3 North Sales (Amit Sharma) — OKR KR + KPI MRR + KRA + Competencies
+  const c4l3nKR = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: l3n, parentId: c4vpARR, type: 'okr_kr', dir: 'top_down',
+    title: 'North Region Revenue Contribution', unit: 'INR Cr',
+    companyTarget: 55, planned: 55, stretch: 65,
+    weight: 30, level: 3, status: 'approved',
+    submittedAt: '2025-04-18', approvedAt: '2025-04-20', approvedBy: vpSal,
+  });
   const c4l3nMRR = insertTarget(db, {
     orgId, cycleId: cy2526, empId: l3n, parentId: c4vpMRR, type: 'kpi', dir: 'top_down',
     title: 'Monthly New Business MRR — North Region', unit: 'INR',
     companyTarget: 310000, planned: 310000, stretch: 345000,
-    desc: 'North: L4.1 (240K) = 70K (L3.1 own) + 240K (L4.1 team). Net after bottom-up: Ankit Joshi +₹5K over-plan → North total bumps to ₹315K vs ₹310K company target.',
-    weight: 50, level: 3, status: 'approved',
+    weight: 40, level: 3, status: 'approved',
     submittedAt: '2025-04-18', approvedAt: '2025-04-20', approvedBy: vpSal,
   });
-  insertTarget(db, {
-    orgId, cycleId: cy2526, empId: l3n, type: 'kra', dir: 'top_down', title: 'Revenue Growth',
-    weight: 50, level: 3, status: 'approved',
-    submittedAt: '2025-04-18', approvedAt: '2025-04-20', approvedBy: vpSal,
-  });
+  insertTarget(db, { orgId, cycleId: cy2526, empId: l3n, type: 'kra', dir: 'top_down',
+    title: 'Revenue Growth', weight: 30, level: 3, status: 'approved',
+    submittedAt: '2025-04-18', approvedAt: '2025-04-20', approvedBy: vpSal });
+  for (const [title, wt] of [['Leadership & Coaching', 40], ['Sales Execution', 35], ['Strategic Thinking', 25]]) {
+    insertTarget(db, { orgId, cycleId: cy2526, empId: l3n, type: 'competency', dir: 'top_down',
+      title, weight: wt, level: 3, status: 'approved', submittedAt: '2025-04-18', approvedAt: '2025-04-20', approvedBy: vpSal });
+  }
 
-  // L3.2 Priya South — APPROVED
+  // L3 South Sales (Priya Patel) — OKR KR + KPI MRR + KRA + Competencies
+  const c4l3sKR = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: l3s, parentId: c4vpARR, type: 'okr_kr', dir: 'top_down',
+    title: 'South Region Revenue Contribution', unit: 'INR Cr',
+    companyTarget: 95, planned: 95, stretch: 110,
+    weight: 30, level: 3, status: 'approved',
+    submittedAt: '2025-04-18', approvedAt: '2025-04-20', approvedBy: vpSal,
+  });
   const c4l3sMRR = insertTarget(db, {
     orgId, cycleId: cy2526, empId: l3s, parentId: c4vpMRR, type: 'kpi', dir: 'top_down',
     title: 'Monthly New Business MRR — South Region', unit: 'INR',
     companyTarget: 550000, planned: 550000, stretch: 610000,
-    desc: 'South: L4.2 (430K) + L4.3 solo (50K) + L3.2 own (70K) = 550K. Note: L6.7 Karan Singh under-planned -₹5K → L5.3 Arun Kumar self-absorbs gap by raising own contribution to 40K.',
-    weight: 50, level: 3, status: 'approved',
+    weight: 40, level: 3, status: 'approved',
     submittedAt: '2025-04-18', approvedAt: '2025-04-20', approvedBy: vpSal,
   });
-  insertTarget(db, {
-    orgId, cycleId: cy2526, empId: l3s, type: 'kra', dir: 'top_down', title: 'Revenue Growth',
-    weight: 50, level: 3, status: 'approved',
-    submittedAt: '2025-04-18', approvedAt: '2025-04-20', approvedBy: vpSal,
-  });
+  insertTarget(db, { orgId, cycleId: cy2526, empId: l3s, type: 'kra', dir: 'top_down',
+    title: 'Revenue Growth', weight: 30, level: 3, status: 'approved',
+    submittedAt: '2025-04-18', approvedAt: '2025-04-20', approvedBy: vpSal });
+  for (const [title, wt] of [['Leadership & Coaching', 40], ['Sales Execution', 35], ['Strategic Thinking', 25]]) {
+    insertTarget(db, { orgId, cycleId: cy2526, empId: l3s, type: 'competency', dir: 'top_down',
+      title, weight: wt, level: 3, status: 'approved', submittedAt: '2025-04-18', approvedAt: '2025-04-20', approvedBy: vpSal });
+  }
 
-  // L4.1 Sanjay — APPROVED
+  // L3 Engineering (Sneha Krishnan) — OKR KRs linked to VP Product, KRA, KPI, Competencies
+  const c4l3EngUptime = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: l3Eng, parentId: c4vpProdUptime, type: 'okr_kr', dir: 'top_down',
+    title: 'Engineering Platform Uptime', unit: '%',
+    companyTarget: 99.9, planned: 99.9, stretch: 99.95,
+    weight: 30, level: 3, status: 'approved',
+    submittedAt: '2025-04-18', approvedAt: '2025-04-20', approvedBy: l2Prod,
+  });
+  const c4l3EngVelocity = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: l3Eng, parentId: c4vpProdVelocity, type: 'okr_kr', dir: 'top_down',
+    title: 'Team Sprint Velocity', unit: 'points',
+    companyTarget: 40, planned: 40, stretch: 50,
+    weight: 25, level: 3, status: 'approved',
+    submittedAt: '2025-04-18', approvedAt: '2025-04-20', approvedBy: l2Prod,
+  });
+  insertTarget(db, { orgId, cycleId: cy2526, empId: l3Eng, type: 'kra', dir: 'top_down',
+    title: 'Product Quality & Reliability', weight: 25, level: 3, status: 'approved',
+    submittedAt: '2025-04-18', approvedAt: '2025-04-20', approvedBy: l2Prod });
+  insertTarget(db, { orgId, cycleId: cy2526, empId: l3Eng, type: 'kpi', dir: 'top_down',
+    title: 'Bug Escape Rate', unit: '%', measure: 'lower_better',
+    companyTarget: 2, planned: 2, stretch: 1, weight: 20, level: 3, status: 'approved',
+    submittedAt: '2025-04-18', approvedAt: '2025-04-20', approvedBy: l2Prod });
+  for (const [title, wt] of [['Technical Aptitude', 40], ['Collaboration & Teamwork', 35], ['Adaptability & Learning', 25]]) {
+    insertTarget(db, { orgId, cycleId: cy2526, empId: l3Eng, type: 'competency', dir: 'top_down',
+      title, weight: wt, level: 3, status: 'approved', submittedAt: '2025-04-18', approvedAt: '2025-04-20', approvedBy: l2Prod });
+  }
+
+  // L3 CX (Ganesh Iyer) — OKR KRs linked to VP CX, KRA, KPI, Competencies
+  const c4l3CXNPS = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: l3CX, parentId: c4vpCXNPS, type: 'okr_kr', dir: 'top_down',
+    title: 'Customer NPS — CX Team', unit: 'score',
+    companyTarget: 85, planned: 85, stretch: 90,
+    weight: 30, level: 3, status: 'approved',
+    submittedAt: '2025-04-18', approvedAt: '2025-04-20', approvedBy: l2CX,
+  });
+  insertTarget(db, { orgId, cycleId: cy2526, empId: l3CX, parentId: c4vpCXChurn, type: 'okr_kr', dir: 'top_down',
+    title: 'Churn Prevention — Top 50 Accounts', unit: '%',
+    companyTarget: 97, planned: 97, stretch: 99,
+    weight: 25, level: 3, status: 'approved', submittedAt: '2025-04-18', approvedAt: '2025-04-20', approvedBy: l2CX });
+  insertTarget(db, { orgId, cycleId: cy2526, empId: l3CX, type: 'kra', dir: 'top_down',
+    title: 'Customer Satisfaction & Retention', weight: 25, level: 3, status: 'approved',
+    submittedAt: '2025-04-18', approvedAt: '2025-04-20', approvedBy: l2CX });
+  insertTarget(db, { orgId, cycleId: cy2526, empId: l3CX, type: 'kpi', dir: 'top_down',
+    title: 'Ticket Resolution Time', unit: 'hours', measure: 'lower_better',
+    companyTarget: 4, planned: 4, stretch: 2, weight: 20, level: 3, status: 'approved',
+    submittedAt: '2025-04-18', approvedAt: '2025-04-20', approvedBy: l2CX });
+  for (const [title, wt] of [['Customer Focus', 50], ['Communication & Influence', 30], ['Collaboration & Teamwork', 20]]) {
+    insertTarget(db, { orgId, cycleId: cy2526, empId: l3CX, type: 'competency', dir: 'top_down',
+      title, weight: wt, level: 3, status: 'approved', submittedAt: '2025-04-18', approvedAt: '2025-04-20', approvedBy: l2CX });
+  }
+
+  // L3 HR (Pooja Mehta) — OKR KRs linked to CEO Obj4 (People), KRA, Competencies
+  insertTarget(db, { orgId, cycleId: cy2526, empId: l3HR, parentId: c4eNPS, type: 'okr_kr', dir: 'top_down',
+    title: 'Employee Engagement & eNPS', unit: 'score',
+    companyTarget: 50, planned: 50, stretch: 65,
+    weight: 35, level: 3, status: 'approved', submittedAt: '2025-04-18', approvedAt: '2025-04-20', approvedBy: CEO });
+  insertTarget(db, { orgId, cycleId: cy2526, empId: l3HR, parentId: c4Attrition, type: 'okr_kr', dir: 'top_down',
+    title: 'Attrition Management', unit: '%', measure: 'lower_better',
+    companyTarget: 10, planned: 10, stretch: 8,
+    weight: 30, level: 3, status: 'approved', submittedAt: '2025-04-18', approvedAt: '2025-04-20', approvedBy: CEO });
+  insertTarget(db, { orgId, cycleId: cy2526, empId: l3HR, type: 'kra', dir: 'top_down',
+    title: 'Team Performance & Development', weight: 35, level: 3, status: 'approved',
+    submittedAt: '2025-04-18', approvedAt: '2025-04-20', approvedBy: CEO });
+  for (const [title, wt] of [['Leadership & Coaching', 40], ['Communication & Influence', 35], ['Adaptability & Learning', 25]]) {
+    insertTarget(db, { orgId, cycleId: cy2526, empId: l3HR, type: 'competency', dir: 'top_down',
+      title, weight: wt, level: 3, status: 'approved', submittedAt: '2025-04-18', approvedAt: '2025-04-20', approvedBy: CEO });
+  }
+
+  // L4.1 Sales (Sanjay Reddy) — OKR KR + KPI MRR + KRA + Competencies (weights: 25+45+30=100%)
+  const c4l41KR = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: l41, parentId: c4l3nKR, type: 'okr_kr', dir: 'top_down',
+    title: 'North Area 1 Revenue Contribution', unit: 'INR Cr',
+    companyTarget: 35, planned: 35, stretch: 42,
+    weight: 25, level: 4, status: 'approved',
+    submittedAt: '2025-04-21', approvedAt: '2025-04-23', approvedBy: l3n,
+  });
   const c4l41MRR = insertTarget(db, {
     orgId, cycleId: cy2526, empId: l41, parentId: c4l3nMRR, type: 'kpi', dir: 'top_down',
     title: 'Monthly New Business MRR — North Area 1', unit: 'INR',
     companyTarget: 240000, planned: 240000, stretch: 265000,
-    desc: 'Team = 50K own + L5.1 (95K) + L5.2 (95K) = 240K. Bottom-up net: Ankit Joshi (L6.1) +5K → team overachieves to 245K.',
-    weight: 60, level: 4, status: 'approved',
+    weight: 45, level: 4, status: 'approved',
     submittedAt: '2025-04-21', approvedAt: '2025-04-23', approvedBy: l3n,
   });
-  insertTarget(db, {
-    orgId, cycleId: cy2526, empId: l41, type: 'kra', dir: 'top_down', title: 'Revenue Growth',
-    weight: 40, level: 4, status: 'approved',
-    submittedAt: '2025-04-21', approvedAt: '2025-04-23', approvedBy: l3n,
-  });
+  insertTarget(db, { orgId, cycleId: cy2526, empId: l41, type: 'kra', dir: 'top_down',
+    title: 'Revenue Growth', weight: 30, level: 4, status: 'approved',
+    submittedAt: '2025-04-21', approvedAt: '2025-04-23', approvedBy: l3n });
+  for (const [title, wt] of [['Leadership & Coaching', 40], ['Sales Execution', 40], ['Ownership & Accountability', 20]]) {
+    insertTarget(db, { orgId, cycleId: cy2526, empId: l41, type: 'competency', dir: 'top_down',
+      title, weight: wt, level: 4, status: 'approved', submittedAt: '2025-04-21', approvedAt: '2025-04-23', approvedBy: l3n });
+  }
 
-  // L4.2 Deepak — APPROVED
+  // L4.2 Sales (Deepak Rao) — OKR KR + KPI MRR + KRA + Competencies
+  const c4l42KR = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: l42, parentId: c4l3sKR, type: 'okr_kr', dir: 'top_down',
+    title: 'South Area 2 Revenue Contribution', unit: 'INR Cr',
+    companyTarget: 65, planned: 65, stretch: 78,
+    weight: 25, level: 4, status: 'approved',
+    submittedAt: '2025-04-21', approvedAt: '2025-04-23', approvedBy: l3s,
+  });
   const c4l42MRR = insertTarget(db, {
     orgId, cycleId: cy2526, empId: l42, parentId: c4l3sMRR, type: 'kpi', dir: 'top_down',
     title: 'Monthly New Business MRR — South Area 2', unit: 'INR',
     companyTarget: 430000, planned: 430000, stretch: 475000,
-    desc: 'Team = 50K + 4×95K = 430K. Bottom-up: L6.7 Karan -5K → L5.3 Arun self-compensates to 40K own. Team net = 430K (unchanged — Arun covers the gap internally).',
-    weight: 50, level: 4, status: 'approved',
+    weight: 45, level: 4, status: 'approved',
     submittedAt: '2025-04-21', approvedAt: '2025-04-23', approvedBy: l3s,
   });
-  insertTarget(db, {
-    orgId, cycleId: cy2526, empId: l42, type: 'kra', dir: 'top_down', title: 'Revenue Growth',
-    weight: 50, level: 4, status: 'approved',
-    submittedAt: '2025-04-21', approvedAt: '2025-04-23', approvedBy: l3s,
-  });
+  insertTarget(db, { orgId, cycleId: cy2526, empId: l42, type: 'kra', dir: 'top_down',
+    title: 'Revenue Growth', weight: 30, level: 4, status: 'approved',
+    submittedAt: '2025-04-21', approvedAt: '2025-04-23', approvedBy: l3s });
+  for (const [title, wt] of [['Leadership & Coaching', 40], ['Sales Execution', 40], ['Ownership & Accountability', 20]]) {
+    insertTarget(db, { orgId, cycleId: cy2526, empId: l42, type: 'competency', dir: 'top_down',
+      title, weight: wt, level: 4, status: 'approved', submittedAt: '2025-04-21', approvedAt: '2025-04-23', approvedBy: l3s });
+  }
 
-  // L4.3 Sunita Solo — APPROVED
-  insertTarget(db, {
-    orgId, cycleId: cy2526, empId: l43, parentId: c4l3sMRR, type: 'kpi', dir: 'top_down',
+  // L4.3 Sales (Sunita Iyer — solo) — OKR KR + KPI MRR + KRA + Competencies
+  insertTarget(db, { orgId, cycleId: cy2526, empId: l43, parentId: c4l3sKR, type: 'okr_kr', dir: 'top_down',
+    title: 'South Solo Territory Revenue Contribution', unit: 'INR Cr',
+    companyTarget: 7, planned: 7, stretch: 9,
+    weight: 25, level: 4, status: 'approved', submittedAt: '2025-04-21', approvedAt: '2025-04-23', approvedBy: l3s });
+  insertTarget(db, { orgId, cycleId: cy2526, empId: l43, parentId: c4l3sMRR, type: 'kpi', dir: 'top_down',
     title: 'Monthly New Business MRR — South Area 3 (Solo)', unit: 'INR',
     companyTarget: 50000, planned: 50000, stretch: 58000,
-    desc: 'Sunita Iyer — individual quota, no L5/L6. Over-achieved 52K in FY25; FY26 target raised to 50K baseline.',
-    weight: 60, level: 4, status: 'approved',
-    submittedAt: '2025-04-21', approvedAt: '2025-04-23', approvedBy: l3s,
-  });
+    weight: 45, level: 4, status: 'approved', submittedAt: '2025-04-21', approvedAt: '2025-04-23', approvedBy: l3s });
+  insertTarget(db, { orgId, cycleId: cy2526, empId: l43, type: 'kra', dir: 'top_down',
+    title: 'New Business Acquisition', weight: 30, level: 4, status: 'approved',
+    submittedAt: '2025-04-21', approvedAt: '2025-04-23', approvedBy: l3s });
+  for (const [title, wt] of [['Sales Execution', 50], ['Customer Focus', 30], ['Ownership & Accountability', 20]]) {
+    insertTarget(db, { orgId, cycleId: cy2526, empId: l43, type: 'competency', dir: 'top_down',
+      title, weight: wt, level: 4, status: 'approved', submittedAt: '2025-04-21', approvedAt: '2025-04-23', approvedBy: l3s });
+  }
 
-  // L5.1 Rohit — APPROVED; own contribution REDUCED to 30K (L6.1 over-plan relieves 5K burden)
+  // L4 Engineering (Manish Verma) — OKR KRs linked to L3 Eng, KRA, KPI, Competencies
+  const c4l4EngUptime = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: l4Eng, parentId: c4l3EngUptime, type: 'okr_kr', dir: 'top_down',
+    title: 'System Reliability & Uptime', unit: '%',
+    companyTarget: 99.9, planned: 99.9, stretch: 99.95,
+    weight: 30, level: 4, status: 'approved',
+    submittedAt: '2025-04-21', approvedAt: '2025-04-23', approvedBy: l3Eng,
+  });
+  const c4l4EngVelocity = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: l4Eng, parentId: c4l3EngVelocity, type: 'okr_kr', dir: 'top_down',
+    title: 'Sprint Velocity', unit: 'points',
+    companyTarget: 40, planned: 40, stretch: 50,
+    weight: 25, level: 4, status: 'approved',
+    submittedAt: '2025-04-21', approvedAt: '2025-04-23', approvedBy: l3Eng,
+  });
+  insertTarget(db, { orgId, cycleId: cy2526, empId: l4Eng, type: 'kra', dir: 'top_down',
+    title: 'Product Quality & Reliability', weight: 25, level: 4, status: 'approved',
+    submittedAt: '2025-04-21', approvedAt: '2025-04-23', approvedBy: l3Eng });
+  insertTarget(db, { orgId, cycleId: cy2526, empId: l4Eng, type: 'kpi', dir: 'top_down',
+    title: 'Bug Escape Rate', unit: '%', measure: 'lower_better',
+    companyTarget: 2, planned: 2, stretch: 1, weight: 20, level: 4, status: 'approved',
+    submittedAt: '2025-04-21', approvedAt: '2025-04-23', approvedBy: l3Eng });
+  for (const [title, wt] of [['Technical Aptitude', 50], ['Collaboration & Teamwork', 30], ['Ownership & Accountability', 20]]) {
+    insertTarget(db, { orgId, cycleId: cy2526, empId: l4Eng, type: 'competency', dir: 'top_down',
+      title, weight: wt, level: 4, status: 'approved', submittedAt: '2025-04-21', approvedAt: '2025-04-23', approvedBy: l3Eng });
+  }
+
+  // L4 CX (Ritika Gupta) — OKR KR linked to L3 CX, KRA, KPI, Competencies
+  const c4l4CXNPS = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: l4CX, parentId: c4l3CXNPS, type: 'okr_kr', dir: 'top_down',
+    title: 'NPS Improvement — CX Ops', unit: 'score',
+    companyTarget: 85, planned: 85, stretch: 90,
+    weight: 30, level: 4, status: 'approved',
+    submittedAt: '2025-04-21', approvedAt: '2025-04-23', approvedBy: l3CX,
+  });
+  insertTarget(db, { orgId, cycleId: cy2526, empId: l4CX, type: 'kra', dir: 'top_down',
+    title: 'Customer Satisfaction & Retention', weight: 40, level: 4, status: 'approved',
+    submittedAt: '2025-04-21', approvedAt: '2025-04-23', approvedBy: l3CX });
+  insertTarget(db, { orgId, cycleId: cy2526, empId: l4CX, type: 'kpi', dir: 'top_down',
+    title: 'Ticket Resolution Time', unit: 'hours', measure: 'lower_better',
+    companyTarget: 4, planned: 4, stretch: 2, weight: 30, level: 4, status: 'approved',
+    submittedAt: '2025-04-21', approvedAt: '2025-04-23', approvedBy: l3CX });
+  for (const [title, wt] of [['Customer Focus', 50], ['Communication & Influence', 30], ['Adaptability & Learning', 20]]) {
+    insertTarget(db, { orgId, cycleId: cy2526, empId: l4CX, type: 'competency', dir: 'top_down',
+      title, weight: wt, level: 4, status: 'approved', submittedAt: '2025-04-21', approvedAt: '2025-04-23', approvedBy: l3CX });
+  }
+
+  // L5.1 Rohit — own burden REDUCED to 30K (Ankit over-committed 5K) (20+50+30=100%)
+  const c4l51KR = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: l51, parentId: c4l41KR, type: 'okr_kr', dir: 'top_down',
+    title: 'L5.1 Team Revenue Contribution', unit: 'INR Cr',
+    companyTarget: 14, planned: 14, stretch: 17,
+    weight: 20, level: 5, status: 'approved',
+    submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l41,
+  });
   const c4l51MRR = insertTarget(db, {
     orgId, cycleId: cy2526, empId: l51, parentId: c4l41MRR, type: 'kpi', dir: 'top_down',
     title: 'Monthly New Business MRR — L5.1 Team (Rohit Verma)', unit: 'INR',
     companyTarget: 95000, planned: 95000, stretch: 105000,
-    desc: 'Team company_target = 95K. L6 bottom-up: Ankit 25K + Maya 20K + Vikash 20K = 65K. Rohit own = 30K (reduced from 35K salary baseline: Ankit over-committed +5K, so Rohit burden drops by 5K). Team total = 30K + 65K = 95K exactly.',
-    weight: 70, level: 5, status: 'approved',
+    desc: 'Ankit 25K+Maya 20K+Vikash 20K=65K. Rohit own=30K (reduced 5K because Ankit over-committed). Total=95K.',
+    weight: 50, level: 5, status: 'approved',
     submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l41,
   });
-  insertTarget(db, {
-    orgId, cycleId: cy2526, empId: l51, type: 'kra', dir: 'top_down', title: 'New Business Acquisition',
-    weight: 30, level: 5, status: 'approved',
-    submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l41,
-  });
+  insertTarget(db, { orgId, cycleId: cy2526, empId: l51, type: 'kra', dir: 'top_down',
+    title: 'New Business Acquisition', weight: 30, level: 5, status: 'approved',
+    submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l41 });
+  for (const [title, wt] of [['Leadership & Coaching', 40], ['Sales Execution', 40], ['Collaboration & Teamwork', 20]]) {
+    insertTarget(db, { orgId, cycleId: cy2526, empId: l51, type: 'competency', dir: 'top_down',
+      title, weight: wt, level: 5, status: 'approved', submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l41 });
+  }
 
-  // L5.2 Kavya — APPROVED standard
+  // L5.2 Kavya Nair — standard
+  const c4l52KR = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: l52, parentId: c4l41KR, type: 'okr_kr', dir: 'top_down',
+    title: 'L5.2 Team Revenue Contribution', unit: 'INR Cr',
+    companyTarget: 14, planned: 14, stretch: 17,
+    weight: 20, level: 5, status: 'approved',
+    submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l41,
+  });
   const c4l52MRR = insertTarget(db, {
     orgId, cycleId: cy2526, empId: l52, parentId: c4l41MRR, type: 'kpi', dir: 'top_down',
     title: 'Monthly New Business MRR — L5.2 Team (Kavya Nair)', unit: 'INR',
     companyTarget: 95000, planned: 95000, stretch: 105000,
-    desc: 'L6 team: Swati 20K + Mohit 20K + Divya 20K = 60K. Kavya own = 35K. Net = 95K.',
-    weight: 70, level: 5, status: 'approved',
+    weight: 50, level: 5, status: 'approved',
     submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l41,
   });
-  insertTarget(db, {
-    orgId, cycleId: cy2526, empId: l52, type: 'kra', dir: 'top_down', title: 'New Business Acquisition',
-    weight: 30, level: 5, status: 'approved',
-    submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l41,
-  });
+  insertTarget(db, { orgId, cycleId: cy2526, empId: l52, type: 'kra', dir: 'top_down',
+    title: 'New Business Acquisition', weight: 30, level: 5, status: 'approved',
+    submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l41 });
+  for (const [title, wt] of [['Sales Execution', 45], ['Leadership & Coaching', 35], ['Customer Focus', 20]]) {
+    insertTarget(db, { orgId, cycleId: cy2526, empId: l52, type: 'competency', dir: 'top_down',
+      title, weight: wt, level: 5, status: 'approved', submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l41 });
+  }
 
-  // L5.3 Arun — APPROVED; own contribution RAISED to 40K (absorbs L6.7 Karan's gap)
+  // L5.3 Arun Kumar — own burden RAISED to 40K (absorbs Karan's -5K gap)
+  const c4l53KR = insertTarget(db, {
+    orgId, cycleId: cy2526, empId: l53, parentId: c4l42KR, type: 'okr_kr', dir: 'top_down',
+    title: 'L5.3 Team Revenue Contribution', unit: 'INR Cr',
+    companyTarget: 16, planned: 16, stretch: 20,
+    weight: 20, level: 5, status: 'approved',
+    submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l42,
+  });
   const c4l53MRR = insertTarget(db, {
     orgId, cycleId: cy2526, empId: l53, parentId: c4l42MRR, type: 'kpi', dir: 'top_down',
     title: 'Monthly New Business MRR — L5.3 Team (Arun Kumar)', unit: 'INR',
     companyTarget: 95000, planned: 95000, stretch: 105000,
-    desc: 'Team company_target = 95K. L6 bottom-up: Karan 15K + Preethi 20K + Sujith 20K = 55K (short by 5K — Karan under-planned). Arun raises own to 40K (from 35K) to close gap. Net = 40K + 55K = 95K exactly.',
-    weight: 70, level: 5, status: 'approved',
+    desc: 'Karan 15K+Preethi 20K+Sujith 20K=55K. Arun raises own to 40K (from 35K) to cover Karan gap. Total=95K.',
+    weight: 50, level: 5, status: 'approved',
     submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l42,
   });
-  insertTarget(db, {
-    orgId, cycleId: cy2526, empId: l53, type: 'kra', dir: 'top_down', title: 'New Business Acquisition',
-    weight: 30, level: 5, status: 'approved',
-    submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l42,
-  });
-
-  // L5.4, L5.5, L5.6 — APPROVED standard
-  const c4l54MRR = insertTarget(db, {
-    orgId, cycleId: cy2526, empId: l54, parentId: c4l42MRR, type: 'kpi', dir: 'top_down',
-    title: 'Monthly New Business MRR — L5.4 Team (Neha Singh)', unit: 'INR',
-    companyTarget: 95000, planned: 95000, weight: 70, level: 5, status: 'approved',
-    submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l42,
-  });
-  insertTarget(db, {
-    orgId, cycleId: cy2526, empId: l54, type: 'kra', dir: 'top_down', title: 'New Business Acquisition',
-    weight: 30, level: 5, status: 'approved',
-    submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l42,
-  });
-  const c4l55MRR = insertTarget(db, {
-    orgId, cycleId: cy2526, empId: l55, parentId: c4l42MRR, type: 'kpi', dir: 'top_down',
-    title: 'Monthly New Business MRR — L5.5 Team (Ravi Joshi)', unit: 'INR',
-    companyTarget: 95000, planned: 95000, weight: 70, level: 5, status: 'approved',
-    submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l42,
-  });
-  insertTarget(db, {
-    orgId, cycleId: cy2526, empId: l55, type: 'kra', dir: 'top_down', title: 'New Business Acquisition',
-    weight: 30, level: 5, status: 'approved',
-    submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l42,
-  });
-  const c4l56MRR = insertTarget(db, {
-    orgId, cycleId: cy2526, empId: l56, parentId: c4l42MRR, type: 'kpi', dir: 'top_down',
-    title: 'Monthly New Business MRR — L5.6 Team (Pooja Bose)', unit: 'INR',
-    companyTarget: 95000, planned: 95000, weight: 70, level: 5, status: 'approved',
-    submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l42,
-  });
-  insertTarget(db, {
-    orgId, cycleId: cy2526, empId: l56, type: 'kra', dir: 'top_down', title: 'New Business Acquisition',
-    weight: 30, level: 5, status: 'approved',
-    submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l42,
-  });
-
-  // ── BOTTOM-UP TRACK: L6 Proposals (ALL unlinked — V13 blocks cycle advance) ──
-  // Weight = 100% since MRR is each L6 executive's sole goal target.
-  // Competency targets are tracked separately (100% in competency bucket).
-
-  // L6.1 ANKIT JOSHI — OVER-PLANS 25,000 (baseline 20,000, over_plan_ratio = 1.25)
-  insertTarget(db, {
-    orgId, cycleId: cy2526, empId: l61, type: 'kpi', dir: 'bottom_up',
-    title: 'My New Business MRR Target', unit: 'INR',
-    companyTarget: 20000, planned: 25000, stretch: 28000,
-    desc: 'Self-proposed MRR for FY26. Over-planning by ₹5K vs ₹20K salary-based baseline. 3 corporate accounts in advanced pipeline: BSNL Phase-2 (₹8K MRR, contract ready), HDFC Insurance (₹5K MRR, pilot converting), Tata Comm (₹4K MRR, proposal stage). Committed with high confidence.',
-    isOverPlanned: 1, overRatio: 1.25,
-    overNote: 'Over-plan by ₹5,000 vs ₹20,000 baseline. Evidence: (1) BSNL Phase-2 ₹8K MRR contract ready for sign-off by Apr 15. (2) HDFC Insurance pilot converting — decision expected Apr 20. I am willing to forfeit Q1 incentive if target is missed.',
-    overApproved: 0,
-    weight: 100, level: 6, status: 'proposed', submittedAt: '2025-04-18',
-  });
-  insertTarget(db, {
-    orgId, cycleId: cy2526, empId: l61, type: 'competency', dir: 'bottom_up',
-    title: 'Sales Execution',
-    desc: 'Consistent pipeline discipline, deal velocity, and CRM hygiene. FY26 focus: enterprise deal closures.',
-    weight: 50, level: 6, status: 'proposed', submittedAt: '2025-04-18',
-  });
-  insertTarget(db, {
-    orgId, cycleId: cy2526, empId: l61, type: 'competency', dir: 'bottom_up',
-    title: 'Ownership & Accountability',
-    desc: 'Proactive communication on deal slippages; takes full ownership of pipeline health.',
-    weight: 50, level: 6, status: 'proposed', submittedAt: '2025-04-18',
-  });
-
-  // L6.2 Maya Sharma — Standard 20K
-  insertTarget(db, {
-    orgId, cycleId: cy2526, empId: l62, type: 'kpi', dir: 'bottom_up',
-    title: 'My New Business MRR Target', unit: 'INR',
-    companyTarget: 20000, planned: 20000,
-    weight: 100, level: 6, status: 'proposed', submittedAt: '2025-04-18',
-  });
-
-  // L6.3 Vikash Kumar — Standard 20K
-  insertTarget(db, {
-    orgId, cycleId: cy2526, empId: l63, type: 'kpi', dir: 'bottom_up',
-    title: 'My New Business MRR Target', unit: 'INR',
-    companyTarget: 20000, planned: 20000,
-    weight: 100, level: 6, status: 'proposed', submittedAt: '2025-04-18',
-  });
-
-  // L6.4–6.6 under L5.2 Kavya — Standard 20K each
-  for (const empId of [l64, l65, l66]) {
-    insertTarget(db, {
-      orgId, cycleId: cy2526, empId, type: 'kpi', dir: 'bottom_up',
-      title: 'My New Business MRR Target', unit: 'INR',
-      companyTarget: 20000, planned: 20000,
-      weight: 100, level: 6, status: 'proposed', submittedAt: '2025-04-18',
-    });
+  insertTarget(db, { orgId, cycleId: cy2526, empId: l53, type: 'kra', dir: 'top_down',
+    title: 'New Business Acquisition', weight: 30, level: 5, status: 'approved',
+    submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l42 });
+  for (const [title, wt] of [['Leadership & Coaching', 40], ['Ownership & Accountability', 35], ['Strategic Thinking', 25]]) {
+    insertTarget(db, { orgId, cycleId: cy2526, empId: l53, type: 'competency', dir: 'top_down',
+      title, weight: wt, level: 5, status: 'approved', submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l42 });
   }
 
-  // L6.7 KARAN SINGH — UNDER-PLANS 15,000 (baseline 20,000, gap = -5K)
-  // This is the key demo: Karan commits ₹5K less than baseline → Arun must cover the shortfall
-  insertTarget(db, {
-    orgId, cycleId: cy2526, empId: l67, type: 'kpi', dir: 'bottom_up',
-    title: 'My New Business MRR Target', unit: 'INR',
-    companyTarget: 20000, planned: 15000, stretch: 22000,
-    desc: 'Self-proposed MRR for FY26. Under-planning vs ₹20K baseline by ₹5K. Context: In FY25 I lost Infosys account (₹8K MRR) in May to a competitor on pricing — annual avg was only ₹15K. FY26: rebuilt pipeline to 4 new SMEs but none above ₹3K MRR yet. Committing to ₹15K realistic baseline; plan to reach ₹20K by Q2 once 2 pending deals close.',
-    isOverPlanned: 0,
-    weight: 100, level: 6, status: 'proposed', submittedAt: '2025-04-18',
-  });
-  insertTarget(db, {
-    orgId, cycleId: cy2526, empId: l67, type: 'competency', dir: 'bottom_up',
-    title: 'Customer Focus',
-    desc: 'Rebuilding client relationships after FY25 churn. Focus: retention-first selling and needs-based demos.',
-    weight: 60, level: 6, status: 'proposed', submittedAt: '2025-04-18',
-  });
-  insertTarget(db, {
-    orgId, cycleId: cy2526, empId: l67, type: 'competency', dir: 'bottom_up',
-    title: 'Adaptability & Learning',
-    desc: 'Pivoting from SME-only to targeting mid-market accounts; learning enterprise sales methodology.',
-    weight: 40, level: 6, status: 'proposed', submittedAt: '2025-04-18',
-  });
-
-  // L6.8–6.9 under L5.3 Arun — Standard 20K each
-  for (const empId of [l68, l69]) {
-    insertTarget(db, {
-      orgId, cycleId: cy2526, empId, type: 'kpi', dir: 'bottom_up',
-      title: 'My New Business MRR Target', unit: 'INR',
-      companyTarget: 20000, planned: 20000,
-      weight: 100, level: 6, status: 'proposed', submittedAt: '2025-04-19',
+  // L5.4 Neha Singh, L5.5 Ravi Joshi, L5.6 Pooja Bose — standard OKR KR + MRR + KRA + Competencies
+  const l5std = [
+    [l54, c4l42KR, c4l42MRR, l42, 'Neha Singh',  4],
+    [l55, c4l42KR, c4l42MRR, l42, 'Ravi Joshi',  5],
+    [l56, c4l42KR, c4l42MRR, l42, 'Pooja Bose',  6],
+  ];
+  const l5MrrMap = {}, l5KRMap = {};
+  for (const [empId, krParent, mrrParent, mgr, name, idx] of l5std) {
+    l5KRMap[empId] = insertTarget(db, {
+      orgId, cycleId: cy2526, empId, parentId: krParent, type: 'okr_kr', dir: 'top_down',
+      title: `L5.${idx} Team Revenue Contribution`, unit: 'INR Cr',
+      companyTarget: 16, planned: 16, stretch: 20,
+      weight: 20, level: 5, status: 'approved', submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: mgr,
     });
+    l5MrrMap[empId] = insertTarget(db, {
+      orgId, cycleId: cy2526, empId, parentId: mrrParent, type: 'kpi', dir: 'top_down',
+      title: `Monthly New Business MRR — L5.${idx} Team (${name})`, unit: 'INR',
+      companyTarget: 95000, planned: 95000, stretch: 105000,
+      weight: 50, level: 5, status: 'approved', submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: mgr,
+    });
+    insertTarget(db, { orgId, cycleId: cy2526, empId, type: 'kra', dir: 'top_down',
+      title: 'New Business Acquisition', weight: 30, level: 5, status: 'approved',
+      submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: mgr });
+    for (const [title, wt] of [['Sales Execution', 45], ['Leadership & Coaching', 35], ['Customer Focus', 20]]) {
+      insertTarget(db, { orgId, cycleId: cy2526, empId, type: 'competency', dir: 'top_down',
+        title, weight: wt, level: 5, status: 'approved', submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: mgr });
+    }
+  }
+  const c4l54MRR = l5MrrMap[l54], c4l55MRR = l5MrrMap[l55], c4l56MRR = l5MrrMap[l56];
+  const c4l54KR  = l5KRMap[l54],  c4l55KR  = l5KRMap[l55],  c4l56KR  = l5KRMap[l56];
+
+  // L5 Engineering: Zubair Ahmed + Ankita Rao (OKR KR + KRA + KPI + Competencies, 35+35+30=100%)
+  for (const empId of [l5EngA, l5EngB]) {
+    insertTarget(db, { orgId, cycleId: cy2526, empId, parentId: c4l4EngVelocity, type: 'okr_kr', dir: 'top_down',
+      title: 'Sprint Velocity Contribution', unit: 'points',
+      companyTarget: 40, planned: 40, stretch: 50,
+      weight: 35, level: 5, status: 'approved', submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l4Eng });
+    insertTarget(db, { orgId, cycleId: cy2526, empId, type: 'kra', dir: 'top_down',
+      title: 'Product Quality & Reliability', weight: 35, level: 5, status: 'approved',
+      submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l4Eng });
+    insertTarget(db, { orgId, cycleId: cy2526, empId, type: 'kpi', dir: 'top_down',
+      title: 'Bug Escape Rate', unit: '%', measure: 'lower_better',
+      companyTarget: 2, planned: 2, stretch: 1, weight: 30, level: 5, status: 'approved',
+      submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l4Eng });
+    for (const [title, wt] of [['Technical Aptitude', 50], ['Collaboration & Teamwork', 30], ['Adaptability & Learning', 20]]) {
+      insertTarget(db, { orgId, cycleId: cy2526, empId, type: 'competency', dir: 'top_down',
+        title, weight: wt, level: 5, status: 'approved', submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l4Eng });
+    }
   }
 
-  // L6.10–6.12 under L5.4 Neha — Standard 20K each
-  for (const empId of [l610, l611, l612]) {
-    insertTarget(db, {
-      orgId, cycleId: cy2526, empId, type: 'kpi', dir: 'bottom_up',
-      title: 'My New Business MRR Target', unit: 'INR',
-      companyTarget: 20000, planned: 20000,
-      weight: 100, level: 6, status: 'proposed', submittedAt: '2025-04-19',
-    });
+  // L5 CX (Rishab Pillai) — OKR KR + KRA + KPI + Competencies (30+40+30=100%)
+  insertTarget(db, { orgId, cycleId: cy2526, empId: l5CX, parentId: c4l4CXNPS, type: 'okr_kr', dir: 'top_down',
+    title: 'Customer Satisfaction Score', unit: 'score',
+    companyTarget: 85, planned: 85, stretch: 90,
+    weight: 30, level: 5, status: 'approved', submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l4CX });
+  insertTarget(db, { orgId, cycleId: cy2526, empId: l5CX, type: 'kra', dir: 'top_down',
+    title: 'Customer Satisfaction & Retention', weight: 40, level: 5, status: 'approved',
+    submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l4CX });
+  insertTarget(db, { orgId, cycleId: cy2526, empId: l5CX, type: 'kpi', dir: 'top_down',
+    title: 'CSAT Score', unit: 'score', companyTarget: 4.5, planned: 4.5, stretch: 4.8,
+    weight: 30, level: 5, status: 'approved', submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l4CX });
+  for (const [title, wt] of [['Customer Focus', 50], ['Communication & Influence', 30], ['Collaboration & Teamwork', 20]]) {
+    insertTarget(db, { orgId, cycleId: cy2526, empId: l5CX, type: 'competency', dir: 'top_down',
+      title, weight: wt, level: 5, status: 'approved', submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l4CX });
   }
 
-  // L6.13–6.15 under L5.5 Ravi — Standard 20K each
-  for (const empId of [l613, l614, l615]) {
-    insertTarget(db, {
-      orgId, cycleId: cy2526, empId, type: 'kpi', dir: 'bottom_up',
+  // ── BOTTOM-UP TRACK: L6 (18 people) — OKR KR (20%) + KPI MRR (50%) + KRA (30%) = 100% goal
+  // Competencies: Sales Execution 50% + Customer Focus 30% + Adaptability 20% = 100%
+  // OKR KR parentId=null initially (unlinked — V13 blocks cycle advance until manager links)
+  const l6Rows = [
+    // [empId, plannedMRR, isOver, overRatio, overNote, mrrDesc, submitDate]
+    [l61,  25000, 1, 1.25,
+      'Over-plan by ₹5K vs ₹20K baseline. BSNL Phase-2 ₹8K MRR contract ready Apr 15; HDFC Insurance pilot converting.',
+      'Self-proposed FY26 MRR. 3 corporate accounts in advanced pipeline: BSNL Phase-2, HDFC Insurance, Tata Comm.',
+      '2025-04-18'],
+    [l62,  20000, 0, null, null, null, '2025-04-18'],
+    [l63,  20000, 0, null, null, null, '2025-04-18'],
+    [l64,  20000, 0, null, null, null, '2025-04-18'],
+    [l65,  20000, 0, null, null, null, '2025-04-18'],
+    [l66,  20000, 0, null, null, null, '2025-04-18'],
+    [l67,  15000, 0, null, null,
+      'Under-plan vs ₹20K baseline by ₹5K. FY25 Infosys churn (₹8K MRR lost May). Rebuilt pipeline to 4 SMEs, none above ₹3K yet. Committing to realistic ₹15K; target ₹20K by Q2.',
+      '2025-04-18'],
+    [l68,  20000, 0, null, null, null, '2025-04-19'],
+    [l69,  20000, 0, null, null, null, '2025-04-19'],
+    [l610, 20000, 0, null, null, null, '2025-04-19'],
+    [l611, 20000, 0, null, null, null, '2025-04-19'],
+    [l612, 20000, 0, null, null, null, '2025-04-19'],
+    [l613, 20000, 0, null, null, null, '2025-04-19'],
+    [l614, 20000, 0, null, null, null, '2025-04-19'],
+    [l615, 20000, 0, null, null, null, '2025-04-19'],
+    [l616, 20000, 0, null, null, null, '2025-04-20'],
+    [l617, 20000, 0, null, null, null, '2025-04-20'],
+    [l618, 20000, 0, null, null, null, '2025-04-20'],
+  ];
+  for (const [empId, planned, isOver, overRatio, overNote, mrrDesc, sub] of l6Rows) {
+    // OKR KR — unlinked (parentId null); annual equivalent of monthly MRR target
+    insertTarget(db, { orgId, cycleId: cy2526, empId, type: 'okr_kr', dir: 'bottom_up',
+      title: 'My Annual Sales Revenue Contribution', unit: 'INR Cr',
+      companyTarget: 0.24, planned: +(planned * 12 / 1000000).toFixed(2),
+      weight: 20, level: 6, status: 'proposed', submittedAt: sub });
+    // KPI MRR
+    insertTarget(db, { orgId, cycleId: cy2526, empId, type: 'kpi', dir: 'bottom_up',
       title: 'My New Business MRR Target', unit: 'INR',
-      companyTarget: 20000, planned: 20000,
-      weight: 100, level: 6, status: 'proposed', submittedAt: '2025-04-19',
-    });
+      companyTarget: 20000, planned,
+      stretch: planned === 25000 ? 28000 : planned === 15000 ? 22000 : null,
+      desc: mrrDesc ?? null,
+      isOverPlanned: isOver, overRatio: overRatio ?? null,
+      overNote: overNote ?? null, overApproved: 0,
+      weight: 50, level: 6, status: 'proposed', submittedAt: sub });
+    // KRA
+    insertTarget(db, { orgId, cycleId: cy2526, empId, type: 'kra', dir: 'bottom_up',
+      title: 'New Business Acquisition', weight: 30, level: 6, status: 'proposed', submittedAt: sub });
+    // Competencies
+    for (const [title, wt] of [['Sales Execution', 50], ['Customer Focus', 30], ['Adaptability & Learning', 20]]) {
+      insertTarget(db, { orgId, cycleId: cy2526, empId, type: 'competency', dir: 'bottom_up',
+        title, weight: wt, level: 6, status: 'proposed', submittedAt: sub });
+    }
   }
 
-  // L6.16–6.18 under L5.6 Pooja — Standard 20K each
-  for (const empId of [l616, l617, l618]) {
-    insertTarget(db, {
-      orgId, cycleId: cy2526, empId, type: 'kpi', dir: 'bottom_up',
-      title: 'My New Business MRR Target', unit: 'INR',
-      companyTarget: 20000, planned: 20000,
-      weight: 100, level: 6, status: 'proposed', submittedAt: '2025-04-20',
-    });
-  }
-
-  // Competency targets for L5.3 Arun Kumar (demo login for Team Targets)
-  insertTarget(db, {
-    orgId, cycleId: cy2526, empId: l53, type: 'competency', dir: 'top_down',
-    title: 'Leadership & Coaching',
-    desc: 'Developing L6 team capacity; addressing Karan Singh performance gap with structured coaching plan.',
-    weight: 40, level: 5, status: 'approved',
-    submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l42,
-  });
-  insertTarget(db, {
-    orgId, cycleId: cy2526, empId: l53, type: 'competency', dir: 'top_down',
-    title: 'Ownership & Accountability',
-    desc: 'Self-absorbing team shortfall (raising own MRR from ₹35K to ₹40K) demonstrates accountability.',
-    weight: 35, level: 5, status: 'approved',
-    submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l42,
-  });
-  insertTarget(db, {
-    orgId, cycleId: cy2526, empId: l53, type: 'competency', dir: 'top_down',
-    title: 'Strategic Thinking',
-    desc: 'Identifying mid-market opportunities to diversify from SME-heavy portfolio in South territory.',
-    weight: 25, level: 5, status: 'approved',
-    submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l42,
-  });
-
-  console.log('InfoBuz 4-cycle targets seeded. FY25-26 bidirectional demo:');
-  console.log('  Chain L1→L5: all APPROVED (demo-ready for L5 managers to approve team)');
-  console.log('  L6: 18 bottom-up proposals (weight=100%/goal) + competencies for key employees');
-  console.log('  Over-plan: IB-S13 Ankit Joshi 25K vs 20K baseline → L5.1 Rohit burden -5K');
-  console.log('  Under-plan: IB-S19 Karan Singh 15K vs 20K baseline → L5.3 Arun self-absorbs +5K');
-  console.log('  V13 BLOCKED: 18 proposals unlinked → cycle cannot advance to active');
+  saveDb();
+  console.log('InfoBuz 4-cycle targets seeded. FY25-26 comprehensive:');
+  console.log('  ALL 41 employees: OKR KR (cascade) + KRA + KPI + Competencies');
+  console.log('  Sales L1→L5: top-down APPROVED | Non-sales Eng/CX/HR L2→L5: APPROVED');
+  console.log('  L6 (18): bottom-up — OKR KR (unlinked) + KPI MRR + KRA + competencies');
+  console.log('  Over-plan: Ankit Joshi 25K vs 20K → L5.1 Rohit burden -5K');
+  console.log('  Under-plan: Karan Singh 15K vs 20K → L5.3 Arun self-absorbs +5K');
+  console.log('  V13 BLOCKED: 18 OKR KR proposals unlinked → cycle cannot advance to active');
 }
 
 module.exports = { seedTargets: seedInfoBuzTargets };
