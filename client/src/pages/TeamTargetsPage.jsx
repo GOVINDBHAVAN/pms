@@ -589,6 +589,7 @@ function TeamCoverageWidget({ myApprovedTargets, allReportees, currentEmployeeId
       const contributions = allReportees.map(r => {
         const matching = (r.targets || []).filter(t =>
           t.framework_type === managerTarget.framework_type &&
+          t.parent_target_id === managerTarget.id &&
           t.planned_target != null &&
           !['rejected', 'deleted'].includes(t.status)
         );
@@ -1491,6 +1492,7 @@ function computeContributions(myTargets, reporteeTargets) {
     .map(mt => {
       const matching = (reporteeTargets || []).filter(t =>
         t.framework_type === mt.framework_type &&
+        t.parent_target_id === mt.id &&
         t.planned_target != null &&
         !['rejected', 'deleted'].includes(t.status)
       );

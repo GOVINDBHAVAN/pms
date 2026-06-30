@@ -11,9 +11,12 @@
  *       L6.1 Ankit Joshi  OVER-PLANS  25,000 vs 20,000 (+5K) → L5.1 own burden -5K
  *       L6.7 Karan Singh  UNDER-PLANS 15,000 vs 20,000 (-5K) → L5.3 self-absorbs +5K
  *
- * Cascade math for FY 2025-26 MRR targets:
- *   L6 baseline:  20,000  |  L5 team: 95,000  |  L4.1: 240,000  |  L4.2: 430,000
- *   L3.1: 310,000          |  L3.2: 550,000    |  L2 VP Sales: 950,000
+ * Cascade math for FY 2025-26 MRR targets (deliberate under-commits to show "missing out"):
+ *   L6 baseline:  20,000  |  L5.1: 95,000 | L5.2: 75,000 (↓) | L5.3: 95,000
+ *   L5.4: 80,000 (↓) | L5.5: 95,000 | L5.6: 70,000 (↓)
+ *   L4.1: 210,000 (↓)     |  L4.2: 390,000 (↓)  |  L4.3: 50,000
+ *   L3.1: 285,000 (↓)     |  L3.2: 510,000 (↓)  |  L2 VP Sales: 950,000
+ *   VP Sales ARR: 150 INR Cr | L3N: 50 (↓) | L3S: 90 (↓) → Team: 140/150 = 93%
  *
  * POC screens:
  *   My Targets  → L6.1 sees 25K proposal with over-plan flag
@@ -842,14 +845,14 @@ function seedInfoBuzTargets(db) {
   const c4l3nKR = insertTarget(db, {
     orgId, cycleId: cy2526, empId: l3n, parentId: c4vpARR, type: 'okr_kr', dir: 'top_down',
     title: 'North Region Revenue Contribution', unit: 'INR Cr',
-    companyTarget: 55, planned: 55, stretch: 65,
+    companyTarget: 50, planned: 50, stretch: 58,
     weight: 30, level: 3, status: 'approved',
     submittedAt: '2025-04-18', approvedAt: '2025-04-20', approvedBy: vpSal,
   });
   const c4l3nMRR = insertTarget(db, {
     orgId, cycleId: cy2526, empId: l3n, parentId: c4vpMRR, type: 'kpi', dir: 'top_down',
     title: 'Monthly New Business MRR — North Region', unit: 'INR',
-    companyTarget: 310000, planned: 310000, stretch: 345000,
+    companyTarget: 285000, planned: 285000, stretch: 315000,
     weight: 40, level: 3, status: 'approved',
     submittedAt: '2025-04-18', approvedAt: '2025-04-20', approvedBy: vpSal,
   });
@@ -865,14 +868,14 @@ function seedInfoBuzTargets(db) {
   const c4l3sKR = insertTarget(db, {
     orgId, cycleId: cy2526, empId: l3s, parentId: c4vpARR, type: 'okr_kr', dir: 'top_down',
     title: 'South Region Revenue Contribution', unit: 'INR Cr',
-    companyTarget: 95, planned: 95, stretch: 110,
+    companyTarget: 90, planned: 90, stretch: 100,
     weight: 30, level: 3, status: 'approved',
     submittedAt: '2025-04-18', approvedAt: '2025-04-20', approvedBy: vpSal,
   });
   const c4l3sMRR = insertTarget(db, {
     orgId, cycleId: cy2526, empId: l3s, parentId: c4vpMRR, type: 'kpi', dir: 'top_down',
     title: 'Monthly New Business MRR — South Region', unit: 'INR',
-    companyTarget: 550000, planned: 550000, stretch: 610000,
+    companyTarget: 510000, planned: 510000, stretch: 565000,
     weight: 40, level: 3, status: 'approved',
     submittedAt: '2025-04-18', approvedAt: '2025-04-20', approvedBy: vpSal,
   });
@@ -956,14 +959,14 @@ function seedInfoBuzTargets(db) {
   const c4l41KR = insertTarget(db, {
     orgId, cycleId: cy2526, empId: l41, parentId: c4l3nKR, type: 'okr_kr', dir: 'top_down',
     title: 'North Area 1 Revenue Contribution', unit: 'INR Cr',
-    companyTarget: 35, planned: 35, stretch: 42,
+    companyTarget: 28, planned: 28, stretch: 34,
     weight: 25, level: 4, status: 'approved',
     submittedAt: '2025-04-21', approvedAt: '2025-04-23', approvedBy: l3n,
   });
   const c4l41MRR = insertTarget(db, {
     orgId, cycleId: cy2526, empId: l41, parentId: c4l3nMRR, type: 'kpi', dir: 'top_down',
     title: 'Monthly New Business MRR — North Area 1', unit: 'INR',
-    companyTarget: 240000, planned: 240000, stretch: 265000,
+    companyTarget: 210000, planned: 210000, stretch: 235000,
     weight: 45, level: 4, status: 'approved',
     submittedAt: '2025-04-21', approvedAt: '2025-04-23', approvedBy: l3n,
   });
@@ -979,14 +982,14 @@ function seedInfoBuzTargets(db) {
   const c4l42KR = insertTarget(db, {
     orgId, cycleId: cy2526, empId: l42, parentId: c4l3sKR, type: 'okr_kr', dir: 'top_down',
     title: 'South Area 2 Revenue Contribution', unit: 'INR Cr',
-    companyTarget: 65, planned: 65, stretch: 78,
+    companyTarget: 60, planned: 60, stretch: 72,
     weight: 25, level: 4, status: 'approved',
     submittedAt: '2025-04-21', approvedAt: '2025-04-23', approvedBy: l3s,
   });
   const c4l42MRR = insertTarget(db, {
     orgId, cycleId: cy2526, empId: l42, parentId: c4l3sMRR, type: 'kpi', dir: 'top_down',
     title: 'Monthly New Business MRR — South Area 2', unit: 'INR',
-    companyTarget: 430000, planned: 430000, stretch: 475000,
+    companyTarget: 390000, planned: 390000, stretch: 430000,
     weight: 45, level: 4, status: 'approved',
     submittedAt: '2025-04-21', approvedAt: '2025-04-23', approvedBy: l3s,
   });
@@ -1066,7 +1069,7 @@ function seedInfoBuzTargets(db) {
   const c4l51KR = insertTarget(db, {
     orgId, cycleId: cy2526, empId: l51, parentId: c4l41KR, type: 'okr_kr', dir: 'top_down',
     title: 'L5.1 Team Revenue Contribution', unit: 'INR Cr',
-    companyTarget: 14, planned: 14, stretch: 17,
+    companyTarget: 12, planned: 12, stretch: 15,
     weight: 20, level: 5, status: 'approved',
     submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l41,
   });
@@ -1090,14 +1093,14 @@ function seedInfoBuzTargets(db) {
   const c4l52KR = insertTarget(db, {
     orgId, cycleId: cy2526, empId: l52, parentId: c4l41KR, type: 'okr_kr', dir: 'top_down',
     title: 'L5.2 Team Revenue Contribution', unit: 'INR Cr',
-    companyTarget: 14, planned: 14, stretch: 17,
+    companyTarget: 10, planned: 10, stretch: 13,
     weight: 20, level: 5, status: 'approved',
     submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l41,
   });
   const c4l52MRR = insertTarget(db, {
     orgId, cycleId: cy2526, empId: l52, parentId: c4l41MRR, type: 'kpi', dir: 'top_down',
     title: 'Monthly New Business MRR — L5.2 Team (Kavya Nair)', unit: 'INR',
-    companyTarget: 95000, planned: 95000, stretch: 105000,
+    companyTarget: 75000, planned: 75000, stretch: 85000,
     weight: 50, level: 5, status: 'approved',
     submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l41,
   });
@@ -1113,7 +1116,7 @@ function seedInfoBuzTargets(db) {
   const c4l53KR = insertTarget(db, {
     orgId, cycleId: cy2526, empId: l53, parentId: c4l42KR, type: 'okr_kr', dir: 'top_down',
     title: 'L5.3 Team Revenue Contribution', unit: 'INR Cr',
-    companyTarget: 16, planned: 16, stretch: 20,
+    companyTarget: 14, planned: 14, stretch: 17,
     weight: 20, level: 5, status: 'approved',
     submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l42,
   });
@@ -1133,24 +1136,25 @@ function seedInfoBuzTargets(db) {
       title, weight: wt, level: 5, status: 'approved', submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: l42 });
   }
 
-  // L5.4 Neha Singh, L5.5 Ravi Joshi, L5.6 Pooja Bose — standard OKR KR + MRR + KRA + Competencies
+  // L5.4 Neha Singh, L5.5 Ravi Joshi, L5.6 Pooja Bose — OKR KR + MRR + KRA + Competencies
+  // Neha (idx 4) and Pooja (idx 6) UNDER-COMMIT to create "missing out" coverage gaps
   const l5std = [
-    [l54, c4l42KR, c4l42MRR, l42, 'Neha Singh',  4],
-    [l55, c4l42KR, c4l42MRR, l42, 'Ravi Joshi',  5],
-    [l56, c4l42KR, c4l42MRR, l42, 'Pooja Bose',  6],
+    [l54, c4l42KR, c4l42MRR, l42, 'Neha Singh',  4, 12, 80000],   // MISSING OUT — 80K vs 95K baseline
+    [l55, c4l42KR, c4l42MRR, l42, 'Ravi Joshi',  5, 14, 95000],   // standard commitment
+    [l56, c4l42KR, c4l42MRR, l42, 'Pooja Bose',  6,  8, 70000],   // MISSING OUT — 70K vs 95K baseline
   ];
   const l5MrrMap = {}, l5KRMap = {};
-  for (const [empId, krParent, mrrParent, mgr, name, idx] of l5std) {
+  for (const [empId, krParent, mrrParent, mgr, name, idx, krPlan, mrrPlan] of l5std) {
     l5KRMap[empId] = insertTarget(db, {
       orgId, cycleId: cy2526, empId, parentId: krParent, type: 'okr_kr', dir: 'top_down',
       title: `L5.${idx} Team Revenue Contribution`, unit: 'INR Cr',
-      companyTarget: 16, planned: 16, stretch: 20,
+      companyTarget: krPlan, planned: krPlan, stretch: Math.round(krPlan * 1.25),
       weight: 20, level: 5, status: 'approved', submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: mgr,
     });
     l5MrrMap[empId] = insertTarget(db, {
       orgId, cycleId: cy2526, empId, parentId: mrrParent, type: 'kpi', dir: 'top_down',
       title: `Monthly New Business MRR — L5.${idx} Team (${name})`, unit: 'INR',
-      companyTarget: 95000, planned: 95000, stretch: 105000,
+      companyTarget: mrrPlan, planned: mrrPlan, stretch: Math.round(mrrPlan * 1.12),
       weight: 50, level: 5, status: 'approved', submittedAt: '2025-04-24', approvedAt: '2025-04-26', approvedBy: mgr,
     });
     insertTarget(db, { orgId, cycleId: cy2526, empId, type: 'kra', dir: 'top_down',

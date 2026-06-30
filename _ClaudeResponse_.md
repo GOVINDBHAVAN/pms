@@ -201,3 +201,28 @@ Over-plan bubble-up: Ankit Joshi → his manager Rohit Verma (burden reduced)
 Under-plan gap absorption: Karan Singh → his manager Arun Kumar (burden raised)
 Non-sales OKR cascade: Karthik Menon → Sneha Krishnan → Manish Verma → Zubair/Ankita
 V13 block demo: Any admin login → cycle cannot advance to active because L6 OKR KRs are unlinked
+
+
+# Validate InfoBuz seed data against OKR targets
+
+Root cause of the 266% bug (UI)
+TeamTargetsPage.jsx:592 — TeamCoverageWidget was matching reportee targets by framework_type only, so all okr_kr values across every person got summed into every KR row:
+
+Karthik's Platform Uptime (99.9) + Sprint Velocity (40) = 139.9 — added to ARR row
+Divya's Customer NPS (85) + Retention (97) = 182 — same
+Pooja's eNPS (50) + Attrition (10) = 60 — same
+Fix: Added t.parent_target_id === managerTarget.id to the filter. Now only targets explicitly linked to the parent KR are counted. Same fix applied to computeContributions at line ~1493.
+
+Cascade "missing out" scenarios (Seed data)
+Revised FY 2025-26 planned targets so team totals are below parent targets at multiple levels:
+
+Level	Parent target	Team total	Coverage
+CEO → VP Sales (ARR)	200 INR Cr	150 INR Cr	75% — Short by 50 ⚠
+VP Sales → L3 (ARR KR)	150 INR Cr	140 INR Cr	93% — Short by 10 ⚠
+VP Sales → L3 (MRR)	950,000	795,000	84% — Short by 155K ⚠
+L3 North → L4.1 (MRR)	285,000	210,000	74% — Short by 75K ⚠
+L3 South → L4.2+L4.3 (MRR)	510,000	440,000	86% — Short by 70K ⚠
+L4.1 → L5.1+L5.2 (MRR)	210,000	170,000	81% — Short by 40K ⚠
+L4.2 → L5.3–L5.6 (MRR)	390,000	340,000	87% — Short by 50K ⚠
+Neha Singh (L5.4: 80K) and Pooja Bose (L5.6: 70K) are the deliberately under-committed managers showing the "missing out" warning.
+
