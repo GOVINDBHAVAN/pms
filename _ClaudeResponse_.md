@@ -116,7 +116,7 @@ Summary of what was fixed:
 
 Every InfoBuz employee now has in FY 2025-26:
 
-Layer	OKR KR	KRA	KPI	Competencies
+## Layer	OKR KR	KRA	KPI	Competencies
 CEO (L1)	4 Objectives × KRs	Revenue Growth	—	3
 VP Sales (L2)	✅ linked to CEO ARR KR	2 KRAs	MRR KPI	3
 VP Product (L2)	✅ Uptime + Velocity	Quality	Bug Escape Rate	3
@@ -129,4 +129,75 @@ L4 Eng / CX	✅ cascade chain	Quality/CX	Bug Rate/Tickets	3
 L5 Sales ×6	✅ cascade chain	NBA	MRR	3
 L5 Eng ×2 / CX	✅ cascade chain	Quality/CX	Bug Rate/CSAT	3
 L6 Sales ×18	✅ proposed (unlinked — V13 demo)	NBA	MRR	3
+
 Zero employees without OKR contribution, KRA, or competency. The V13 block is preserved (18 L6 OKR KRs unlinked, blocking cycle advance). Ankit Joshi's over-plan and Karan Singh's under-plan narratives are intact.
+
+
+## InfoBuz Employee Directory by Level
+## L1 — CEO
+Name	Email	Role
+Rahul Mehta	rahul.mehta@infobuz.in	admin
+
+## L2 — VPs
+Name	Email	Dept	Notes
+Vikram Joshi	vikram.joshi@infobuz.in	Sales	VP Sales
+Karthik Menon	karthik.menon@infobuz.in	Engineering	VP Product
+Divya Subramaniam	divya.s@infobuz.in	CX	VP CX
+
+## L3 — Heads
+Name	Email	Dept	Notes
+Amit Sharma	amit.sharma@infobuz.in	Sales	North Region Head
+Priya Patel	priya.patel@infobuz.in	Sales	South Region Head
+Sneha Krishnan	sneha.krishnan@infobuz.in	Engineering	Eng Head
+Ganesh Iyer	ganesh.iyer@infobuz.in	CX	CX Head
+Pooja Mehta	pooja.mehta@infobuz.in	HR	HR Head (reports to CEO)
+
+## L4 — Area Managers
+Name	Email	Dept	Notes
+Sanjay Reddy	sanjay.reddy@infobuz.in	Sales	North Area 1 → under Amit
+Deepak Rao	deepak.rao@infobuz.in	Sales	South Area 2 → under Priya
+Sunita Iyer	sunita.iyer@infobuz.in	Sales	Solo quota → under Priya
+Manish Verma	manish.verma@infobuz.in	Engineering	L4 Eng
+Ritika Gupta	ritika.gupta@infobuz.in	CX	L4 CX
+
+## L5 — Senior Executives
+Name	Email	Dept	Notes
+Rohit Verma	rohit.verma@infobuz.in	Sales	★ Own burden -5K (Ankit over-committed)
+Kavya Nair	kavya.nair@infobuz.in	Sales	Standard L5
+Arun Kumar	arun.kumar@infobuz.in	Sales	★ Own burden +5K (absorbs Karan's gap)
+Neha Singh	neha.singh@infobuz.in	Sales	Standard L5
+Ravi Joshi	ravi.joshi@infobuz.in	Sales	Standard L5
+Pooja Bose	pooja.bose@infobuz.in	Sales	Standard L5
+Zubair Ahmed	zubair.ahmed@infobuz.in	Engineering	L5 Eng
+Ankita Rao	ankita.rao@infobuz.in	Engineering	L5 Eng
+Rishab Pillai	rishab.pillai@infobuz.in	CX	L5 CX
+
+## L6 — Executives (all bottom-up proposals)
+Name	Email	MRR Target	Notes
+Ankit Joshi	ankit.joshi@infobuz.in	25,000	★ OVER-PLAN (+5K vs 20K baseline)
+Maya Sharma	maya.sharma@infobuz.in	20,000	Standard, under Rohit
+Vikash Kumar	vikash.kumar@infobuz.in	20,000	Standard, under Rohit
+Swati Gupta	swati.gupta@infobuz.in	20,000	Standard, under Kavya
+Mohit Rao	mohit.rao@infobuz.in	20,000	Standard, under Kavya
+Divya Pillai	divya.pillai@infobuz.in	20,000	Standard, under Kavya
+Karan Singh	karan.singh@infobuz.in	15,000	★ UNDER-PLAN (-5K, FY25 PIP narrative)
+Preethi Nair	preethi.nair@infobuz.in	20,000	Standard, under Arun
+Sujith Kumar	sujith.kumar@infobuz.in	20,000	Standard, under Arun
+Ritu Verma	ritu.verma@infobuz.in	20,000	Standard, under Neha
+Akash Mehta	akash.mehta@infobuz.in	20,000	Standard, under Neha
+Sneha Rao	sneha.rao@infobuz.in	20,000	Standard, under Neha
+Rahul Patel	rahul.patel@infobuz.in	20,000	Standard, under Ravi
+Ankita Dubey	ankita.dubey@infobuz.in	20,000	Standard, under Ravi
+Vishal Kumar	vishal.kumar@infobuz.in	20,000	Standard, under Ravi
+Meena Gupta	meena.gupta@infobuz.in	20,000	Standard, under Pooja B
+Sachin Nair	sachin.nair@infobuz.in	20,000	Standard, under Pooja B
+Tanvi Pillai	tanvi.pillai@infobuz.in	20,000	Standard, under Pooja B
+
+## Key test scenarios:
+
+Cascade demo: 
+Login as Rahul Mehta (CEO) → Vikram Joshi (VP) → Amit/Priya → Sanjay/Deepak → Rohit/Arun → Ankit/Karan
+Over-plan bubble-up: Ankit Joshi → his manager Rohit Verma (burden reduced)
+Under-plan gap absorption: Karan Singh → his manager Arun Kumar (burden raised)
+Non-sales OKR cascade: Karthik Menon → Sneha Krishnan → Manish Verma → Zubair/Ankita
+V13 block demo: Any admin login → cycle cannot advance to active because L6 OKR KRs are unlinked
