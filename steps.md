@@ -192,4 +192,5 @@
 - DONE: okay, can we develop first 'Self Appraisal' Screen to check the output and then proceed for 'Team Appraisal'? Do in-depth analysis before developing.
 - Now develop for remaining feature of 'Team Appraisal' screen.
 - DONE: Provide me the steps which I should follow to demonstrate in InfoBuz for comprehensive demo of cascading in the client InfoBuz. Case of employees/managers which are following top-down OKR and some employee/managers follows bottm-up targets.
-- 
+- After developing of 'Self Appraisal' and 'Team Appraisal', update the PDF of InfoBuz generate PDF of this previously worked prompt: Check the data of InfoBuz again, that OKR and KRA-KPI should be there at all level, along with competency, the mapping of Company OKR to each and every employees should be properly mapped, no incorrect mapping that employee has only KRA-KPI and no OKR. All employees has all data available (you can keep some as unapproved), but proper correct data is very much required for a correct presentation. There should not be a single employee of InfoBuz without OKR contributions, along with KRA-KPI (other than company OKR) and compentencies. Consider use cases of Self Appraisal and Team Appraisal, ensure to check Levels are displayed properly CEO is L1 not L9.
+
